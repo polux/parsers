@@ -1,0 +1,53 @@
+// Copyright (c) 2012, Google Inc. All rights reserved. Use of this source code
+// is governed by a BSD-style license that can be found in the LICENSE file.
+
+// Author: Paul Brauner (polux@google.com)
+
+library example;
+
+import 'package:parsers/parsers.dart';
+import 'dart:math';
+
+// We define our parser as methods of some class because toplevel functions
+// aren't mutually recursive in Dart.
+
+class Arith {
+
+  // Some combinators: functions that take parsers and return a parser.
+
+  lexeme(parser) => parser < spaces;
+  token(str)     => lexeme(string(str));
+  parens(parser) => token('(') + parser + token(')')  ^ (a,b,c) => b;
+
+  // The axiom of the grammar is an expression followed by end of file.
+
+  get start => expr() < eof;
+
+  // We define some lexemes.
+
+  get comma  => token(',');
+  get times  => token('*');
+  get plus   => token('+');
+  get number => lexeme(digit.many1)  ^ digits2int;
+
+  // This is the gist of the grammar, the BNF-like rules.
+
+  expr() => rec(mult).sepBy(plus)    ^ sum;
+  mult() => rec(atom).sepBy(times)   ^ prod;
+  atom() => number
+          | parens(rec(expr));
+
+  // These are simple Dart functions used as "actions" above to transform the
+  // results of intermediate parsing steps.
+
+  digits2int(digits) => parseInt(Strings.concatAll(digits));
+  prod(xs) => xs.reduce(1, (a,b) => a * b);
+  sum(xs) => xs.reduce(0, (a,b) => a + b);
+}
+
+main() {
+  String good = "1 * 2 + 3 * (4 + 5)";
+  print(new Arith().start.parse(good)); // prints 29
+  String bad = "1 * x + 2";
+  print(new Arith().start.parse(bad)); // throws exception
+}

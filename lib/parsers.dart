@@ -106,6 +106,14 @@ class Parser<A> {
                 | pure(acc);
     return this >> rest;
   }
+
+  Parser chainr(Parser sep, defaultValue) => chainr1(sep) | pure(defaultValue);
+
+  Parser chainr1(Parser sep) {
+    rest(x) => pure((f) => (y) => f(x, y)) * sep * chainr1(sep)
+             | pure(x);
+    return this >> rest;
+  }
 }
 
 class ParserAccumulator2 {

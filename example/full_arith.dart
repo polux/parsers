@@ -3,7 +3,7 @@
 
 // Author: Paul Brauner (polux@google.com)
 
-library full_arith;
+library example;
 
 import 'package:parsers/parsers.dart';
 import 'dart:math';
@@ -28,18 +28,18 @@ class Arith {
   get minus  => token('-');
   get number => lexeme(digit.many1)  ^ digits2int;
 
-  expr() => rec(term).chainl1(mulop);
-  term() => rec(atom).chainl1(addop);
+  expr() => rec(term).chainl1(addop);
+  term() => rec(atom).chainl1(mulop);
   atom() => number | parens(rec(expr));
 
-  get mulop => plus  > pure((x, y) => x + y)
+  get addop => plus  > pure((x, y) => x + y)
              | minus > pure((x, y) => x - y);
 
-  get addop => times > pure((x, y) => x * y)
+  get mulop => times > pure((x, y) => x * y)
              | div   > pure((x, y) => x ~/ y);
 }
 
 main() {
-  String good = "1 * 2 ~/ 2 + 3 * (4 + 5 - 1)";
-  print(new Arith().start.parse(good)); // prints 25
+  final s = "1 * 2 ~/ 2 + 3 * (4 + 5 - 1)";
+  print(new Arith().start.parse(s)); // prints 25
 }

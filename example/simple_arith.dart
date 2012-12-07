@@ -43,8 +43,8 @@ class Arith {
 }
 
 main() {
-  String good = "1 * 2 + 3 * (4 + 5)";
+  final good = "1 * 2 + 3 * (4 + 5)";
   print(new Arith().start.parse(good)); // prints 29
-  String bad = "1 * x + 2";
+  final bad = "1 * x + 2";
   print(new Arith().start.parse(bad)); // throws exception
 }

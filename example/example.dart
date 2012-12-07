@@ -8,9 +8,6 @@ library example;
 import 'package:parsers/parsers.dart';
 import 'dart:math';
 
-// We define our parser as methods of some class because toplevel functions
-// aren't mutually recursive in Dart.
-
 class Arith {
 
   // Some combinators: functions that take parsers and return a parser.

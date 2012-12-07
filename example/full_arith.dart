@@ -17,7 +17,7 @@ class Arith {
 
   lexeme(parser) => parser < spaces;
   token(str)     => lexeme(string(str));
-  parens(parser) => token('(') + parser + token(')')  ^ (a,b,c) => b;
+  parens(parser) => parser.between(token('('), token(')'));
 
   get start => expr() < eof;
 

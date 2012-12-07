@@ -75,9 +75,71 @@ class Parser<A> {
     });
   }
 
+  /**
+   * Parses without consuming any input.
+   *
+   * Used for defining followedBy, which is probably what you're looking for.
+   */
+  Parser get lookAhead {
+    return new Parser((s) {
+      Option<Pair<A, String>> res = run(s);
+      return res.isDefined
+          ? _some(_pair(res.value.fst, s))
+          : res;
+    });
+  }
+
+  /**
+   * Succeeds if and only if [this] succeeds and [p] succeeds on what remains to
+   * parse without cosuming it.
+   *
+   *     string("let").followedBy(space)
+   */
+  Parser followedBy(Parser p) => this < p.lookAhead;
+
+  /**
+   * Fails if and only if [this] succeeds on what's ahead.
+   *
+   * Used for defining notFollowedBy, which is probably what you're looking for.
+   */
+  Parser get notAhead {
+    return new Parser((s) {
+      Option<Pair<A, String>> res = run(s);
+      return res.isDefined
+          ? _none
+          : _some(_pair(null, s));
+    });
+  }
+
+  /**
+   * Succeeds if and only if [this] succeeds and [p] fails on what remains to
+   * parse.
+   *
+   *     string("let").notFollowedBy(alphanum)
+   */
+  Parser notFollowedBy(Parser p) => this < p.notAhead;
+
+  /**
+   * Parses [this] 0 or more times until [end] succeeds.
+   *
+   * Returns the list of values returned by [p]. It is useful for parsing
+   * comments.
+   *
+   *     string('/*') > anyChar.manyUntil(string('*/'))
+   *
+   * The input consumed by [p] is consumed. Use [:p.lookAhead:] if you don't
+   * want this.
+   */
+  Parser<List> manyUntil(Parser end) {
+    _manyUntil() => (end > pure(_nil)) | pure(_cons) * this * rec(_manyUntil);
+    return _manyUntil().map(_ll2list);
+  }
+
   // Derived combinators, defined here for infix notation
 
   Parser orElse(A value) => this | pure(value);
+
+  Parser<Option> get maybe => this.map(_some) | pure(_none);
 
   Parser<List> get many => _many.map(_ll2list);
   Parser<LList> get _many =>
@@ -114,6 +176,8 @@ class Parser<A> {
              | pure(x);
     return this >> rest;
   }
+
+  Parser<A> between(Parser left, Parser right) => left > (this < right);
 }
 
 class ParserAccumulator2 {

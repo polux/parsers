@@ -25,12 +25,12 @@ class Arith {
   get comma  => token(',');
   get times  => token('*');
   get plus   => token('+');
-  get number => lexeme(digit.many1)  ^ digits2int;
+  get number => lexeme(digit.many1)   ^ digits2int;
 
   // This is the gist of the grammar, the BNF-like rules.
 
-  expr() => rec(mult).sepBy(plus)    ^ sum;
-  mult() => rec(atom).sepBy(times)   ^ prod;
+  expr() => rec(mult).sepBy1(plus)    ^ sum;
+  mult() => rec(atom).sepBy1(times)   ^ prod;
   atom() => number
           | parens(rec(expr));
 

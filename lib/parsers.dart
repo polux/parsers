@@ -98,6 +98,14 @@ class Parser<A> {
   Parser<List> endBy(Parser sep) => (this < sep).many;
 
   Parser<List> endBy1(Parser sep) => (this < sep).many1;
+
+  Parser chainl(Parser sep, defaultValue) => chainl1(sep) | pure(defaultValue);
+
+  Parser chainl1(Parser sep) {
+    rest(acc) => (sep >> (f) => this >> (x) => rest(f(acc,x)))
+                | pure(acc);
+    return this >> rest;
+  }
 }
 
 class ParserAccumulator2 {

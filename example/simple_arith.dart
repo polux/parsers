@@ -3,7 +3,7 @@
 
 // Author: Paul Brauner (polux@google.com)
 
-library example;
+library simple_arith;
 
 import 'package:parsers/parsers.dart';
 import 'dart:math';

@@ -13,6 +13,7 @@ Pair _pair(x, y) => new Pair(x, y);
 final _nil = new LList.nil();
 _cons(x) => (xs) => new LList.cons(x, xs);
 _consStr(c) => (String cs) => "$c$cs";
+
 LList _list2ll(List l) {
   LListBuilder result = new LListBuilder();
   for (final x in l) {
@@ -25,6 +26,15 @@ List _ll2list(LList ll) {
   ll.foreach((x) { result.add(x); });
   return result;
 }
+
+List _sort(List l, Comparator c) {
+  List res = new List.from(l);
+  res.sort(c);
+  return res;
+}
+
+String _strHead(String s) => s[0];
+String _strTail(String s) => s.substring(1);
 
 class Parser<A> {
   final Function run;
@@ -152,6 +162,22 @@ class Parser<A> {
       // eta-expansion required to prevent infinite loop
       pure(_cons) * this * new Parser((s) => this._many.run(s));
 
+  /**
+   * Parses [this] zero or more time, skipping its result.
+   *
+   * Equivalent to [:this.many > pure(null):] but more efficient.
+   */
+  Parser get skipMany =>
+      // eta-expansion required to prevent infinite loop
+      (this > new Parser((s) => this.skipMany.run(s))).orElse(null);
+
+  /**
+   * Parses [this] one or more time, skipping its result.
+   *
+   * Equivalent to [:this.many1 > pure(null):] but more efficient.
+   */
+  Parser get skipMany1 => this > this.skipMany;
+
   Parser<List> sepBy(Parser sep) => sepBy1(sep).orElse([]);
 
   Parser<List> sepBy1(Parser sep) => _sepBy1(sep).map(_ll2list);
@@ -259,8 +285,8 @@ Parser pred(bool p(String char)) {
   return new Parser((String s) {
     if (s.isEmpty) return _none;
     else {
-      String c = s[0];
-      return p(c) ? _some(_pair(c, s.substring(1))) : _none;
+      String c = _strHead(s);
+      return p(c) ? _some(_pair(c, _strTail(s))) : _none;
     }
   });
 }
@@ -276,7 +302,7 @@ Parser char(String chr) => pred((c) => c == chr);
 Parser string(String str) =>
     str.isEmpty
         ? pure('')
-        : pure(_consStr) * char(str[0]) * string(str.substring(1));
+        : pure(_consStr) * char(_strHead(str)) * string(_strTail(str));
 
 Parser _choice(LList<Parser> ps) =>
     ps.isNil() ? fail : ps.elem | _choice(ps.tail);
@@ -316,6 +342,16 @@ final Parser<String> letter = oneOf(_alpha);
 
 final Parser<String> digit = oneOf(_digit);
 
+class ReservedNames {
+  Map<String, Parser<String>> _map;
+  ReservedNames._(this._map);
+  Parser<String> operator[](String key) {
+    final res = _map[key];
+    if (res == null) throw "$key is not a reserved name";
+    else return res;
+  }
+}
+
 /// Programming language specific combinators
 class LanguageParsers {
   String _commentStart;
@@ -324,11 +360,10 @@ class LanguageParsers {
   bool _nestedComments;
   Parser<String> _identStart;
   Parser<String> _identLetter;
-  Parser<String> _opStart;
-  Parser<String> _opLetter;
-  List<String> _reservedNames;
-  List<String> _reservedOpNames;
+  Set<String> _reservedNames;
   bool _caseSensitive;
+
+  ReservedNames _reserved;
 
   LanguageParsers({
     String         commentStart   : '/*',
@@ -337,16 +372,10 @@ class LanguageParsers {
     bool           nestedComments : false,
     Parser<String> identStart     : null, // letter | char('_')
     Parser<String> identLetter    : null, // alphanum | char('_')
-    Parser<String> opStart        : null, // oneOf('=*/~%+-<>&^|?:')
-    Parser<String> opLetter       : null, // opStart
-    List<String>   reservedNames  : const [],
-    List<String>   reservedOpNames: const [],
-    bool           caseSensitive  : true
+    List<String>   reservedNames  : const []
   }) {
     final identStartDefault = letter | char('_');
     final identLetterDefault = alphanum | char('_');
-    final opStartDefault = oneOf('=*/~%+-<>&^|?:');
-    final opLetterDefault = opStartDefault;
 
     _commentStart = commentStart;
     _commentEnd = commentEnd;
@@ -354,44 +383,84 @@ class LanguageParsers {
     _nestedComments = nestedComments;
     _identStart = (identStart == null) ? identStartDefault : identStart;
     _identLetter = (identLetter == null) ? identLetterDefault : identLetter;
-    _opStart = (opStart == null) ? opStartDefault : opStart;
-    _opLetter = (opStart == null) ? opLetterDefault : opLetter;
-    _reservedNames = reservedNames;
-    _reservedOpNames = reservedOpNames;
-    _caseSensitive = caseSensitive;
+    _reservedNames = new Set<String>.from(reservedNames);
   }
 
-  Parser<String> get identifier => null;
+  Parser<String> get semi => symbol(';');
+  Parser<String> get comma => symbol(',');
+  Parser<String> get colon => symbol(':');
+  Parser<String> get dot => symbol('.');
 
-  Parser reserved(String name) => null;
+  Parser<String> get _ident =>
+      pure((c) => (cs) => _consStr(c)(Strings.concatAll(cs)))
+      * _identStart
+      * _identLetter.many;
 
-  Parser<String> get op => null;
+  Parser<String> get identifier =>
+      lexeme(_ident >> (name) =>
+             _reservedNames.contains(name) ? fail : pure(name));
 
-  Parser reservedOp(String name) => null;
+  ReservedNames get reserved {
+    if (_reserved == null) {
+      final map = new Map<String, Parser<String>>();
+      for (final name in _reservedNames) {
+        map[name] = string(name).notFollowedBy(_identLetter);
+      }
+      _reserved = new ReservedNames._(map);
+    }
+    return _reserved;
+  }
 
   Parser<String> get charLiteral => null;
 
   Parser<String> get stringLiteral => null;
 
-  Parser<String> get natural => null;
+  Parser<int> get natural => null;
 
-  Parser<String> get intLiteral => null;
+  Parser<int> get intLiteral => null;
 
-  Parser<String> get floatLiteral => null;
+  Parser<double> get floatLiteral => null;
 
-  Parser<String> get naturalOrFloat => null;
+  Parser<num> get naturalOrFloat => null;
 
-  Parser<String> get decimal => null;
+  Parser<int> get decimal => null;
 
-  Parser<String> get hexaDecimal => null;
+  Parser<int> get hexaDecimal => null;
 
-  Parser<String> get octal => null;
+  Parser<int> get octal => null;
 
   Parser<String> symbol(String symb) => lexeme(string(symb));
 
   Parser lexeme(Parser p) => p < whiteSpace;
 
-  Parser get whiteSpace => null;
+  Parser _multiLineComment() => string(_commentStart) > _inComment();
+
+  Parser _inComment() =>
+      _nestedComments ? _inCommentMulti() : _inCommentSingle();
+
+  String get _startEnd => '$_commentStart$_commentEnd';
+
+  Parser _inCommentMulti() => string(_commentEnd) > pure(null)
+                            | rec(_multiLineComment) > rec(_inCommentMulti)
+                            | anyChar > rec(_inCommentMulti);
+
+  Parser _inCommentSingle() => string(_commentEnd) > pure(null)
+                             | anyChar > rec(_inCommentSingle);
+
+  Parser get _oneLineComment =>
+      string(_commentLine) > (pred((c) => c != '\n').skipMany > pure(null));
+
+  Parser get whiteSpace {
+    if (_commentLine.isEmpty && _commentStart.isEmpty) {
+      return space.skipMany;
+    } else if (_commentLine.isEmpty) {
+      return (space | _multiLineComment()).skipMany;
+    } else if (_commentStart.isEmpty) {
+      return (space | _oneLineComment).skipMany;
+    } else {
+      return (space | _oneLineComment | _multiLineComment()).skipMany;
+    }
+  }
 
   Parser parens(Parser p) => p.between(symbol('('), symbol(')'));
 
@@ -400,12 +469,4 @@ class LanguageParsers {
   Parser angles(Parser p) => p.between(symbol('<'), symbol('>'));
 
   Parser brackets(Parser p) => p.between(symbol('['), symbol(']'));
-
-  Parser<String> get semi => symbol(';');
-
-  Parser<String> get comma => symbol(',');
-
-  Parser<String> get colon => symbol(':');
-
-  Parser<String> get dot => symbol('.');
 }

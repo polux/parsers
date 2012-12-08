@@ -35,4 +35,10 @@ main() {
   print(lang.reserved['for'].run('for a'));
   print(lang.reserved['for'].run('fora'));
   // print(lang.reserved['foo'].run('fora')); // should fail
+
+  print(lang.charLiteral.run(r"'a'"));
+  print(lang.charLiteral.run(r"'aa'"));
+  print(lang.charLiteral.run(r"'''"));
+  print(lang.charLiteral.run(r"'\t'"));
+  print(lang.charLiteral.run(r"'\\'"));
 }

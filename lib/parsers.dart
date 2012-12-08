@@ -411,7 +411,17 @@ class LanguageParsers {
     return _reserved;
   }
 
-  Parser<String> get charLiteral => null;
+  final Parser<String> _escapeCode =
+      char('a')  > pure('\a') | char('b')  > pure('\b')
+    | char('f')  > pure('\f') | char('n')  > pure('\n')
+    | char('r')  > pure('\r') | char('t')  > pure('\t')
+    | char('v')  > pure('\v') | char('\\') > pure('\\')
+    | char('"')  > pure('"')  | char("'")  > pure("'");
+
+  Parser<String> get _charChar => char('\\') > _escapeCode
+                                | pred((c) => c != "'");
+
+  Parser<String> get charLiteral => _charChar.between(char("'"), char("'"));
 
   Parser<String> get stringLiteral => null;
 

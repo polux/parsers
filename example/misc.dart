@@ -54,4 +54,10 @@ main() {
   print(lang.natural.run('-0X42'));
   print(lang.intLiteral.run('-0X42'));
   print(lang.intLiteral.run('-  0X42'));
+
+  print(lang.floatLiteral.run('3.14116'));
+  print(lang.floatLiteral.run('3e5'));
+  print(lang.floatLiteral.run('3e-5'));
+  print(lang.floatLiteral.run('3.14e5'));
+  print(lang.floatLiteral.run('3.14e-5'));
 }

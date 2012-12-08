@@ -6,6 +6,7 @@
 library parsers;
 
 import 'package:persistent/persistent.dart';
+import 'dart:math';
 
 final Option _none = new Option.none();
 Option _some(x) => new Option.some(x);
@@ -458,9 +459,24 @@ class LanguageParsers {
 
   Parser<int> get intLiteral => lexeme(_int);
 
-  Parser<double> get floatLiteral => null;
+  double _power(int e) => e < 0 ? 1.0 / _power(-e) : pow(10, e);
 
-  Parser<num> get naturalOrFloat => null;
+  Parser<double> get _exponent =>
+      oneOf('eE') > pure((f) => (e) => _power(f(e))) * _sign * decimal;
+
+  Parser<double> get _fraction => char('.') > digit.many1 >> (ds) {
+    double res = 0.0;
+    for (final d in ds) { res = (res + _digitToInt[d]) / 10.0; }
+    return pure(res);
+  };
+
+  Parser<double> _fractExponent(int n) =>
+      (pure((fract) => (expo) => (n + fract) * expo)
+          * _fraction
+          * _exponent.orElse(1.0))
+      | _exponent.map((expo) => n * expo);
+
+  Parser<double> get floatLiteral => lexeme(decimal >> _fractExponent);
 
   Parser<int> get decimal => _number(10, digit);
 

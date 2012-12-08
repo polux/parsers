@@ -421,9 +421,15 @@ class LanguageParsers {
   Parser<String> get _charChar => char('\\') > _escapeCode
                                 | pred((c) => c != "'");
 
-  Parser<String> get charLiteral => _charChar.between(char("'"), char("'"));
+  Parser<String> get charLiteral =>
+      lexeme(_charChar.between(char("'"), char("'")));
 
-  Parser<String> get stringLiteral => null;
+  Parser<String> get _stringChar => char('\\') > _escapeCode
+                                  | pred((c) => c != '"');
+
+  Parser<String> get stringLiteral =>
+      lexeme(_stringChar.many.between(char('"'), char('"')))
+      .map(Strings.concatAll);
 
   Parser<int> get natural => null;
 

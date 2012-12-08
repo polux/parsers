@@ -41,4 +41,9 @@ main() {
   print(lang.charLiteral.run(r"'''"));
   print(lang.charLiteral.run(r"'\t'"));
   print(lang.charLiteral.run(r"'\\'"));
+
+  print(lang.stringLiteral.run(r'"aaa"'));
+  print(lang.stringLiteral.run(r'"a\ta"'));
+  print(lang.stringLiteral.run(r'"a"a"'));
+  print(lang.stringLiteral.run(r'"aa\"aa"'));
 }

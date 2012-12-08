@@ -139,7 +139,7 @@ class Parser<A> {
 
   Parser orElse(A value) => this | pure(value);
 
-  Parser<Option> get maybe => this.map(_some) | pure(_none);
+  Parser<Option> get maybe => this.map(_some).orElse(_none);
 
   Parser<List> get many => _many.map(_ll2list);
   Parser<LList> get _many =>
@@ -160,6 +160,22 @@ class Parser<A> {
   Parser<List> endBy(Parser sep) => (this < sep).many;
 
   Parser<List> endBy1(Parser sep) => (this < sep).many1;
+
+  /**
+   * Parses zero or more occurences of [this] separated and optionally ended
+   * by [sep].
+   */
+  Parser<List> sepEndBy(Parser sep) => _sepEndBy(sep).map(_ll2list);
+  Parser<LList> _sepEndBy(Parser sep) => _sepEndBy1(sep).orElse(_nil);
+
+  /**
+   * Parses one or more occurences of [this] separated and optionally ended
+   * by [sep].
+   */
+  Parser<List> sepEndBy1(Parser sep) => _sepEndBy1(sep).map(_ll2list);
+  Parser<LList> _sepEndBy1(Parser sep) =>
+      this >> (x) => (sep > this._sepEndBy(sep).map(_cons(x)))
+                   | pure(_cons(x)(_nil));
 
   Parser chainl(Parser sep, defaultValue) => chainl1(sep) | pure(defaultValue);
 

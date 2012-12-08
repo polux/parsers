@@ -59,7 +59,7 @@ final test = """
      multi-line comments are 
      supported and tunable
   */
-  if (i < j || true) {
+  if (i < j + 2 * 3 || true) {
     i = "foo\t";
   } else {
     j = false;

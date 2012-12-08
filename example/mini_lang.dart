@@ -7,8 +7,8 @@ library misc;
 
 import 'package:parsers/parsers.dart';
 
-// In a real parser, these would be replace by AST node constructors. We use
-// nested lists for simplicity here.
+// In a real parser, these would be AST node constructors. We use nested lists
+// for simplicity here.
 
 list1(a) => [a];
 list2(a, b) => [a, b];
@@ -18,7 +18,7 @@ list5(a, b, c, d, e) => [a, b, c, d, e];
 list6(a, b, c, d, e, f) => [a, b, c, d, e, f];
 
 // We extend LanguageParsers to benefit from all the C-like language-specific
-// comment-aware, reserved names-aware combinators for literals.
+// comment-aware, reserved names-aware, literals combinators.
 
 class MiniLang extends LanguageParsers {
   MiniLang() : super(reservedNames: ['var', 'if', 'else', 'true', 'false']);

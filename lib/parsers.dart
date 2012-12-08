@@ -315,3 +315,97 @@ final Parser<String> alphanum = oneOf(_alphanum);
 final Parser<String> letter = oneOf(_alpha);
 
 final Parser<String> digit = oneOf(_digit);
+
+/// Programming language specific combinators
+class LanguageParsers {
+  String _commentStart;
+  String _commentEnd;
+  String _commentLine;
+  bool _nestedComments;
+  Parser<String> _identStart;
+  Parser<String> _identLetter;
+  Parser<String> _opStart;
+  Parser<String> _opLetter;
+  List<String> _reservedNames;
+  List<String> _reservedOpNames;
+  bool _caseSensitive;
+
+  LanguageParsers({
+    String         commentStart   : '/*',
+    String         commentEnd     : '*/',
+    String         commentLine    : '//',
+    bool           nestedComments : false,
+    Parser<String> identStart     : null, // letter | char('_')
+    Parser<String> identLetter    : null, // alphanum | char('_')
+    Parser<String> opStart        : null, // oneOf('=*/~%+-<>&^|?:')
+    Parser<String> opLetter       : null, // opStart
+    List<String>   reservedNames  : const [],
+    List<String>   reservedOpNames: const [],
+    bool           caseSensitive  : true
+  }) {
+    final identStartDefault = letter | char('_');
+    final identLetterDefault = alphanum | char('_');
+    final opStartDefault = oneOf('=*/~%+-<>&^|?:');
+    final opLetterDefault = opStartDefault;
+
+    _commentStart = commentStart;
+    _commentEnd = commentEnd;
+    _commentLine = commentLine;
+    _nestedComments = nestedComments;
+    _identStart = (identStart == null) ? identStartDefault : identStart;
+    _identLetter = (identLetter == null) ? identLetterDefault : identLetter;
+    _opStart = (opStart == null) ? opStartDefault : opStart;
+    _opLetter = (opStart == null) ? opLetterDefault : opLetter;
+    _reservedNames = reservedNames;
+    _reservedOpNames = reservedOpNames;
+    _caseSensitive = caseSensitive;
+  }
+
+  Parser<String> get identifier => null;
+
+  Parser reserved(String name) => null;
+
+  Parser<String> get op => null;
+
+  Parser reservedOp(String name) => null;
+
+  Parser<String> get charLiteral => null;
+
+  Parser<String> get stringLiteral => null;
+
+  Parser<String> get natural => null;
+
+  Parser<String> get intLiteral => null;
+
+  Parser<String> get floatLiteral => null;
+
+  Parser<String> get naturalOrFloat => null;
+
+  Parser<String> get decimal => null;
+
+  Parser<String> get hexaDecimal => null;
+
+  Parser<String> get octal => null;
+
+  Parser<String> symbol(String symb) => lexeme(string(symb));
+
+  Parser lexeme(Parser p) => p < whiteSpace;
+
+  Parser get whiteSpace => null;
+
+  Parser parens(Parser p) => p.between(symbol('('), symbol(')'));
+
+  Parser braces(Parser p) => p.between(symbol('{'), symbol('}'));
+
+  Parser angles(Parser p) => p.between(symbol('<'), symbol('>'));
+
+  Parser brackets(Parser p) => p.between(symbol('['), symbol(']'));
+
+  Parser<String> get semi => symbol(';');
+
+  Parser<String> get comma => symbol(',');
+
+  Parser<String> get colon => symbol(':');
+
+  Parser<String> get dot => symbol('.');
+}

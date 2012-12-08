@@ -431,19 +431,44 @@ class LanguageParsers {
       lexeme(_stringChar.many.between(char('"'), char('"')))
       .map(Strings.concatAll);
 
-  Parser<int> get natural => null;
+  Map<String, int> _digitToInt = {
+    '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8,
+    '9': 9, 'a': 10, 'b': 11, 'c': 12, 'd': 13, 'e': 14, 'f': 15, 'A': 10,
+    'B': 11, 'C': 12, 'D': 13, 'E': 14, 'F': 15
+  };
 
-  Parser<int> get intLiteral => null;
+  Parser<int> _number(int base, Parser baseDigit) => baseDigit.many1 >> (ds) {
+    int res = 0;
+    for (final d in ds) { res = base * res + _digitToInt[d]; }
+    return pure(res);
+  };
+
+  Parser<int> get _zeroNumber =>
+      char('0') > (hexaDecimal | octal | decimal | pure(0));
+
+  Parser<int> get _nat => _zeroNumber | decimal;
+
+  Parser<int> get _int => lexeme(_sign) * _nat;
+
+  Parser<Function> get _sign => char('-') > pure((n) => -n)
+                              | char('+') > pure((n) => n)
+                              | pure((n) => n);
+
+  Parser<int> get natural => lexeme(_nat);
+
+  Parser<int> get intLiteral => lexeme(_int);
 
   Parser<double> get floatLiteral => null;
 
   Parser<num> get naturalOrFloat => null;
 
-  Parser<int> get decimal => null;
+  Parser<int> get decimal => _number(10, digit);
 
-  Parser<int> get hexaDecimal => null;
+  Parser<int> get hexaDecimal =>
+      oneOf("xX") > _number(16, oneOf("0123456789abcdefABCDEF"));
 
-  Parser<int> get octal => null;
+  Parser<int> get octal =>
+      oneOf("oO") > _number(8, oneOf("01234567"));
 
   Parser<String> symbol(String symb) => lexeme(string(symb));
 

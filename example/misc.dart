@@ -46,4 +46,12 @@ main() {
   print(lang.stringLiteral.run(r'"a\ta"'));
   print(lang.stringLiteral.run(r'"a"a"'));
   print(lang.stringLiteral.run(r'"aa\"aa"'));
+
+  print(lang.natural.run('42'));
+  print(lang.natural.run('0O42'));
+  print(lang.natural.run('0X42'));
+  print(lang.natural.run('0xFF'));
+  print(lang.natural.run('-0X42'));
+  print(lang.intLiteral.run('-0X42'));
+  print(lang.intLiteral.run('-  0X42'));
 }

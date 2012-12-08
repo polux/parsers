@@ -63,7 +63,7 @@ final test = """
     i = "foo\t";
   } else {
     j = false;
-  };  // we need a semicolon here because of endBy1
+  };  // we need a semicolon here because of endBy
 """;
 
 main() {

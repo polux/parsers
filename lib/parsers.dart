@@ -405,7 +405,7 @@ class LanguageParsers {
     if (_reserved == null) {
       final map = new Map<String, Parser<String>>();
       for (final name in _reservedNames) {
-        map[name] = string(name).notFollowedBy(_identLetter);
+        map[name] = lexeme(string(name).notFollowedBy(_identLetter));
       }
       _reserved = new ReservedNames._(map);
     }

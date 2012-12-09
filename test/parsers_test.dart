@@ -77,6 +77,20 @@ main() {
   test('letter', () =>
       expect(letter.run('a'), isSuccess('a', '')));
 
+  test('manyUntil 1', () =>
+      checkList(anyChar.manyUntil(string('*/')).run(' a b c d */ e'),
+                ' a b c d '.splitChars(),
+                ' e'));
+
+  test('manyUntil 2', () =>
+      expect(anyChar.manyUntil(string('*/')).run(' a b c d e'),
+             isFailure));
+
+  test('manyUntil 3', () =>
+      checkList(anyChar.manyUntil(string('*/').lookAhead).run(' a b c d */ e'),
+                ' a b c d '.splitChars(),
+                '*/ e'));
+
   final lang = new LanguageParsers(
       nestedComments: true,
       reservedNames: ['for', 'in']);
@@ -253,11 +267,15 @@ main() {
   for (int i = 0; i < 15; i++) { big = '$big$big'; }
 
   test('no stack overflow many', () =>
-      expect(char('a').many.run(big).value.fst.length, equals(32768)));
+       expect(char('a').many.run(big).value.fst.length, equals(32768)));
 
   test('no stack overflow skipMany', () =>
       expect(char('a').skipMany.run('${big}bb'), isSuccess(null, 'bb')));
 
-  test('no stack overflow comment', () =>
-      expect(lang.natural.run('1 /* $big */'), isSuccess(1, '')));
+  test('no stack overflow manyUntil', () =>
+       expect(anyChar.manyUntil(char('b')).run('${big}b').value.fst.length,
+              equals(32768)));
+
+  //test('no stack overflow comment', () =>
+  //    expect(lang.natural.run('1 /* $big */'), isSuccess(1, '')));
 }

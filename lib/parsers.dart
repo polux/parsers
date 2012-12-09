@@ -142,8 +142,25 @@ class Parser<A> {
    * want this.
    */
   Parser<List> manyUntil(Parser end) {
-    _manyUntil() => (end > pure(_nil)) | pure(_cons) * this * rec(_manyUntil);
-    return _manyUntil().map(_ll2list);
+    // Imperative version to avoid stack overflows.
+    return new Parser((s) {
+      List res = [];
+      String tape = s;
+      while(true) {
+        final mend = end.run(tape);
+        if (mend.isDefined) {
+          return _some(_pair(res, mend.value.snd));
+        } else {
+          final mx = this.run(tape);
+          if (mx.isDefined) {
+            res.add(mx.value.fst);
+            tape = mx.value.snd;
+          } else {
+            return _none;
+          }
+        }
+      }
+    });
   }
 
   // Derived combinators, defined here for infix notation

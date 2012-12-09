@@ -128,6 +128,42 @@ main() {
   test('maybe 2', () =>
       expect(char('a').maybe.run('b'), isSuccess(new Option.none(),'b')));
 
+  test('sepBy 1', () =>
+      expect(char('a').sepBy(char(';')).run('a;a;a'),
+             isSuccess(['a', 'a', 'a'], '')));
+
+  test('sepBy 2', () =>
+      expect(char('a').sepBy(char(';')).run('a;a;a;'),
+             isSuccess(['a', 'a', 'a'], ';')));
+
+  test('sepBy 3', () =>
+      expect(char('a').sepBy(char(';')).run(''),
+             isSuccess([], '')));
+
+  test('sepBy 4', () =>
+      expect(char('a').sepBy(char(';')).run(';'),
+             isSuccess([], ';')));
+
+  test('sepBy 5', () =>
+      expect(char('a').sepBy(char(';')).run(''),
+             isSuccess([], '')));
+
+  test('sepBy1 1', () =>
+      expect(char('a').sepBy1(char(';')).run('a;a'),
+             isSuccess(['a','a'], '')));
+
+  test('sepBy1 2', () =>
+      expect(char('a').sepBy1(char(';')).run('a;a;'),
+             isSuccess(['a','a'], ';')));
+
+  test('sepBy1 3', () =>
+      expect(char('a').sepBy1(char(';')).run(''),
+             isFailure('')));
+
+  test('sepBy1 4', () =>
+      expect(char('a').sepEndBy1(char(';')).run(';'),
+             isFailure(';')));
+
   test('sepEndBy 1', () =>
       expect(char('a').sepEndBy(char(';')).run('a;a;a'),
              isSuccess(['a', 'a', 'a'], '')));
@@ -155,7 +191,7 @@ main() {
   test('sepEndBy1 3', () =>
       expect(char('a').sepEndBy1(char(';')).run(''), isFailure('')));
 
-  test('sepEndBy1 3', () =>
+  test('sepEndBy1 4', () =>
       expect(char('a').sepEndBy1(char(';')).run(';'), isFailure(';')));
 
   test('letter', () =>

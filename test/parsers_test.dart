@@ -91,6 +91,18 @@ main() {
                 ' a b c d '.splitChars(),
                 '*/ e'));
 
+  test('skipManyUntil 1', () =>
+      expect(anyChar.skipManyUntil(string('*/')).run(' a b c d */ e'),
+             isSuccess(null, ' e')));
+
+  test('skipManyUntil 2', () =>
+      expect(anyChar.skipManyUntil(string('*/')).run(' a b c d e'),
+             isFailure));
+
+  test('skipManyUntil 3', () =>
+      expect(anyChar.skipManyUntil(string('*/').lookAhead).run(' a b c d */ e'),
+             isSuccess(null, '*/ e')));
+
   final lang = new LanguageParsers(
       nestedComments: true,
       reservedNames: ['for', 'in']);

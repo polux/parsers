@@ -176,8 +176,6 @@ class Parser<A> {
       int index = pos;
       while(true) {
         final endRes = end._run(s, index);
-        //print("at ${s.substring(index)}");
-        //print(endRes);
         if (endRes.isSuccess) {
           return _success(res, s, endRes.position);
         } else {

@@ -152,25 +152,46 @@ class Parser<A> {
 
   Parser<Option> get maybe => this.map(_some).orElse(_none);
 
-  Parser<List> get many => _many.map(_ll2list);
-  Parser<LList> get _many =>
-      // eta-expansion required to prevent infinite loop
-      (pure(_cons) * this * new Parser((s) => this._many.run(s)))
-      .orElse(_nil);
 
-  Parser<List> get many1 => _many1.map(_ll2list);
-  Parser<LList> get _many1 =>
-      // eta-expansion required to prevent infinite loop
-      pure(_cons) * this * new Parser((s) => this._many.run(s));
+  // Imperative version to avoid stack overflows. !Side effect on acc!
+  Parser<List> _many(List acc) {
+    return new Parser((s) {
+      String tape = s;
+      while(true) {
+        Option<Pair<A, String>> o = this.run(tape);
+        if (o.isDefined) {
+          acc.add(o.value.fst);
+          tape = o.value.snd;
+        } else {
+          return _some(_pair(acc, tape));
+        }
+      }
+    });
+  }
+
+  Parser<List> get many => _many([]);
+
+  Parser<List> get many1 => this >> (x) => _many([x]);
 
   /**
    * Parses [this] zero or more time, skipping its result.
    *
    * Equivalent to [:this.many > pure(null):] but more efficient.
    */
-  Parser get skipMany =>
-      // eta-expansion required to prevent infinite loop
-      (this > new Parser((s) => this.skipMany.run(s))).orElse(null);
+  Parser get skipMany {
+    // Imperative version to avoid stack overflows.
+    return new Parser((s) {
+      String tape = s;
+      while(true) {
+        Option<Pair<A, String>> o = this.run(tape);
+        if (o.isDefined) {
+          tape = o.value.snd;
+        } else {
+          return _some(_pair(null, tape));
+        }
+      }
+    });
+  }
 
   /**
    * Parses [this] one or more time, skipping its result.
@@ -181,8 +202,7 @@ class Parser<A> {
 
   Parser<List> sepBy(Parser sep) => sepBy1(sep).orElse([]);
 
-  Parser<List> sepBy1(Parser sep) => _sepBy1(sep).map(_ll2list);
-  Parser<LList> _sepBy1(Parser sep) => pure(_cons) * this * (sep > this)._many;
+  Parser<List> sepBy1(Parser sep) => this >> (x) => (sep > this)._many([x]);
 
   Parser<List> endBy(Parser sep) => (this < sep).many;
 

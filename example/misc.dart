@@ -43,7 +43,7 @@ main() {
 
   print(lang.charLiteral.run(r"'a'"));
   print(lang.charLiteral.run(r"'aa'"));
-  print(lang.charLiteral.run(r"'''"));
+  print(lang.charLiteral.run(r"''"));
   print(lang.charLiteral.run(r"'\t'"));
   print(lang.charLiteral.run(r"'\\'"));
 
@@ -65,4 +65,9 @@ main() {
   print(lang.floatLiteral.run('3e-5'));
   print(lang.floatLiteral.run('3.14e5'));
   print(lang.floatLiteral.run('3.14e-5'));
+
+  var big = "a";
+  for (int i = 0; i < 15; i++) { big = '$big$big'; }
+  print(char('a').many.run(big).value.fst.length);
+  print(char('a').skipMany.run('${big}bb'));
 }

@@ -252,9 +252,12 @@ main() {
   var big = "a";
   for (int i = 0; i < 15; i++) { big = '$big$big'; }
 
-  test('no stack overflow 1', () =>
+  test('no stack overflow many', () =>
       expect(char('a').many.run(big).value.fst.length, equals(32768)));
 
-  test('no stack overflow 2', () =>
+  test('no stack overflow skipMany', () =>
       expect(char('a').skipMany.run('${big}bb'), isSuccess(null, 'bb')));
+
+  test('no stack overflow comment', () =>
+      expect(lang.natural.run('1 /* $big */'), isSuccess(1, '')));
 }

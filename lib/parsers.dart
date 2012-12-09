@@ -486,7 +486,9 @@ class LanguageParsers {
 
   Parser<double> get _fraction => char('.') > digit.many1 >> (ds) {
     double res = 0.0;
-    for (final d in ds) { res = (res + _digitToInt[d]) / 10.0; }
+    for (int i = ds.length - 1; i >= 0; i--) {
+      res = (res + _digitToInt[ds[i]]) / 10.0;
+    }
     return pure(res);
   };
 

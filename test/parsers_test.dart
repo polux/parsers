@@ -182,6 +182,73 @@ main() {
   test('float 3', () =>
       checkFloat(lang.floatLiteral.run('3.14e-5'), 0.0000314, ''));
 
+  test('chainl 1', () =>
+      expect(lang.natural.chainl(pure((x, y) => x + y), 42).run('1 2 3'),
+             isSuccess(6, '')));
+
+  test('chainl 2', () =>
+      expect(lang.natural.chainl(pure((x, y) => x + y), 42).run('a 2 3'),
+             isSuccess(42, 'a 2 3')));
+
+  final addop = lang.symbol('+') > pure((x, y) => x + y)
+              | lang.symbol('-') > pure((x, y) => x - y);
+
+  test('chainl 3', () =>
+      expect(lang.natural.chainl(addop, 42).run('3 - 1 - 2'),
+             isSuccess(0, '')));
+
+  test('chainl 4', () =>
+      expect(lang.natural.chainl(addop, 42).run('a - 1 - 2'),
+              isSuccess(42, 'a - 1 - 2')));
+
+  test('chainl1 1', () =>
+      expect(lang.natural.chainl1(pure((x, y) => x + y)).run('1 2 3'),
+             isSuccess(6, '')));
+
+  test('chainl1 2', () =>
+      expect(lang.natural.chainl1(pure((x, y) => x + y)).run('a 2 3'),
+             isFailure));
+
+  test('chainl1 3', () =>
+      expect(lang.natural.chainl1(addop).run('3 - 1 - 2'),
+             isSuccess(0, '')));
+
+  test('chainl1 4', () =>
+      expect(lang.natural.chainl1(addop).run('a - 1 - 2'),
+              isFailure));
+
+  test('chainr 1', () =>
+      expect(lang.natural.chainr(pure((x, y) => x + y), 42).run('1 2 3'),
+             isSuccess(6, '')));
+
+  test('chainr 2', () =>
+      expect(lang.natural.chainr(pure((x, y) => x + y), 42).run('a 2 3'),
+             isSuccess(42, 'a 2 3')));
+
+  test('chainr 3', () =>
+      expect(lang.natural.chainr(addop, 42).run('3 - 1 - 2'),
+             isSuccess(4, '')));
+
+  test('chainr 4', () =>
+      expect(lang.intLiteral.chainr(addop, 42).run('a - 1 - 2'),
+              isSuccess(42, 'a - 1 - 2')));
+
+  test('chainr1 1', () =>
+      expect(lang.intLiteral.chainr1(pure((x, y) => x + y)).run('1 2 3'),
+             isSuccess(6, '')));
+
+  test('chainr1 2', () =>
+      expect(lang.intLiteral.chainr1(pure((x, y) => x + y)).run('a 2 3'),
+             isFailure));
+
+  test('chainr1 3', () =>
+      expect(lang.intLiteral.chainr1(addop).run('3 - 1 - 2'),
+             isSuccess(4, '')));
+
+  test('chainr1 4', () =>
+      expect(lang.intLiteral.chainr1(addop).run('a - 1 - 2'),
+              isFailure));
+
   var big = "a";
   for (int i = 0; i < 15; i++) { big = '$big$big'; }
 

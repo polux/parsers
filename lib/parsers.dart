@@ -212,28 +212,39 @@ class Parser<A> {
    * Parses zero or more occurences of [this] separated and optionally ended
    * by [sep].
    */
-  Parser<List> sepEndBy(Parser sep) => _sepEndBy(sep).map(_ll2list);
-  Parser<LList> _sepEndBy(Parser sep) => _sepEndBy1(sep).orElse(_nil);
+  Parser<List> sepEndBy(Parser sep) => sepEndBy1(sep).orElse([]);
 
   /**
    * Parses one or more occurences of [this] separated and optionally ended
    * by [sep].
    */
-  Parser<List> sepEndBy1(Parser sep) => _sepEndBy1(sep).map(_ll2list);
-  Parser<LList> _sepEndBy1(Parser sep) =>
-      this >> (x) => (sep > this._sepEndBy(sep).map(_cons(x)))
-                   | pure(_cons(x)(_nil));
+  Parser<List> sepEndBy1(Parser sep) => sepBy1(sep) < sep.maybe;
 
   Parser chainl(Parser sep, defaultValue) => chainl1(sep) | pure(defaultValue);
 
   Parser chainl1(Parser sep) {
-    rest(acc) => (sep >> (f) => this >> (x) => rest(f(acc,x)))
-                | pure(acc);
+    rest(acc) {
+      var res = acc;
+      return new Parser((s) {
+        String tape = s;
+        while(true) {
+          final newres = (pure((f) => (x) => f(res, x)) * sep * this).run(tape);
+          if (newres.isDefined) {
+            res = newres.value.fst;
+            tape = newres.value.snd;
+          } else {
+            return _some(_pair(res, tape));
+          }
+        }
+      });
+    }
     return this >> rest;
   }
 
+  /// Warning: may lead to stack overflows.
   Parser chainr(Parser sep, defaultValue) => chainr1(sep) | pure(defaultValue);
 
+  /// Warning: may lead to stack overflows.
   Parser chainr1(Parser sep) {
     rest(x) => pure((f) => (y) => f(x, y)) * sep * chainr1(sep)
              | pure(x);
@@ -479,7 +490,7 @@ class LanguageParsers {
 
   Parser<int> get intLiteral => lexeme(_int);
 
-  double _power(int e) => e < 0 ? 1.0 / _power(-e) : pow(10, e);
+  num _power(num e) => e < 0 ? 1.0 / _power(-e) : pow(10, e);
 
   Parser<double> get _exponent =>
       oneOf('eE') > pure((f) => (e) => _power(f(e))) * _sign * decimal;

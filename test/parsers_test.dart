@@ -10,23 +10,80 @@ import 'package:persistent/persistent.dart';
 import 'package:unittest/unittest.dart';
 
 
-final isFailure = equals(new Option.none());
+class FailureMatcher extends BaseMatcher {
+  String rest;
+  FailureMatcher(this.rest);
+  bool matches(item, MatchState matchState) {
+    return !item.isSuccess
+        && item.rest == rest;
+  }
+  Description describe(Description description) =>
+    description.add('a parse failure with rest "$rest"');
+}
 
-isSuccess(res, rest) => equals(new Option.some(new Pair(res, rest)));
+class SuccessMatcher extends BaseMatcher {
+  final Object res;
+  final String rest;
+  SuccessMatcher(this.res, this.rest);
+
+  bool _equals(value) {
+    if (res is List) {
+      if (value is! List) return false;
+      if (value.length != res.length) return false;
+      bool same = true;
+      for (int i = 0; i < res.length && same; i++) {
+        same = same && res[i] == value[i];
+      }
+      return same;
+    } else if (res is double) {
+      if (value is! double) return false;
+      return (res - value).abs() < 0.00001;
+    } else {
+      return res == value;
+    }
+  }
+
+  bool matches(item, MatchState matchState) {
+    return item.isSuccess
+        && _equals(item.value)
+        && item.rest == rest;
+  }
+  Description describe(Description description) =>
+    description.add('a parse success with value $res and rest "$rest"');
+}
+
+isFailure(rest) => new FailureMatcher(rest);
+
+isSuccess(res, rest) => new SuccessMatcher(res, rest);
 
 checkFloat(res, f, rest) {
-  expect(res.isDefined, isTrue);
-  expect((res.value.fst - f).abs() < 0.00001, isTrue);
-  expect(res.value.snd, equals(rest));
+  expect(res.isSuccess, isTrue);
+  expect((res.value - f).abs() < 0.00001, isTrue);
+  expect(res.rest, equals(rest));
 }
 
 checkList(res, list, rest) {
-  expect(res.isDefined, isTrue);
-  expect(res.value.fst, orderedEquals(list));
-  expect(res.value.snd, equals(rest));
+  expect(res.isSuccess, isTrue);
+  expect(res.value, orderedEquals(list));
+  expect(res.value.rest, equals(rest));
 }
 
 main() {
+  test('char 1', () =>
+      expect(char('a').run('abc'), isSuccess('a', 'bc')));
+
+  test('char 2', () =>
+      expect(char('a').run('a'), isSuccess('a', '')));
+
+  test('char 3', () =>
+      expect(char('a').run('bac'), isFailure('bac')));
+
+  test('char 4', () =>
+      expect(char('a').run('b'), isFailure('b')));
+
+  test('char 5', () =>
+      expect(char('a').run(''), isFailure('')));
+
   test('string 1', () =>
       expect(string('').run('abc'), isSuccess('', 'abc')));
 
@@ -34,10 +91,22 @@ main() {
       expect(string('foo').run('fooabc'), isSuccess('foo', 'abc')));
 
   test('string 3', () =>
-      expect(string('foo').run('barabc'), isFailure));
+      expect(string('foo').run('barabc'), isFailure('barabc')));
 
   test('string 4', () =>
-      expect(string('foo').run('fo'), isFailure));
+      expect(string('foo').run('fo'), isFailure('fo')));
+
+  test('string 5', () =>
+      expect(string('foo').run('foo'), isSuccess('foo', '')));
+
+  test('> 1', () =>
+      expect((char('a') > char('b')).run('abc'), isSuccess('b','c')));
+
+  test('> 2', () =>
+      expect((char('a') > char('b')).run('bbc'), isFailure('bbc')));
+
+  test('> 3', () =>
+      expect((char('a') > char('b')).run('aac'), isFailure('ac')));
 
   final let = string("let").notFollowedBy(alphanum);
 
@@ -45,12 +114,13 @@ main() {
       expect(let.run('let aa'), isSuccess('let', ' aa')));
 
   test('notFollowedBy 2', () =>
-      expect(let.run('letaa'), isFailure));
+      expect(let.run('letaa'), isFailure('aa')));
 
   final comment = string('/*') > anyChar.manyUntil(string('*/'));
 
   test('manyUntil', () =>
-    checkList(comment.run('/* abcdef */'), ' abcdef '.splitChars(), ''));
+    expect(comment.run('/* abcdef */'),
+           isSuccess(' abcdef '.splitChars(), '')));
 
   test('maybe 1', () =>
       expect(char('a').maybe.run('a'), isSuccess(new Option.some('a'),'')));
@@ -59,49 +129,49 @@ main() {
       expect(char('a').maybe.run('b'), isSuccess(new Option.none(),'b')));
 
   test('sepEndBy 1', () =>
-      checkList(char('a').sepEndBy(char(';')).run('a;a;a'),
-                ['a', 'a', 'a'],
-                ''));
+      expect(char('a').sepEndBy(char(';')).run('a;a;a'),
+             isSuccess(['a', 'a', 'a'], '')));
 
   test('sepEndBy 2', () =>
-      checkList(char('a').sepEndBy(char(';')).run('a;a;a;'),
-                ['a', 'a', 'a'],
-                ''));
+      expect(char('a').sepEndBy(char(';')).run('a;a;a;'),
+             isSuccess(['a', 'a', 'a'], '')));
 
   test('sepEndBy 3', () =>
-      checkList(char('a').sepEndBy(char(';')).run(''), [], ''));
+      expect(char('a').sepEndBy(char(';')).run(''),
+             isSuccess([], '')));
 
   test('sepEndBy 4', () =>
-      checkList(char('a').sepEndBy(char(';')).run(';'), [], ';'));
+      expect(char('a').sepEndBy(char(';')).run(';'),
+             isSuccess([], ';')));
 
   test('sepEndBy1 1', () =>
-      checkList(char('a').sepEndBy1(char(';')).run('a;a'), ['a','a'], ''));
+      expect(char('a').sepEndBy1(char(';')).run('a;a'),
+             isSuccess(['a','a'], '')));
 
   test('sepEndBy1 2', () =>
-      checkList(char('a').sepEndBy1(char(';')).run('a;a;'), ['a','a'], ''));
+      expect(char('a').sepEndBy1(char(';')).run('a;a;'),
+             isSuccess(['a','a'], '')));
 
   test('sepEndBy1 3', () =>
-      expect(char('a').sepEndBy1(char(';')).run(''), isFailure));
+      expect(char('a').sepEndBy1(char(';')).run(''), isFailure('')));
 
   test('sepEndBy1 3', () =>
-      expect(char('a').sepEndBy1(char(';')).run(';'), isFailure));
+      expect(char('a').sepEndBy1(char(';')).run(';'), isFailure(';')));
 
   test('letter', () =>
       expect(letter.run('a'), isSuccess('a', '')));
 
   test('manyUntil 1', () =>
-      checkList(anyChar.manyUntil(string('*/')).run(' a b c d */ e'),
-                ' a b c d '.splitChars(),
-                ' e'));
+      expect(anyChar.manyUntil(string('*/')).run(' a b c d */ e'),
+             isSuccess(' a b c d '.splitChars(), ' e')));
 
   test('manyUntil 2', () =>
       expect(anyChar.manyUntil(string('*/')).run(' a b c d e'),
-             isFailure));
+             isFailure('')));
 
   test('manyUntil 3', () =>
-      checkList(anyChar.manyUntil(string('*/').lookAhead).run(' a b c d */ e'),
-                ' a b c d '.splitChars(),
-                '*/ e'));
+      expect(anyChar.manyUntil(string('*/').lookAhead).run(' a b c d */ e'),
+             isSuccess(' a b c d '.splitChars(), '*/ e')));
 
   test('skipManyUntil 1', () =>
       expect(anyChar.skipManyUntil(string('*/')).run(' a b c d */ e'),
@@ -109,7 +179,7 @@ main() {
 
   test('skipManyUntil 2', () =>
       expect(anyChar.skipManyUntil(string('*/')).run(' a b c d e'),
-             isFailure));
+             isFailure('')));
 
   test('skipManyUntil 3', () =>
       expect(anyChar.skipManyUntil(string('*/').lookAhead).run(' a b c d */ e'),
@@ -133,7 +203,7 @@ main() {
 
   test('identifier 4', () =>
       expect(lang.identifier.run('7B6ar_Foo toto'),
-             isFailure));
+             isFailure('7B6ar_Foo toto')));
 
   test('identifier 5', () =>
       expect(lang.identifier.run('_7B6ar_Foo toto'),
@@ -155,7 +225,7 @@ main() {
       expect(lang.reserved['for'].run('for a'), isSuccess('for', 'a')));
 
   test('reserved 2', () =>
-      expect(lang.reserved['for'].run('fora'), isFailure));
+      expect(lang.reserved['for'].run('fora'), isFailure('a')));
 
   test('reserved 3', () =>
       expect(() => lang.reserved['foo'].run('fora'), throws));
@@ -164,10 +234,10 @@ main() {
       expect(lang.charLiteral.run(r"'a'"), isSuccess('a', '')));
 
   test('char 2', () =>
-      expect(lang.charLiteral.run(r"'aa'"), isFailure));
+      expect(lang.charLiteral.run(r"'aa'"), isFailure("a'")));
 
   test('char 3', () =>
-      expect(lang.charLiteral.run(r"''"), isFailure));
+      expect(lang.charLiteral.run(r"''"), isFailure("'")));
 
   test('char 4', () =>
       expect(lang.charLiteral.run(r"'\t'"), isSuccess('\t', '')));
@@ -203,7 +273,7 @@ main() {
       expect(lang.natural.run('0xFf'), isSuccess(255, '')));
 
   test('natural 6', () =>
-      expect(lang.natural.run('-0x42'), isFailure));
+      expect(lang.natural.run('-0x42'), isFailure('-0x42')));
 
   test('int 1', () =>
       expect(lang.intLiteral.run('-0x42'), isSuccess(-66, '')));
@@ -212,13 +282,13 @@ main() {
       expect(lang.intLiteral.run('-  0x42'), isSuccess(-66, '')));
 
   test('float 1', () =>
-      checkFloat(lang.floatLiteral.run('3.14'), 3.14, ''));
+      expect(lang.floatLiteral.run('3.14'), isSuccess(3.14, '')));
 
   test('float 2', () =>
-      checkFloat(lang.floatLiteral.run('3.14e5'), 314000.0, ''));
+      expect(lang.floatLiteral.run('3.14e5'), isSuccess(314000.0, '')));
 
   test('float 3', () =>
-      checkFloat(lang.floatLiteral.run('3.14e-5'), 0.0000314, ''));
+      expect(lang.floatLiteral.run('3.14e-5'), isSuccess(0.0000314, '')));
 
   test('chainl 1', () =>
       expect(lang.natural.chainl(pure((x, y) => x + y), 42).run('1 2 3'),
@@ -245,7 +315,7 @@ main() {
 
   test('chainl1 2', () =>
       expect(lang.natural.chainl1(pure((x, y) => x + y)).run('a 2 3'),
-             isFailure));
+             isFailure('a 2 3')));
 
   test('chainl1 3', () =>
       expect(lang.natural.chainl1(addop).run('3 - 1 - 2'),
@@ -253,7 +323,7 @@ main() {
 
   test('chainl1 4', () =>
       expect(lang.natural.chainl1(addop).run('a - 1 - 2'),
-              isFailure));
+              isFailure('a - 1 - 2')));
 
   test('chainr 1', () =>
       expect(lang.natural.chainr(pure((x, y) => x + y), 42).run('1 2 3'),
@@ -277,7 +347,7 @@ main() {
 
   test('chainr1 2', () =>
       expect(lang.intLiteral.chainr1(pure((x, y) => x + y)).run('a 2 3'),
-             isFailure));
+             isFailure('a 2 3')));
 
   test('chainr1 3', () =>
       expect(lang.intLiteral.chainr1(addop).run('3 - 1 - 2'),
@@ -285,7 +355,7 @@ main() {
 
   test('chainr1 4', () =>
       expect(lang.intLiteral.chainr1(addop).run('a - 1 - 2'),
-              isFailure));
+              isFailure('a - 1 - 2')));
 
   test('choice 1', () =>
       expect(choice([char('a'), char('b'), char('c')]).run('b'),
@@ -293,19 +363,19 @@ main() {
 
   test('choice 2', () =>
       expect(choice([char('a'), char('b'), char('c')]).run('d'),
-             isFailure));
+             isFailure('d')));
 
   var big = "a";
   for (int i = 0; i < 15; i++) { big = '$big$big'; }
 
   test('no stack overflow many', () =>
-      expect(char('a').many.run(big).value.fst.length, equals(32768)));
+      expect(char('a').many.run(big).value.length, equals(32768)));
 
   test('no stack overflow skipMany', () =>
       expect(char('a').skipMany.run('${big}bb'), isSuccess(null, 'bb')));
 
   test('no stack overflow manyUntil', () =>
-      expect(anyChar.manyUntil(char('b')).run('${big}b').value.fst.length,
+      expect(anyChar.manyUntil(char('b')).run('${big}b').value.length,
              equals(32768)));
 
   test('no stack overflow comment', () =>

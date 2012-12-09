@@ -8,31 +8,81 @@ library parsers;
 import 'package:persistent/persistent.dart';
 import 'dart:math';
 
-final Option _none = new Option.none();
-Option _some(x) => new Option.some(x);
-Pair _pair(x, y) => new Pair(x, y);
 _consStr(c) => (String cs) => "$c$cs";
 String _strHead(String s) => s[0];
 String _strTail(String s) => s.substring(1);
+_some(x) => new Option.some(x);
+final _none = new Option.none();
+
+class ParseResult<A> {
+  final bool isSuccess;
+  /// [:null:] if [:!isSuccess:]
+  final A value;
+  final String text;
+  final int position;
+  /// [:null:] if [:isSuccess:]
+  final String errorMessage;
+
+  String get rest => text.substring(position);
+
+  ParseResult.success(A value, String text, int position)
+      : this.isSuccess = true
+      , this.value = value
+      , this.text = text
+      , this.position = position
+      , this.errorMessage = null;
+
+  ParseResult.failure(String text, int position, String errorMessage)
+      : this.isSuccess = false
+      , this.value = null
+      , this.text = text
+      , this.position = position
+      , this.errorMessage = errorMessage;
+
+  get _shortRest => rest.length < 10 ? rest : '${rest.substring(0, 10)}...';
+
+  toString() =>
+      isSuccess ? 'success: {value: $value, rest: "$_shortRest"}'
+                : 'failure: {message: $errorMessage, rest: "$_shortRest"}';
+}
+
+ParseResult _success(value, String text, int position) =>
+    new ParseResult.success(value, text, position);
+
+ParseResult _failure(String text, int position, [String errorMessage = ""]) =>
+    new ParseResult.failure(text, position, errorMessage);
+
+typedef ParseResult ParseFunction(String s, int pos);
 
 class Parser<A> {
-  final Function run;
+  final ParseFunction _run;
 
-  Parser(Option<Pair<A, String>> f(String)) : this.run = f;
+  Parser(ParseResult<A> f(String s, int pos)) : this._run = f;
+
+  ParseResult run(String s, [int pos = 0]) => _run(s, pos);
 
   Object parse(String s) {
-    Option<Pair<Object, String>> result = run(s);
-    if (result.isDefined) return result.value.fst;
-    else throw "parse error";
+    ParseResult<A> result = _run(s, 0);
+    if (result.isSuccess) return result.value;
+    else throw result.errorMessage;
   }
 
   /// Monadic bind.
   Parser operator >>(Parser g(A x)) {
-    return new Parser((s) {
-      Option<Pair<A, String>> res = run(s);
-      return res.isDefined
-          ? g(res.value.fst).run(res.value.snd)
-          : new Option.none();
+    return new Parser((text, pos) {
+      ParseResult res = _run(text, pos);
+      return res.isSuccess
+          ? g(res.value)._run(text, res.position)
+          : res;
+    });
+  }
+
+  Parser expecting(String expected) {
+    return new Parser((s, pos) {
+      final res = _run(s, pos);
+      return res.isSuccess
+          ? res
+          : _failure(res.text, res.position, 'expected $expected');
     });
   }
 
@@ -56,11 +106,11 @@ class Parser<A> {
 
   /// Alternative
   Parser operator |(Parser p) {
-    return new Parser((s) {
-      Option<Pair<A, String>> res = run(s);
-      return res.isDefined
+    return new Parser((s, pos) {
+      ParseResult<A> res = _run(s, pos);
+      return res.isSuccess
           ? res
-          : p.run(s);
+          : p._run(s, pos);
     });
   }
 
@@ -70,10 +120,10 @@ class Parser<A> {
    * Used for defining followedBy, which is probably what you're looking for.
    */
   Parser get lookAhead {
-    return new Parser((s) {
-      Option<Pair<A, String>> res = run(s);
-      return res.isDefined
-          ? _some(_pair(res.value.fst, s))
+    return new Parser((s, pos) {
+      ParseResult res = _run(s, pos);
+      return res.isSuccess
+          ? _success(res.value, s, pos)
           : res;
     });
   }
@@ -92,11 +142,11 @@ class Parser<A> {
    * Used for defining notFollowedBy, which is probably what you're looking for.
    */
   Parser get notAhead {
-    return new Parser((s) {
-      Option<Pair<A, String>> res = run(s);
-      return res.isDefined
-          ? _none
-          : _some(_pair(null, s));
+    return new Parser((s, pos) {
+      ParseResult res = _run(s, pos);
+      return res.isSuccess
+          ? _failure(s, pos, 'unexpected character')
+          : _success(null, s, pos);
     });
   }
 
@@ -121,20 +171,22 @@ class Parser<A> {
    */
   Parser<List> manyUntil(Parser end) {
     // Imperative version to avoid stack overflows.
-    return new Parser((s) {
+    return new Parser((s, pos) {
       List res = [];
-      String tape = s;
+      int index = pos;
       while(true) {
-        final mend = end.run(tape);
-        if (mend.isDefined) {
-          return _some(_pair(res, mend.value.snd));
+        final endRes = end._run(s, index);
+        //print("at ${s.substring(index)}");
+        //print(endRes);
+        if (endRes.isSuccess) {
+          return _success(res, s, endRes.position);
         } else {
-          final mx = this.run(tape);
-          if (mx.isDefined) {
-            res.add(mx.value.fst);
-            tape = mx.value.snd;
+          final xRes = this._run(s, index);
+          if (xRes.isSuccess) {
+            res.add(xRes.value);
+            index = xRes.position;
           } else {
-            return _none;
+            return xRes;
           }
         }
       }
@@ -149,18 +201,18 @@ class Parser<A> {
    */
   Parser<List> skipManyUntil(Parser end) {
     // Imperative version to avoid stack overflows.
-    return new Parser((s) {
-      String tape = s;
+    return new Parser((s, pos) {
+      int index = pos;
       while(true) {
-        final mend = end.run(tape);
-        if (mend.isDefined) {
-          return _some(_pair(null, mend.value.snd));
+        final endRes = end._run(s, index);
+        if (endRes.isSuccess) {
+          return _success(null, s, endRes.position);
         } else {
-          final mx = this.run(tape);
-          if (mx.isDefined) {
-            tape = mx.value.snd;
+          final xRes = this._run(s, index);
+          if (xRes.isSuccess) {
+            index = xRes.position;
           } else {
-            return _none;
+            return xRes;
           }
         }
       }
@@ -173,18 +225,17 @@ class Parser<A> {
 
   Parser<Option> get maybe => this.map(_some).orElse(_none);
 
-
   // Imperative version to avoid stack overflows. !Side effect on acc!
   Parser<List> _many(List acc) {
-    return new Parser((s) {
-      String tape = s;
+    return new Parser((s, pos) {
+      int index = pos;
       while(true) {
-        Option<Pair<A, String>> o = this.run(tape);
-        if (o.isDefined) {
-          acc.add(o.value.fst);
-          tape = o.value.snd;
+        ParseResult<A> o = this._run(s, index);
+        if (o.isSuccess) {
+          acc.add(o.value);
+          index = o.position;
         } else {
-          return _some(_pair(acc, tape));
+          return _success(acc, s, index);
         }
       }
     });
@@ -201,14 +252,14 @@ class Parser<A> {
    */
   Parser get skipMany {
     // Imperative version to avoid stack overflows.
-    return new Parser((s) {
-      String tape = s;
+    return new Parser((s, pos) {
+      int index = pos;
       while(true) {
-        Option<Pair<A, String>> o = this.run(tape);
-        if (o.isDefined) {
-          tape = o.value.snd;
+        ParseResult<A> o = this._run(s, index);
+        if (o.isSuccess) {
+          index = o.position;
         } else {
-          return _some(_pair(null, tape));
+          return _success(null, s, index);
         }
       }
     });
@@ -246,15 +297,16 @@ class Parser<A> {
   Parser chainl1(Parser sep) {
     rest(acc) {
       var res = acc;
-      return new Parser((s) {
-        String tape = s;
+      return new Parser((s, pos) {
+        int index = pos;
         while(true) {
-          final newres = (pure((f) => (x) => f(res, x)) * sep * this).run(tape);
-          if (newres.isDefined) {
-            res = newres.value.fst;
-            tape = newres.value.snd;
+          final newres =
+              (pure((f) => (x) => f(res, x)) * sep * this)._run(s, index);
+          if (newres.isSuccess) {
+            res = newres.value;
+            index = newres.position;
           } else {
-            return _some(_pair(res, tape));
+            return _success(res, s, index);
           }
         }
       });
@@ -326,51 +378,57 @@ class ParserAccumulator5 {
 
 // Primitive parsers
 
-final Parser fail = new Parser((s) => _none);
+final Parser fail = new Parser((s, pos) => _failure(s, pos, 'failure'));
 
-final Parser empty = new Parser((s) => _some(_pair(null, s)));
+Parser pure(value) => new Parser((s, pos) => _success(value, s, pos));
 
-Parser pure(value) => new Parser((s) => _some(_pair(value, s)));
-
-final Parser eof = new Parser((s) => s.isEmpty ? _some(_pair(null, s)) : _none);
+final Parser eof = new Parser((s, pos) =>
+    pos >= s.length ? _success(null, s, pos)
+                    : _failure(s, pos, "expected eof"));
 
 Parser pred(bool p(String char)) {
-  return new Parser((String s) {
-    if (s.isEmpty) return _none;
+  return new Parser((s, pos) {
+    if (pos >= s.length) return _failure(s, pos, "unexpected eof");
     else {
-      String c = _strHead(s);
-      return p(c) ? _some(_pair(c, _strTail(s))) : _none;
+      String c = s[pos];
+      return p(c) ? _success(c, s, pos + 1)
+                  : _failure(s, pos, "predicate failed");
     }
   });
 }
 
 // Util
 
-rec(f) => new Parser((s) => f().run(s));
+rec(f) => new Parser((s, pos) => f()._run(s, pos));
 
 // Derived combinators
 
-Parser char(String chr) => pred((c) => c == chr);
+Parser char(String chr) => pred((c) => c == chr).expecting("'$chr'");
 
 Parser string(String str) {
   // Primitive version for efficiency
-  return new Parser((s) {
-    if (s.startsWith(str)) {
-      return _some(_pair(str, s.substring(str.length)));
+  return new Parser((s, pos) {
+    int max = pos + str.length;
+    bool match = s.length >= max;
+    for (int i = 0; i < str.length && match; i++) {
+      match = match && str[i] == s[pos + i];
+    }
+    if (match) {
+      return _success(str, s, max);
     } else {
-      return _none;
+      return _failure(s, pos, 'expected "$str"');
     }
   });
 }
 
 Parser choice(List<Parser> ps) {
   // Imperative version for efficiency
-  return new Parser((s) {
+  return new Parser((s, pos) {
     for (final p in ps) {
-      final res = p.run(s);
-      if (res.isDefined) return res;
+      final res = p._run(s, pos);
+      if (res.isSuccess) return res;
     }
-    return _none;
+    return _failure(s, pos, 'choice failed');
   });
 }
 

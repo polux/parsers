@@ -134,7 +134,7 @@ class Parser<A> {
    *
    *     string("let").followedBy(space)
    */
-  Parser followedBy(Parser p) => this < p.lookAhead;
+  Parser<A> followedBy(Parser p) => this < p.lookAhead;
 
   /**
    * Fails if and only if [this] succeeds on what's ahead.
@@ -156,7 +156,7 @@ class Parser<A> {
    *
    *     string("let").notFollowedBy(alphanum)
    */
-  Parser notFollowedBy(Parser p) => this < p.notAhead;
+  Parser<A> notFollowedBy(Parser p) => this < p.notAhead;
 
   /**
    * Parses [this] 0 or more times until [end] succeeds.
@@ -169,7 +169,7 @@ class Parser<A> {
    * The input parsed by [end] is consumed. Use [:end.lookAhead:] if you don't
    * want this.
    */
-  Parser<List> manyUntil(Parser end) {
+  Parser<List<A>> manyUntil(Parser end) {
     // Imperative version to avoid stack overflows.
     return new Parser((s, pos) {
       List res = [];
@@ -197,7 +197,7 @@ class Parser<A> {
    * Equivalent to [:this.manyUntil(end) > pure(null):] but faster. The input
    * parsed by [end] is consumed. Use [:end.lookAhead:] if you don't want this.
    */
-  Parser<List> skipManyUntil(Parser end) {
+  Parser skipManyUntil(Parser end) {
     // Imperative version to avoid stack overflows.
     return new Parser((s, pos) {
       int index = pos;
@@ -221,27 +221,28 @@ class Parser<A> {
 
   Parser orElse(A value) => this | pure(value);
 
-  Parser<Option> get maybe => this.map(_some).orElse(_none);
+  Parser<Option<A>> get maybe => this.map(_some).orElse(_none);
 
-  // Imperative version to avoid stack overflows. !Side effect on acc!
-  Parser<List> _many(List acc) {
+  // Imperative version to avoid stack overflows.
+  Parser<List<A>> _many(List<A> acc()) {
     return new Parser((s, pos) {
+      final res = acc();
       int index = pos;
       while(true) {
         ParseResult<A> o = this._run(s, index);
         if (o.isSuccess) {
-          acc.add(o.value);
+          res.add(o.value);
           index = o.position;
         } else {
-          return _success(acc, s, index);
+          return _success(res, s, index);
         }
       }
     });
   }
 
-  Parser<List> get many => _many([]);
+  Parser<List<A>> get many => _many(() => []);
 
-  Parser<List> get many1 => this >> (x) => _many([x]);
+  Parser<List<A>> get many1 => this >> (x) => _many(() => [x]);
 
   /**
    * Parses [this] zero or more time, skipping its result.
@@ -270,25 +271,26 @@ class Parser<A> {
    */
   Parser get skipMany1 => this > this.skipMany;
 
-  Parser<List> sepBy(Parser sep) => sepBy1(sep).orElse([]);
+  Parser<List<A>> sepBy(Parser sep) => sepBy1(sep).orElse([]);
 
-  Parser<List> sepBy1(Parser sep) => this >> (x) => (sep > this)._many([x]);
+  Parser<List<A>> sepBy1(Parser sep) =>
+      this >> (x) => (sep > this)._many(() => [x]);
 
-  Parser<List> endBy(Parser sep) => (this < sep).many;
+  Parser<List<A>> endBy(Parser sep) => (this < sep).many;
 
-  Parser<List> endBy1(Parser sep) => (this < sep).many1;
+  Parser<List<A>> endBy1(Parser sep) => (this < sep).many1;
 
   /**
    * Parses zero or more occurences of [this] separated and optionally ended
    * by [sep].
    */
-  Parser<List> sepEndBy(Parser sep) => sepEndBy1(sep).orElse([]);
+  Parser<List<A>> sepEndBy(Parser sep) => sepEndBy1(sep).orElse([]);
 
   /**
    * Parses one or more occurences of [this] separated and optionally ended
    * by [sep].
    */
-  Parser<List> sepEndBy1(Parser sep) => sepBy1(sep) < sep.maybe;
+  Parser<List<A>> sepEndBy1(Parser sep) => sepBy1(sep) < sep.maybe;
 
   Parser chainl(Parser sep, defaultValue) => chainl1(sep) | pure(defaultValue);
 

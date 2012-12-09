@@ -245,6 +245,10 @@ main() {
       expect(lang.identifier.run('_7B6ar_Foo toto'),
              isSuccess('_7B6ar_Foo', 'toto')));
 
+  test('identifier 6', () =>
+      expect(lang.identifier.sepBy(lang.comma).run('abc, def, hij'),
+             isSuccess(['abc', 'def', 'hij'], '')));
+
   test('multi-line comment 1', () =>
       expect((lang.identifier > lang.identifier).run('a /* abc */ b'),
              isSuccess('b', '')));

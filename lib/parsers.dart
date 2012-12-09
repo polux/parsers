@@ -133,12 +133,12 @@ class Parser<A> {
   /**
    * Parses [this] 0 or more times until [end] succeeds.
    *
-   * Returns the list of values returned by [p]. It is useful for parsing
+   * Returns the list of values returned by [this]. It is useful for parsing
    * comments.
    *
    *     string('/*') > anyChar.manyUntil(string('*/'))
    *
-   * The input consumed by [p] is consumed. Use [:p.lookAhead:] if you don't
+   * The input parsed by [end] is consumed. Use [:end.lookAhead:] if you don't
    * want this.
    */
   Parser<List> manyUntil(Parser end) {
@@ -154,6 +154,32 @@ class Parser<A> {
           final mx = this.run(tape);
           if (mx.isDefined) {
             res.add(mx.value.fst);
+            tape = mx.value.snd;
+          } else {
+            return _none;
+          }
+        }
+      }
+    });
+  }
+
+  /**
+   * Parses [this] 0 or more times until [end] succeeds and discards the result.
+   *
+   * Equivalent to [:this.manyUntil(end) > pure(null):] but faster. The input
+   * parsed by [end] is consumed. Use [:end.lookAhead:] if you don't want this.
+   */
+  Parser<List> skipManyUntil(Parser end) {
+    // Imperative version to avoid stack overflows.
+    return new Parser((s) {
+      String tape = s;
+      while(true) {
+        final mend = end.run(tape);
+        if (mend.isDefined) {
+          return _some(_pair(null, mend.value.snd));
+        } else {
+          final mx = this.run(tape);
+          if (mx.isDefined) {
             tape = mx.value.snd;
           } else {
             return _none;
@@ -540,19 +566,23 @@ class LanguageParsers {
 
   Parser lexeme(Parser p) => p < whiteSpace;
 
-  Parser _multiLineComment() => string(_commentStart) > _inComment();
+  Parser get _start => string(_commentStart);
+  Parser get _end => string(_commentEnd);
+  Parser get _startOrEnd => _start | _end;
+
+  Parser _multiLineComment() => _start > _inComment();
 
   Parser _inComment() =>
       _nestedComments ? _inCommentMulti() : _inCommentSingle();
 
-  String get _startEnd => '$_commentStart$_commentEnd';
+  Parser _inCommentMulti() =>
+      _end > pure(null)
+    | rec(_multiLineComment) > rec(_inCommentMulti)
+    | anyChar.skipManyUntil(_startOrEnd.lookAhead) > rec(_inCommentMulti);
 
-  Parser _inCommentMulti() => string(_commentEnd) > pure(null)
-                            | rec(_multiLineComment) > rec(_inCommentMulti)
-                            | anyChar > rec(_inCommentMulti);
-
-  Parser _inCommentSingle() => string(_commentEnd) > pure(null)
-                             | anyChar > rec(_inCommentSingle);
+  Parser _inCommentSingle() =>
+      _end > pure(null)
+    | anyChar.skipManyUntil(_end.lookAhead) > rec(_inCommentSingle);
 
   Parser get _oneLineComment =>
       string(_commentLine) > (pred((c) => c != '\n').skipMany > pure(null));

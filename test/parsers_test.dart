@@ -267,15 +267,15 @@ main() {
   for (int i = 0; i < 15; i++) { big = '$big$big'; }
 
   test('no stack overflow many', () =>
-       expect(char('a').many.run(big).value.fst.length, equals(32768)));
+      expect(char('a').many.run(big).value.fst.length, equals(32768)));
 
   test('no stack overflow skipMany', () =>
       expect(char('a').skipMany.run('${big}bb'), isSuccess(null, 'bb')));
 
   test('no stack overflow manyUntil', () =>
-       expect(anyChar.manyUntil(char('b')).run('${big}b').value.fst.length,
-              equals(32768)));
+      expect(anyChar.manyUntil(char('b')).run('${big}b').value.fst.length,
+             equals(32768)));
 
-  //test('no stack overflow comment', () =>
-  //    expect(lang.natural.run('1 /* $big */'), isSuccess(1, '')));
+  test('no stack overflow comment', () =>
+      expect(lang.natural.run('1 /* $big */'), isSuccess(1, '')));
 }

@@ -275,6 +275,14 @@ main() {
       expect(lang.intLiteral.chainr1(addop).run('a - 1 - 2'),
               isFailure));
 
+  test('choice 1', () =>
+      expect(choice([char('a'), char('b'), char('c')]).run('b'),
+             isSuccess('b', '')));
+
+  test('choice 2', () =>
+      expect(choice([char('a'), char('b'), char('c')]).run('d'),
+             isFailure));
+
   var big = "a";
   for (int i = 0; i < 15; i++) { big = '$big$big'; }
 

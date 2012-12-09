@@ -11,29 +11,7 @@ import 'dart:math';
 final Option _none = new Option.none();
 Option _some(x) => new Option.some(x);
 Pair _pair(x, y) => new Pair(x, y);
-final _nil = new LList.nil();
-_cons(x) => (xs) => new LList.cons(x, xs);
 _consStr(c) => (String cs) => "$c$cs";
-
-LList _list2ll(List l) {
-  LListBuilder result = new LListBuilder();
-  for (final x in l) {
-    result.add(x);
-  }
-  return result.build();
-}
-List _ll2list(LList ll) {
-  List result = [];
-  ll.foreach((x) { result.add(x); });
-  return result;
-}
-
-List _sort(List l, Comparator c) {
-  List res = new List.from(l);
-  res.sort(c);
-  return res;
-}
-
 String _strHead(String s) => s[0];
 String _strTail(String s) => s.substring(1);
 
@@ -379,10 +357,16 @@ Parser string(String str) =>
         ? pure('')
         : pure(_consStr) * char(_strHead(str)) * string(_strTail(str));
 
-Parser _choice(LList<Parser> ps) =>
-    ps.isNil() ? fail : ps.elem | _choice(ps.tail);
-
-Parser choice(List<Parser> ps) => _choice(_list2ll(ps));
+Parser choice(List<Parser> ps) {
+  // Imperative version for efficiency
+  return new Parser((s) {
+    for (final p in ps) {
+      final res = p.run(s);
+      if (res.isDefined) return res;
+    }
+    return _none;
+  });
+}
 
 // Derived character parsers
 

@@ -27,6 +27,18 @@ checkList(res, list, rest) {
 }
 
 main() {
+  test('string 1', () =>
+      expect(string('').run('abc'), isSuccess('', 'abc')));
+
+  test('string 2', () =>
+      expect(string('foo').run('fooabc'), isSuccess('foo', 'abc')));
+
+  test('string 3', () =>
+      expect(string('foo').run('barabc'), isFailure));
+
+  test('string 4', () =>
+      expect(string('foo').run('fo'), isFailure));
+
   final let = string("let").notFollowedBy(alphanum);
 
   test('notFollowedBy 1', () =>

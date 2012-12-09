@@ -352,10 +352,16 @@ rec(f) => new Parser((s) => f().run(s));
 
 Parser char(String chr) => pred((c) => c == chr);
 
-Parser string(String str) =>
-    str.isEmpty
-        ? pure('')
-        : pure(_consStr) * char(_strHead(str)) * string(_strTail(str));
+Parser string(String str) {
+  // Primitive version for efficiency
+  return new Parser((s) {
+    if (s.startsWith(str)) {
+      return _some(_pair(str, s.substring(str.length)));
+    } else {
+      return _none;
+    }
+  });
+}
 
 Parser choice(List<Parser> ps) {
   // Imperative version for efficiency

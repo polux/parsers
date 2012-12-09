@@ -4,4 +4,5 @@ version: 0.1.0
 author: Paul Brauner <polux@google.com>
 homepage: http://code.google.com/p/parsers/
 dependencies:
+  unittest:
   persistent:

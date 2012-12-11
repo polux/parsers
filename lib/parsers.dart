@@ -40,7 +40,7 @@ class ParseResult<A> {
   String get rest => text.substring(position);
 
   String get errorMessage {
-    final seen = text[position];
+    final seen = (position < text.length) ? text[position] : 'eof';
     if (expected.isEmpty) {
       return 'unexpected $seen';
     } else {

@@ -325,6 +325,19 @@ class Parser<A> {
   }
 
   Parser<A> between(Parser left, Parser right) => left > (this < right);
+
+  /// Returns the substring comsumed by [this].
+  Parser<String> get record {
+    return new Parser((s, pos) {
+        final result = run(s, pos);
+        if (result.isSuccess) {
+          return _success(s.substring(pos, result.position),
+                          s, result.position);
+        } else {
+          return result;
+        }
+    });
+  }
 }
 
 class ParserAccumulator2 {

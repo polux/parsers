@@ -405,6 +405,18 @@ main() {
       expect(choice([char('a'), char('b'), char('c')]).run('d'),
              isFailure('d')));
 
+  test('record 1', () =>
+      expect(char('a').many.record.run('aaaabb'),
+             isSuccess('aaaa', 'bb')));
+
+  test('record 2', () =>
+      expect(string('aa').record.run('abaabb'),
+             isFailure('abaabb')));
+
+  test('record 2', () =>
+      expect(char('a').record.run(''),
+             isFailure('')));
+
   var big = "a";
   for (int i = 0; i < 15; i++) { big = '$big$big'; }
 

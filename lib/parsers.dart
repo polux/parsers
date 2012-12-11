@@ -20,7 +20,7 @@ _humanOr(List es) {
   } else {
     StringBuffer result = new StringBuffer();
     for (int i = 0; i < es.length - 2; i++) {
-      result.add('$es[i], ');
+      result.add('${es[i]}, ');
     }
     result.add('${es[es.length - 2]} or ${es[es.length - 1]}');
     return result;
@@ -34,7 +34,6 @@ class ParseResult<A> {
   final A value;
   final String text;
   final int position;
-  /// [:null:] if [:isSuccess:]
   final PersistentSet<String> expected;
 
   String get rest => text.substring(position);
@@ -49,12 +48,13 @@ class ParseResult<A> {
     }
   }
 
-  ParseResult.success(A value, String text, int position)
+  ParseResult.success(A value, String text, int position,
+                      PersistentSet<String> expected)
       : this.isSuccess = true
       , this.value = value
       , this.text = text
       , this.position = position
-      , this.expected = null;
+      , this.expected = expected;
 
   ParseResult.failure(String text, int position, PersistentSet<String> expected)
       : this.isSuccess = false
@@ -70,12 +70,14 @@ class ParseResult<A> {
                 : 'failure: {message: $errorMessage, rest: "$_shortRest"}';
 }
 
-ParseResult _success(value, String text, int position) =>
-    new ParseResult.success(value, text, position);
+ParseResult _success(value, String text, int position,
+                     [PersistentSet expected]) =>
+    new ParseResult.success(value, text, position,
+                            ?expected ? expected : new PersistentSet());
 
 ParseResult _failure(String text, int position, [PersistentSet expected]) =>
     new ParseResult.failure(text, position,
-        ?expected ? expected : new PersistentSet());
+                            ?expected ? expected : new PersistentSet());
 
 typedef ParseResult ParseFunction(String s, int pos);
 
@@ -96,9 +98,17 @@ class Parser<A> {
   Parser operator >>(Parser g(A x)) {
     return new Parser((text, pos) {
       ParseResult res = _run(text, pos);
-      return res.isSuccess
-          ? g(res.value)._run(text, res.position)
-          : res;
+      if (res.isSuccess) {
+        final res2 = g(res.value)._run(text, res.position);
+        if (res2.isSuccess) {
+          return res2;
+        } else {
+          return _failure(res2.text, res2.position,
+                          res.expected + res2.expected);
+        }
+      } else {
+        return res;
+      }
     });
   }
 
@@ -141,7 +151,7 @@ class Parser<A> {
           return pres;
         } else {
           return _failure(pres.text, pres.position,
-                          res.expected.union(pres.expected));
+                          res.expected + pres.expected);
         }
       }
     });
@@ -267,7 +277,7 @@ class Parser<A> {
           res.add(o.value);
           index = o.position;
         } else {
-          return _success(res, s, index);
+          return _success(res, s, index, o.expected);
         }
       }
     });
@@ -477,7 +487,7 @@ Parser choice(List<Parser> ps) {
         return res;
       }
       else {
-        expected = expected.union(res.expected);
+        expected += res.expected;
       }
     }
     return _failure(s, pos, expected);
@@ -488,9 +498,11 @@ Parser choice(List<Parser> ps) {
 
 final Parser<String> anyChar = pred((c) => true);
 
-Parser<String> oneOf(String chars) => pred((c) => chars.contains(c));
+Parser<String> oneOf(String chars) =>
+    pred((c) => chars.contains(c)).expecting("one of '$chars'");
 
-Parser<String> noneOf(String chars) => pred((c) => !chars.contains(c));
+Parser<String> noneOf(String chars) =>
+    pred((c) => !chars.contains(c)).expecting("none of '$chars'");
 
 final _spaces = " \t\n";
 final _lower = "abcdefghijklmnopqrstuvwxyz";

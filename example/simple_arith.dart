@@ -43,6 +43,10 @@ class Arith {
 }
 
 main() {
+  final a = new Arith();
+  final x = a.token('d') | a.token('a').many;
+  print((x > char('c')).run('b'));
+
   final good = "1 * 2 + 3 * (4 + 5)";
   print(new Arith().start.parse(good)); // prints 29
 

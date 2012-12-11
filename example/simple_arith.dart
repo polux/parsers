@@ -49,7 +49,7 @@ main() {
   final bad = "1 * x + 2";
   try {
     new Arith().start.parse(bad);
-  } catch(_) {
-    print('parsing of 1 * x + 2 failed as expected');
+  } catch(e) {
+    print('parsing of 1 * x + 2 failed as expected: "$e"');
   }
 }

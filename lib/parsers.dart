@@ -13,6 +13,20 @@ String _strHead(String s) => s[0];
 String _strTail(String s) => s.substring(1);
 _some(x) => new Option.some(x);
 final _none = new Option.none();
+_humanOr(List es) {
+  assert(es.length > 0);
+  if (es.length == 1) {
+    return es[0];
+  } else {
+    StringBuffer result = new StringBuffer();
+    for (int i = 0; i < es.length - 2; i++) {
+      result.add('$es[i], ');
+    }
+    result.add('${es[es.length - 2]} or ${es[es.length - 1]}');
+    return result;
+  }
+}
+_single(x) => new PersistentSet().insert(x);
 
 class ParseResult<A> {
   final bool isSuccess;
@@ -21,23 +35,33 @@ class ParseResult<A> {
   final String text;
   final int position;
   /// [:null:] if [:isSuccess:]
-  final String errorMessage;
+  final PersistentSet<String> expected;
 
   String get rest => text.substring(position);
+
+  String get errorMessage {
+    final seen = text[position];
+    if (expected.isEmpty) {
+      return 'unexpected $seen';
+    } else {
+      final or = _humanOr(new List.from(expected.toSet()));
+      return "expected $or, got '$seen'";
+    }
+  }
 
   ParseResult.success(A value, String text, int position)
       : this.isSuccess = true
       , this.value = value
       , this.text = text
       , this.position = position
-      , this.errorMessage = null;
+      , this.expected = null;
 
-  ParseResult.failure(String text, int position, String errorMessage)
+  ParseResult.failure(String text, int position, PersistentSet<String> expected)
       : this.isSuccess = false
       , this.value = null
       , this.text = text
       , this.position = position
-      , this.errorMessage = errorMessage;
+      , this.expected = expected;
 
   get _shortRest => rest.length < 10 ? rest : '${rest.substring(0, 10)}...';
 
@@ -49,8 +73,9 @@ class ParseResult<A> {
 ParseResult _success(value, String text, int position) =>
     new ParseResult.success(value, text, position);
 
-ParseResult _failure(String text, int position, [String errorMessage = ""]) =>
-    new ParseResult.failure(text, position, errorMessage);
+ParseResult _failure(String text, int position, [PersistentSet expected]) =>
+    new ParseResult.failure(text, position,
+        ?expected ? expected : new PersistentSet());
 
 typedef ParseResult ParseFunction(String s, int pos);
 
@@ -82,7 +107,7 @@ class Parser<A> {
       final res = _run(s, pos);
       return res.isSuccess
           ? res
-          : _failure(res.text, res.position, 'expected $expected');
+          : _failure(res.text, res.position, _single(expected));
     });
   }
 
@@ -108,9 +133,17 @@ class Parser<A> {
   Parser operator |(Parser p) {
     return new Parser((s, pos) {
       ParseResult<A> res = _run(s, pos);
-      return res.isSuccess
-          ? res
-          : p._run(s, pos);
+      if (res.isSuccess) {
+        return res;
+      } else {
+        ParseResult pres = p._run(s, pos);
+        if (pres.isSuccess) {
+          return pres;
+        } else {
+          return _failure(pres.text, pres.position,
+                          res.expected.union(pres.expected));
+        }
+      }
     });
   }
 
@@ -145,7 +178,7 @@ class Parser<A> {
     return new Parser((s, pos) {
       ParseResult res = _run(s, pos);
       return res.isSuccess
-          ? _failure(s, pos, 'unexpected character')
+          ? _failure(s, pos)
           : _success(null, s, pos);
     });
   }
@@ -391,21 +424,21 @@ class ParserAccumulator5 {
 
 // Primitive parsers
 
-final Parser fail = new Parser((s, pos) => _failure(s, pos, 'failure'));
+final Parser fail = new Parser((s, pos) => _failure(s, pos));
 
 Parser pure(value) => new Parser((s, pos) => _success(value, s, pos));
 
 final Parser eof = new Parser((s, pos) =>
     pos >= s.length ? _success(null, s, pos)
-                    : _failure(s, pos, "expected eof"));
+                    : _failure(s, pos, _single("eof")));
 
 Parser pred(bool p(String char)) {
   return new Parser((s, pos) {
-    if (pos >= s.length) return _failure(s, pos, "unexpected eof");
+    if (pos >= s.length) return _failure(s, pos);
     else {
       String c = s[pos];
       return p(c) ? _success(c, s, pos + 1)
-                  : _failure(s, pos, "predicate failed");
+                  : _failure(s, pos);
     }
   });
 }
@@ -429,7 +462,7 @@ Parser string(String str) {
     if (match) {
       return _success(str, s, max);
     } else {
-      return _failure(s, pos, 'expected "$str"');
+      return _failure(s, pos, _single("'$str'"));
     }
   });
 }
@@ -437,11 +470,17 @@ Parser string(String str) {
 Parser choice(List<Parser> ps) {
   // Imperative version for efficiency
   return new Parser((s, pos) {
+    var expected = new PersistentSet();
     for (final p in ps) {
       final res = p._run(s, pos);
-      if (res.isSuccess) return res;
+      if (res.isSuccess) {
+        return res;
+      }
+      else {
+        expected = expected.union(res.expected);
+      }
     }
-    return _failure(s, pos, 'choice failed');
+    return _failure(s, pos, expected);
   });
 }
 

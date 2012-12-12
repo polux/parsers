@@ -54,7 +54,8 @@ class ParseResult<A> {
   String get rest => text.substring(position);
 
   String get errorMessage {
-    final seen = (position < text.length) ? text[position] : 'eof';
+    final maxPos = expectations.position;
+    final seen = (maxPos < text.length) ? text[maxPos] : 'eof';
     final expected = expectations.expected;
     if (expected.isEmpty) {
       return 'unexpected $seen';
@@ -117,7 +118,8 @@ class Parser<A> {
       if (res.isSuccess) {
         final res2 = g(res.value)._run(text, res.position);
         if (res2.isSuccess) {
-          return res2;
+          return _success(res2.value, res2.text, res2.position,
+                          res.expectations.best(res2.expectations));
         } else {
           return _failure(res2.text, res2.position,
                           res.expectations.best(res2.expectations));
@@ -132,10 +134,15 @@ class Parser<A> {
     return new Parser((s, pos) {
       final res = _run(s, pos);
       return res.isSuccess
-          ? res
-          : _failure(res.text, res.position, _singleExpectation(expected, pos));
+          ? _success(res.value, res.text, res.position,
+                     _singleExpectation(expected, pos))
+          : _failure(res.text, res.position,
+                     _singleExpectation(expected, pos));
     });
   }
+
+  /// Alias for [:expecting:].
+  Parser operator %(String expected) => this.expecting(expected);
 
   /// Applicative <*>
   Parser operator *(Parser p) => this >> (f) => p >> (x) => pure(f(x));
@@ -162,12 +169,13 @@ class Parser<A> {
       if (res.isSuccess) {
         return res;
       } else {
-        ParseResult pres = p._run(s, pos);
-        if (pres.isSuccess) {
-          return pres;
+        ParseResult res2 = p._run(s, pos);
+        if (res2.isSuccess) {
+          return _success(res2.value, res2.text, res2.position,
+                          res.expectations.best(res2.expectations));
         } else {
-          return _failure(pres.text, pres.position,
-                          res.expectations.best(pres.expectations));
+          return _failure(res2.text, res2.position,
+                          res.expectations.best(res2.expectations));
         }
       }
     });
@@ -233,17 +241,21 @@ class Parser<A> {
     return new Parser((s, pos) {
       List res = [];
       int index = pos;
+      var exps = _emptyExpectation(pos);
       while(true) {
         final endRes = end._run(s, index);
         if (endRes.isSuccess) {
-          return _success(res, s, endRes.position);
+          return _success(res, s, endRes.position,
+                          exps.best(endRes.expectations));
         } else {
           final xRes = this._run(s, index);
           if (xRes.isSuccess) {
             res.add(xRes.value);
             index = xRes.position;
+            exps = exps.best(xRes.expectations);
           } else {
-            return xRes;
+            return _failure(xRes.text, xRes.position,
+                            exps.best(endRes.expectations));
           }
         }
       }
@@ -260,16 +272,20 @@ class Parser<A> {
     // Imperative version to avoid stack overflows.
     return new Parser((s, pos) {
       int index = pos;
+      var exps = _emptyExpectation(pos);
       while(true) {
         final endRes = end._run(s, index);
         if (endRes.isSuccess) {
-          return _success(null, s, endRes.position);
+          return _success(null, s, endRes.position,
+                          exps.best(endRes.expectations));
         } else {
           final xRes = this._run(s, index);
           if (xRes.isSuccess) {
             index = xRes.position;
+            exps = exps.best(xRes.expectations);
           } else {
-            return xRes;
+            return _failure(xRes.text, xRes.position,
+                            exps.best(endRes.expectations));
           }
         }
       }
@@ -286,14 +302,16 @@ class Parser<A> {
   Parser<List<A>> _many(List<A> acc()) {
     return new Parser((s, pos) {
       final res = acc();
+      var exps = _emptyExpectation(pos);
       int index = pos;
       while(true) {
         ParseResult<A> o = this._run(s, index);
         if (o.isSuccess) {
           res.add(o.value);
           index = o.position;
+          exps = exps.best(o.expectations);
         } else {
-          return _success(res, s, index, o.expectations);
+          return _success(res, s, index, exps.best(o.expectations));
         }
       }
     });
@@ -312,12 +330,14 @@ class Parser<A> {
     // Imperative version to avoid stack overflows.
     return new Parser((s, pos) {
       int index = pos;
+      var exps = _emptyExpectation(pos);
       while(true) {
         ParseResult<A> o = this._run(s, index);
         if (o.isSuccess) {
           index = o.position;
+          exps = exps.best(o.expectations);
         } else {
-          return _success(null, s, index);
+          return _success(null, s, index, exps.best(o.expectations));
         }
       }
     });
@@ -358,14 +378,16 @@ class Parser<A> {
       var res = acc;
       return new Parser((s, pos) {
         int index = pos;
+        var exps = _emptyExpectation(pos);
         while(true) {
           final newres =
               (pure((f) => (x) => f(res, x)) * sep * this)._run(s, index);
           if (newres.isSuccess) {
             res = newres.value;
             index = newres.position;
+            exps = exps.best(newres.expectations);
           } else {
-            return _success(res, s, index);
+            return _success(res, s, index, exps.best(newres.expectations));
           }
         }
       });
@@ -391,7 +413,7 @@ class Parser<A> {
         final result = run(s, pos);
         if (result.isSuccess) {
           return _success(s.substring(pos, result.position),
-                          s, result.position);
+                          s, result.position, result.expectations);
         } else {
           return result;
         }
@@ -475,7 +497,7 @@ rec(f) => new Parser((s, pos) => f()._run(s, pos));
 
 // Derived combinators
 
-Parser char(String chr) => pred((c) => c == chr).expecting("'$chr'");
+Parser char(String chr) => pred((c) => c == chr) % "'$chr'";
 
 Parser string(String str) {
   // Primitive version for efficiency
@@ -496,23 +518,24 @@ Parser string(String str) {
 Parser choice(List<Parser> ps) {
   // Imperative version for efficiency
   return new Parser((s, pos) {
-    var expectations = _emptyExpectation(pos);
+    var exps = _emptyExpectation(pos);
     for (final p in ps) {
       final res = p._run(s, pos);
       if (res.isSuccess) {
-        return res;
+        return _success(res.value, res.text, res.position,
+                        exps.best(res.expectations));
       }
       else {
-        expectations = expectations.best(res.expectations);
+        exps = exps.best(res.expectations);
       }
     }
-    return _failure(s, pos, expectations);
+    return _failure(s, pos, exps);
   });
 }
 
 // Derived character parsers
 
-final Parser<String> anyChar = pred((c) => true);
+final Parser<String> anyChar = pred((c) => true) % 'any character';
 
 Parser<String> oneOf(String chars) =>
     pred((c) => chars.contains(c)).expecting("one of '$chars'");
@@ -527,23 +550,23 @@ final _alpha = "$_lower$_upper";
 final _digit = "1234567890";
 final _alphanum = "$_alpha$_digit";
 
-final Parser<String> tab = char('\t');
+final Parser<String> tab = char('\t') % 'tab';
 
-final Parser<String> newline = char('\n');
+final Parser<String> newline = char('\n') % 'newline';
 
-final Parser<String> space = oneOf(_spaces);
+final Parser<String> space = oneOf(_spaces) % 'space';
 
-final Parser spaces = space.many > pure(null);
+final Parser spaces = (space.many > pure(null)) % 'spaces';
 
-final Parser<String> upper = oneOf(_upper);
+final Parser<String> upper = oneOf(_upper) % 'uppercase letter';
 
-final Parser<String> lower = oneOf(_lower);
+final Parser<String> lower = oneOf(_lower) % 'lowercase letter';
 
-final Parser<String> alphanum = oneOf(_alphanum);
+final Parser<String> alphanum = oneOf(_alphanum) /* % 'alphanumeric character' */;
 
-final Parser<String> letter = oneOf(_alpha);
+final Parser<String> letter = oneOf(_alpha) % 'letter';
 
-final Parser<String> digit = oneOf(_digit);
+final Parser<String> digit = oneOf(_digit) % 'digit';
 
 class ReservedNames {
   Map<String, Parser<String>> _map;
@@ -589,10 +612,10 @@ class LanguageParsers {
     _reservedNames = new Set<String>.from(reservedNames);
   }
 
-  Parser<String> get semi => symbol(';');
-  Parser<String> get comma => symbol(',');
-  Parser<String> get colon => symbol(':');
-  Parser<String> get dot => symbol('.');
+  Parser<String> get semi  => symbol(';') % 'semicolon';
+  Parser<String> get comma => symbol(',') % 'comma';
+  Parser<String> get colon => symbol(':') % 'colon';
+  Parser<String> get dot   => symbol('.') % 'dot';
 
   Parser<String> get _ident =>
       pure((c) => (cs) => _consStr(c)(Strings.concatAll(cs)))
@@ -601,7 +624,8 @@ class LanguageParsers {
 
   Parser<String> get identifier =>
       lexeme(_ident >> (name) =>
-             _reservedNames.contains(name) ? fail : pure(name));
+             _reservedNames.contains(name) ? fail : pure(name))
+      % 'identifier';
 
   ReservedNames get reserved {
     if (_reserved == null) {
@@ -625,14 +649,16 @@ class LanguageParsers {
                                 | pred((c) => c != "'");
 
   Parser<String> get charLiteral =>
-      lexeme(_charChar.between(char("'"), char("'")));
+      lexeme(_charChar.between(char("'"), char("'")))
+      % 'character literal';
 
   Parser<String> get _stringChar => char('\\') > _escapeCode
                                   | pred((c) => c != '"');
 
   Parser<String> get stringLiteral =>
       lexeme(_stringChar.many.between(char('"'), char('"')))
-      .map(Strings.concatAll);
+      .map(Strings.concatAll)
+      % 'string literal';
 
   Map<String, int> _digitToInt = {
     '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8,
@@ -657,9 +683,9 @@ class LanguageParsers {
                               | char('+') > pure((n) => n)
                               | pure((n) => n);
 
-  Parser<int> get natural => lexeme(_nat);
+  Parser<int> get natural => lexeme(_nat) % 'natural number';
 
-  Parser<int> get intLiteral => lexeme(_int);
+  Parser<int> get intLiteral => lexeme(_int) % 'integer';
 
   num _power(num e) => e < 0 ? 1.0 / _power(-e) : pow(10, e);
 
@@ -680,15 +706,18 @@ class LanguageParsers {
           * _exponent.orElse(1.0))
       | _exponent.map((expo) => n * expo);
 
-  Parser<double> get floatLiteral => lexeme(decimal >> _fractExponent);
+  Parser<double> get floatLiteral =>
+      lexeme(decimal >> _fractExponent) % 'float';
 
-  Parser<int> get decimal => _number(10, digit);
+  Parser<int> get decimal => _number(10, digit) % 'decimal number';
 
   Parser<int> get hexaDecimal =>
-      oneOf("xX") > _number(16, oneOf("0123456789abcdefABCDEF"));
+      (oneOf("xX") > _number(16, oneOf("0123456789abcdefABCDEF")))
+      % 'hexadecimal number';
 
   Parser<int> get octal =>
-      oneOf("oO") > _number(8, oneOf("01234567"));
+      (oneOf("oO") > _number(8, oneOf("01234567")))
+      % 'octal number';
 
   Parser<String> symbol(String symb) => lexeme(string(symb));
 
@@ -715,7 +744,9 @@ class LanguageParsers {
   Parser get _oneLineComment =>
       string(_commentLine) > (pred((c) => c != '\n').skipMany > pure(null));
 
-  Parser get whiteSpace {
+  Parser get whiteSpace => _whiteSpace % 'whitespace/comment';
+
+  Parser get _whiteSpace {
     if (_commentLine.isEmpty && _commentStart.isEmpty) {
       return space.skipMany;
     } else if (_commentLine.isEmpty) {

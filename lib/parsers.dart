@@ -27,19 +27,20 @@ _humanOr(List es) {
   }
 }
 _singleExpectation(String str, int pos) =>
-    new Expectations(new PersistentSet().insert(str), pos);
+    new Expectations(new Set()..add(str), pos);
 _emptyExpectation(int pos) =>
-    new Expectations(new PersistentSet(), pos);
+    new Expectations(new Set(), pos);
 
 class Expectations {
-  final PersistentSet<String> expected;
+  final Set<String> expected;
   final int position;
   Expectations(this.expected, this.position);
 
   Expectations best(Expectations other) {
     if (position < other.position) return other;
     if (position > other.position) return this;
-    return new Expectations(expected + other.expected, position);
+    Set<String> newSet = expected..addAll(other.expected);
+    return new Expectations(newSet, position);
   }
 }
 
@@ -60,7 +61,7 @@ class ParseResult<A> {
     if (expected.isEmpty) {
       return 'unexpected $seen.';
     } else {
-      final or = _humanOr(new List.from(expected.toSet()));
+      final or = _humanOr(new List.from(expected));
       return "expected $or, got $seen.";
     }
   }

@@ -55,13 +55,13 @@ class ParseResult<A> {
 
   String get errorMessage {
     final maxPos = expectations.position;
-    final seen = (maxPos < text.length) ? "${'text[maxPos]'}" : 'eof';
+    final seen = (maxPos < text.length) ? "'${text[maxPos]}'" : 'eof';
     final expected = expectations.expected;
     if (expected.isEmpty) {
-      return 'unexpected $seen';
+      return 'unexpected $seen.';
     } else {
       final or = _humanOr(new List.from(expected.toSet()));
-      return "expected $or, got $seen";
+      return "expected $or, got $seen.";
     }
   }
 

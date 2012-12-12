@@ -25,7 +25,7 @@ class Arith {
   get comma  => token(',');
   get times  => token('*');
   get plus   => token('+');
-  get number => lexeme(digit.many1)   ^ digits2int;
+  get number => (lexeme(digit.many1) ^ digits2int) % 'natural number';
 
   // This is the gist of the grammar, the BNF-like rules.
 

@@ -249,15 +249,38 @@ main() {
       expect(lang.identifier.sepBy(lang.comma).run('abc, def, hij'),
              isSuccess(['abc', 'def', 'hij'], '')));
 
-  test('multi-line comment 1', () =>
+  test('multi-line comment 1.1', () =>
       expect((lang.identifier > lang.identifier).run('a /* abc */ b'),
              isSuccess('b', '')));
 
-  test('multi-line comment 2', () =>
+  test('multi-line comment 1.2', () =>
       expect((lang.identifier > lang.identifier).run('a /* x /* abc */ y */ b'),
              isSuccess('b', '')));
 
-  test('multi-line comment 3', () =>
+  test('multi-line comment 1.3', () =>
+      expect((lang.identifier > lang.identifier).run('a /* x /* abc */ y b'),
+             isFailure('/* x /* abc */ y b')));
+
+  test('single-line comment 1.1', () =>
+      expect((lang.identifier > lang.identifier).run('a // foo \n b'),
+             isSuccess('b', '')));
+
+  final noNest = new LanguageParsers(nestedComments: false);
+
+  test('multi-line comment 2.1', () =>
+      expect((noNest.identifier > lang.identifier).run('a /* abc */ b'),
+             isSuccess('b', '')));
+
+  test('multi-line comment 2.2', () =>
+      expect((noNest.identifier > lang.identifier).run(
+                 'a /* x /* abc */ y */ b'),
+             isSuccess('y', '*/ b')));
+
+  test('multi-line comment 2.3', () =>
+      expect((noNest.identifier > lang.identifier).run('a /* x /* abc */ y b'),
+             isSuccess('y', 'b')));
+
+  test('single-line comment 2.1', () =>
       expect((lang.identifier > lang.identifier).run('a // foo \n b'),
              isSuccess('b', '')));
 

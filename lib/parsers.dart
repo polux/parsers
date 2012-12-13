@@ -726,21 +726,19 @@ class LanguageParsers {
 
   Parser get _start => string(_commentStart);
   Parser get _end => string(_commentEnd);
-  Parser get _startOrEnd => _start | _end;
+  Parser get _notStartNorEnd => (_start | _end).notAhead > anyChar;
 
   Parser _multiLineComment() => _start > _inComment();
 
   Parser _inComment() =>
       _nestedComments ? _inCommentMulti() : _inCommentSingle();
 
-  Parser _inCommentMulti() =>
-      _end > pure(null)
-    | rec(_multiLineComment) > rec(_inCommentMulti)
-    | anyChar.skipManyUntil(_startOrEnd.lookAhead) > rec(_inCommentMulti);
+  Parser _inCommentMulti() => _notStartNorEnd.skipMany1 > _recOrEnd();
 
-  Parser _inCommentSingle() =>
-      _end > pure(null)
-    | anyChar.skipManyUntil(_end.lookAhead) > rec(_inCommentSingle);
+  Parser _recOrEnd() => rec(_multiLineComment) > rec(_inCommentMulti)
+                      | _end > pure(null);
+
+  Parser _inCommentSingle() => anyChar.skipManyUntil(_end);
 
   Parser get _oneLineComment =>
       string(_commentLine) > (pred((c) => c != '\n').skipMany > pure(null));

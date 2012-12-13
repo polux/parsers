@@ -261,6 +261,14 @@ main() {
       expect((lang.identifier > lang.identifier).run('a /* x /* abc */ y b'),
              isFailure('/* x /* abc */ y b')));
 
+  test('multi-line comment 1.4', () =>
+      expect((lang.identifier > lang.identifier).run('a /*/**/*/ y b'),
+             isSuccess('y', 'b')));
+
+  test('multi-line comment 1.5', () =>
+      expect((lang.identifier > lang.identifier).run('a /*/**/ y b'),
+             isFailure('/*/**/ y b')));
+
   test('single-line comment 1.1', () =>
       expect((lang.identifier > lang.identifier).run('a // foo \n b'),
              isSuccess('b', '')));
@@ -278,6 +286,14 @@ main() {
 
   test('multi-line comment 2.3', () =>
       expect((noNest.identifier > lang.identifier).run('a /* x /* abc */ y b'),
+             isSuccess('y', 'b')));
+
+  test('multi-line comment 2.4', () =>
+      expect((noNest.identifier > lang.identifier).run('a /*/**/*/ y b'),
+             isFailure('*/ y b')));
+
+  test('multi-line comment 2.5', () =>
+      expect((noNest.identifier > lang.identifier).run('a /*/**/ y b'),
              isSuccess('y', 'b')));
 
   test('single-line comment 2.1', () =>

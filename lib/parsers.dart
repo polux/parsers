@@ -733,7 +733,7 @@ class LanguageParsers {
   Parser _inComment() =>
       _nestedComments ? _inCommentMulti() : _inCommentSingle();
 
-  Parser _inCommentMulti() => _notStartNorEnd.skipMany1 > _recOrEnd();
+  Parser _inCommentMulti() => _notStartNorEnd.skipMany > _recOrEnd();
 
   Parser _recOrEnd() => rec(_multiLineComment) > rec(_inCommentMulti)
                       | _end > pure(null);

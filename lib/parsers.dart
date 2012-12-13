@@ -71,7 +71,7 @@ class ParseResult<A> {
               this.isCommitted, this.value);
 
   ParseResult with({String text, Expectations expectations, int position,
-                    bool isSuccess, int isCommitted, Object value}) {
+                    bool isSuccess, bool isCommitted, Object value}) {
     return new ParseResult(
         ?text         ? text         : this.text,
         ?expectations ? expectations : this.expectations,
@@ -122,7 +122,8 @@ class Parser<A> {
       if (res.isSuccess) {
         final res2 = g(res.value)._run(text, res.position);
         return res2.with(
-            expectations: res.expectations.best(res2.expectations));
+            expectations: res.expectations.best(res2.expectations),
+            isCommitted: res.isCommitted || res2.isCommitted);
       } else {
         return res;
       }
@@ -133,6 +134,13 @@ class Parser<A> {
     return new Parser((s, pos) {
       final res = _run(s, pos);
       return res.with(expectations: _singleExpectation(expected, pos));
+    });
+  }
+
+  Parser get committed {
+    return new Parser((s, pos) {
+      final res = _run(s, pos);
+      return res.with(isCommitted: true);
     });
   }
 
@@ -161,7 +169,7 @@ class Parser<A> {
   Parser operator |(Parser p) {
     return new Parser((s, pos) {
       ParseResult<A> res = _run(s, pos);
-      if (res.isSuccess) {
+      if (res.isSuccess || res.isCommitted) {
         return res;
       } else {
         ParseResult res2 = p._run(s, pos);
@@ -232,20 +240,26 @@ class Parser<A> {
       List res = [];
       int index = pos;
       var exps = _emptyExpectation(pos);
+      var commit = false;
       while(true) {
         final endRes = end._run(s, index);
+        exps = exps.best(endRes.expectations);
+        commit = commit || endRes.isCommitted;
         if (endRes.isSuccess) {
-          return endRes.with(
-              value: res, expectations: exps.best(endRes.expectations));
-        } else {
+          return endRes.with(value: res, expectations: exps,
+                             isCommitted: commit);
+        } else if (!endRes.isCommitted) {
           final xRes = this._run(s, index);
+          exps = exps.best(xRes.expectations);
+          commit = commit || xRes.isCommitted;
           if (xRes.isSuccess) {
             res.add(xRes.value);
             index = xRes.position;
-            exps = exps.best(xRes.expectations);
           } else {
-            return xRes.with(expectations: exps.best(endRes.expectations));
+            return xRes.with(expectations: exps, isCommitted: commit);
           }
+        } else {
+          return endRes.with(expectations: exps);
         }
       }
     });
@@ -262,19 +276,25 @@ class Parser<A> {
     return new Parser((s, pos) {
       int index = pos;
       var exps = _emptyExpectation(pos);
+      var commit = false;
       while(true) {
         final endRes = end._run(s, index);
+        exps = exps.best(endRes.expectations);
+        commit = commit || endRes.isCommitted;
         if (endRes.isSuccess) {
-          return endRes.with(
-              value: null, expectations: exps.best(endRes.expectations));
-        } else {
+          return endRes.with(value: null, expectations: exps,
+                             isCommitted: commit);
+        } else if (!endRes.isCommitted) {
           final xRes = this._run(s, index);
+          exps = exps.best(xRes.expectations);
+          commit = commit || xRes.isCommitted;
           if (xRes.isSuccess) {
             index = xRes.position;
-            exps = exps.best(xRes.expectations);
           } else {
-            return xRes.with(expectations: exps.best(endRes.expectations));
+            return xRes.with(expectations: exps, isCommitted: commit);
           }
+        } else {
+          return endRes.with(expectations: exps);
         }
       }
     });
@@ -291,15 +311,19 @@ class Parser<A> {
     return new Parser((s, pos) {
       final res = acc();
       var exps = _emptyExpectation(pos);
+      var commit = false;
       int index = pos;
       while(true) {
         ParseResult<A> o = this._run(s, index);
+        exps = exps.best(o.expectations);
+        commit = commit || o.isCommitted;
         if (o.isSuccess) {
           res.add(o.value);
           index = o.position;
-          exps = exps.best(o.expectations);
+        } else if (commit) {
+          return _failure(s, index, exps, true);
         } else {
-          return _success(res, s, index, exps.best(o.expectations));
+          return _success(res, s, index, exps);
         }
       }
     });
@@ -319,13 +343,17 @@ class Parser<A> {
     return new Parser((s, pos) {
       int index = pos;
       var exps = _emptyExpectation(pos);
+      var commit = false;
       while(true) {
         ParseResult<A> o = this._run(s, index);
+        exps = exps.best(o.expectations);
+        commit = commit || o.isCommitted;
         if (o.isSuccess) {
           index = o.position;
-          exps = exps.best(o.expectations);
+        } else if (commit) {
+          return _failure(s, index, exps, true);
         } else {
-          return _success(null, s, index, exps.best(o.expectations));
+          return _success(null, s, index, exps);
         }
       }
     });
@@ -367,15 +395,19 @@ class Parser<A> {
       return new Parser((s, pos) {
         int index = pos;
         var exps = _emptyExpectation(pos);
+        var commit = false;
         while(true) {
-          final newres =
-              (pure((f) => (x) => f(res, x)) * sep * this)._run(s, index);
+          accum(f) => (x) => f(res, x);
+          final newres = (pure(accum) * sep * this)._run(s, index);
+          exps = exps.best(newres.expectations);
+          commit = commit || newres.isCommitted;
           if (newres.isSuccess) {
             res = newres.value;
             index = newres.position;
-            exps = exps.best(newres.expectations);
+          } else if (commit) {
+            return _failure(s, index, exps, true);
           } else {
-            return _success(res, s, index, exps.best(newres.expectations));
+            return _success(res, s, index, exps);
           }
         }
       });
@@ -508,11 +540,11 @@ Parser choice(List<Parser> ps) {
     var exps = _emptyExpectation(pos);
     for (final p in ps) {
       final res = p._run(s, pos);
+      exps = exps.best(res.expectations);
       if (res.isSuccess) {
-        return res.with(expectations: exps.best(res.expectations));
-      }
-      else {
-        exps = exps.best(res.expectations);
+        return res.with(expectations: exps);
+      } else if (res.isCommitted) {
+        return res;
       }
     }
     return _failure(s, pos, exps);

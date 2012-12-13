@@ -46,6 +46,7 @@ class Expectations {
 
 class ParseResult<A> {
   final bool isSuccess;
+  final bool isCommitted;
   /// [:null:] if [:!isSuccess:]
   final A value;
   final String text;
@@ -66,20 +67,19 @@ class ParseResult<A> {
     }
   }
 
-  ParseResult.success(A value, String text, int position,
-                      Expectations expectations)
-      : this.isSuccess = true
-      , this.value = value
-      , this.text = text
-      , this.position = position
-      , this.expectations = expectations;
+  ParseResult(this.text, this.expectations, this.position, this.isSuccess,
+              this.isCommitted, this.value);
 
-  ParseResult.failure(String text, int position, Expectations expectations)
-      : this.isSuccess = false
-      , this.value = null
-      , this.text = text
-      , this.position = position
-      , this.expectations = expectations;
+  ParseResult with({String text, Expectations expectations, int position,
+                    bool isSuccess, int isCommitted, Object value}) {
+    return new ParseResult(
+        ?text         ? text         : this.text,
+        ?expectations ? expectations : this.expectations,
+        ?position     ? position     : this.position,
+        ?isSuccess    ? isSuccess    : this.isSuccess,
+        ?isCommitted  ? isCommitted  : this.isCommitted,
+        ?value        ? value        : this.value);
+  }
 
   get _shortRest => rest.length < 10 ? rest : '${rest.substring(0, 10)}...';
 
@@ -89,13 +89,16 @@ class ParseResult<A> {
 }
 
 ParseResult _success(value, String text, int position,
-                     [Expectations expectations]) =>
-    new ParseResult.success(value, text, position,
-        ?expectations ? expectations : _emptyExpectation(position));
+                     [Expectations expectations, bool committed = false]) {
+  final exps = ?expectations ? expectations : _emptyExpectation(position);
+  return new ParseResult(text, exps, position, true, committed, value);
+}
 
-ParseResult _failure(String text, int position, [Expectations expectations]) =>
-    new ParseResult.failure(text, position,
-        ?expectations ? expectations : _emptyExpectation(position));
+ParseResult _failure(String text, int position,
+                     [Expectations expectations, bool committed = false]) {
+  final exps = ?expectations ? expectations : _emptyExpectation(position);
+  return new ParseResult(text, exps, position, false, committed, null);
+}
 
 typedef ParseResult ParseFunction(String s, int pos);
 
@@ -118,13 +121,8 @@ class Parser<A> {
       ParseResult res = _run(text, pos);
       if (res.isSuccess) {
         final res2 = g(res.value)._run(text, res.position);
-        if (res2.isSuccess) {
-          return _success(res2.value, res2.text, res2.position,
-                          res.expectations.best(res2.expectations));
-        } else {
-          return _failure(res2.text, res2.position,
-                          res.expectations.best(res2.expectations));
-        }
+        return res2.with(
+            expectations: res.expectations.best(res2.expectations));
       } else {
         return res;
       }
@@ -134,11 +132,7 @@ class Parser<A> {
   Parser expecting(String expected) {
     return new Parser((s, pos) {
       final res = _run(s, pos);
-      return res.isSuccess
-          ? _success(res.value, res.text, res.position,
-                     _singleExpectation(expected, pos))
-          : _failure(res.text, res.position,
-                     _singleExpectation(expected, pos));
+      return res.with(expectations: _singleExpectation(expected, pos));
     });
   }
 
@@ -171,13 +165,8 @@ class Parser<A> {
         return res;
       } else {
         ParseResult res2 = p._run(s, pos);
-        if (res2.isSuccess) {
-          return _success(res2.value, res2.text, res2.position,
-                          res.expectations.best(res2.expectations));
-        } else {
-          return _failure(res2.text, res2.position,
-                          res.expectations.best(res2.expectations));
-        }
+        return res2.with(
+            expectations: res.expectations.best(res2.expectations));
       }
     });
   }
@@ -246,8 +235,8 @@ class Parser<A> {
       while(true) {
         final endRes = end._run(s, index);
         if (endRes.isSuccess) {
-          return _success(res, s, endRes.position,
-                          exps.best(endRes.expectations));
+          return endRes.with(
+              value: res, expectations: exps.best(endRes.expectations));
         } else {
           final xRes = this._run(s, index);
           if (xRes.isSuccess) {
@@ -255,8 +244,7 @@ class Parser<A> {
             index = xRes.position;
             exps = exps.best(xRes.expectations);
           } else {
-            return _failure(xRes.text, xRes.position,
-                            exps.best(endRes.expectations));
+            return xRes.with(expectations: exps.best(endRes.expectations));
           }
         }
       }
@@ -277,16 +265,15 @@ class Parser<A> {
       while(true) {
         final endRes = end._run(s, index);
         if (endRes.isSuccess) {
-          return _success(null, s, endRes.position,
-                          exps.best(endRes.expectations));
+          return endRes.with(
+              value: null, expectations: exps.best(endRes.expectations));
         } else {
           final xRes = this._run(s, index);
           if (xRes.isSuccess) {
             index = xRes.position;
             exps = exps.best(xRes.expectations);
           } else {
-            return _failure(xRes.text, xRes.position,
-                            exps.best(endRes.expectations));
+            return xRes.with(expectations: exps.best(endRes.expectations));
           }
         }
       }
@@ -413,8 +400,7 @@ class Parser<A> {
     return new Parser((s, pos) {
         final result = run(s, pos);
         if (result.isSuccess) {
-          return _success(s.substring(pos, result.position),
-                          s, result.position, result.expectations);
+          return result.with(value: s.substring(pos, result.position));
         } else {
           return result;
         }
@@ -523,8 +509,7 @@ Parser choice(List<Parser> ps) {
     for (final p in ps) {
       final res = p._run(s, pos);
       if (res.isSuccess) {
-        return _success(res.value, res.text, res.position,
-                        exps.best(res.expectations));
+        return res.with(expectations: exps.best(res.expectations));
       }
       else {
         exps = exps.best(res.expectations);

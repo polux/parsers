@@ -393,23 +393,22 @@ class Parser<A> {
 
   Parser chainl1(Parser sep) {
     rest(acc) {
-      var res = acc;
       return new Parser((s, pos) {
         int index = pos;
         var exps = _emptyExpectation(pos);
         var commit = false;
         while(true) {
-          accum(f) => (x) => f(res, x);
-          final newres = (pure(accum) * sep * this)._run(s, index);
-          exps = exps.best(newres.expectations);
-          commit = commit || newres.isCommitted;
-          if (newres.isSuccess) {
-            res = newres.value;
-            index = newres.position;
-          } else if (commit) {
-            return _failure(s, index, exps, true);
+          combine(f) => (x) => f(acc, x);
+          final res = (pure(combine) * sep * this)._run(s, index);
+          exps = exps.best(res.expectations);
+          commit = commit || res.isCommitted;
+          if (res.isSuccess) {
+            acc = res.value;
+            index = res.position;
+          } else if (res.isCommitted) {
+            return res.with(expectations: exps);
           } else {
-            return _success(res, s, index, exps);
+            return _success(acc, s, index, exps, commit);
           }
         }
       });

@@ -928,10 +928,59 @@ main() {
   test('commit 55 model', () => commit55Prop(manyUntilModel));
   test('commit 55 impl', () => commit55Prop(manyUntilImpl));
 
+
+
+
+
+  commit56Prop(f) {
+    t3(x) => (y) => (z) => int.parse(x) + int.parse(y) + int.parse(z);
+    plus(x, y) => x + y;
+    final p = (pure(t3) * char('1') * char('2').committed * char('3'))
+            | (pure(t3) * char('4') * char('5') * char('6'));
+    return expect(f(p, pure(plus)).run('123456123zz'),
+                  isSuccess(27, 'zz'));
+  }
+
+  test('commit 56 model', () => commit56Prop(chainl1Model));
+  test('commit 56 impl', () => commit56Prop(chainl1Impl));
+
+  commit57Prop(f) {
+    t3(x) => (y) => (z) => int.parse(x) + int.parse(y) + int.parse(z);
+    plus(x, y) => x + y;
+    final p = (pure(t3) * char('1') * char('2').committed * char('3'))
+            | (pure(t3) * char('1') * char('5') * char('6'));
+    return expect(f(p, pure(plus)).run('123156zz'),
+                  isFailure('56zz'));
+  }
+
+  test('commit 57 model', () => commit57Prop(chainl1Model));
+  test('commit 57 impl', () => commit57Prop(chainl1Impl));
+
+  commit58Prop(f) {
+    t2(x) => (y) => '$x$y';
+    plus(x, y) => '$x$y';
+    final p = f(char('x') > char('a').committed, pure(plus)) > string('b')
+            | string('xaxac');
+    return expect(p.run('xaxac'), isFailure('c'));
+  }
+
+  test('commit 58 model', () => commit58Prop(chainl1Model));
+  test('commit 58 impl', () => commit58Prop(chainl1Impl));
+
+  commit59Prop(f) {
+    t2(x) => (y) => '$x$y';
+    plus(x, y) => '$x$y';
+    final p = f(char('x') > char('a'), pure(plus).committed) > string('b')
+            | string('xaxac');
+    return expect(p.run('xaxac'), isFailure('c'));
+  }
+
+  test('commit 59 model', () => commit59Prop(chainl1Model));
+  test('commit 59 impl', () => commit59Prop(chainl1Impl));
+
   var big = "a";
   for (int i = 0; i < 15; i++) { big = '$big$big'; }
 
-  /*
   test('no stack overflow many', () =>
       expect(char('a').many.run(big).value.length, equals(32768)));
 
@@ -944,5 +993,4 @@ main() {
 
   test('no stack overflow comment', () =>
       expect(lang.natural.run('1 /* $big */'), isSuccess(1, '')));
-      */
 }

@@ -833,6 +833,15 @@ main() {
   test('commit 47 model', () => commit47Prop(manyModel));
   test('commit 47 impl', () => commit47Prop(manyImpl));
 
+  commit475Prop(f) {
+    final p = f(char('x') > char('a').committed) > string('b')
+            | string('xaxac');
+    return expect(p.run('xaxac'), isFailure('c'));
+  }
+
+  test('commit 47.5 model', () => commit475Prop(manyModel));
+  test('commit 47.5 impl', () => commit475Prop(manyImpl));
+
   commit48Prop(f) {
     final p = (char('a') > (char('b').committed > char('c')))
             | (char('d') > (char('e') > char('f')));
@@ -859,6 +868,65 @@ main() {
 
   test('commit 50 model', () => commit50Prop(skipManyModel));
   test('commit 50 impl', () => commit50Prop(skipManyImpl));
+
+  commit51Prop(f) {
+    t3(x) => (y) => (z) => '$x$y$z';
+    final p = (pure(t3) * char('a') * char('b').committed * char('c'))
+            | (pure(t3) * char('a') * char('e') * char('f'));
+    return expect(f(p, char('z')).run('abcabczz'),
+                  isSuccess(['abc', 'abc'], 'z'));
+  }
+
+  test('commit 51 model', () => commit51Prop(manyUntilModel));
+  test('commit 51 impl', () => commit51Prop(manyUntilImpl));
+
+  commit515Prop(f) {
+    final p = f(char('x') > char('a').committed) > string('b')
+            | string('xaxac');
+    return expect(p.run('xaxac'), isFailure('c'));
+  }
+
+  test('commit 51.5 model', () => commit515Prop(skipManyModel));
+  test('commit 51.5 impl', () => commit515Prop(skipManyImpl));
+
+  commit52Prop(f) {
+    t3(x) => (y) => (z) => '$x$y$z';
+    final p = (pure(t3) * char('a') * char('b').committed * char('c'))
+            | (pure(t3) * char('d') * char('e') * char('f'));
+    return expect(f(p, char('z')).run('abcdefabczz'),
+                  isSuccess(['abc', 'def', 'abc'], 'z'));
+  }
+
+  test('commit 52 model', () => commit52Prop(manyUntilModel));
+  test('commit 52 impl', () => commit52Prop(manyUntilModel));
+
+  commit53Prop(f) {
+    t3(x) => (y) => (z) => '$x$y$z';
+    final p = (pure(t3) * char('a') * char('b').committed * char('c'))
+            | (pure(t3) * char('a') * char('e') * char('f'));
+    return expect(f(p, char('z')).run('abcaefzz'), isFailure('efzz'));
+  }
+
+  test('commit 53 model', () => commit53Prop(manyUntilModel));
+  test('commit 53 impl', () => commit53Prop(manyUntilModel));
+
+  commit54Prop(f) {
+    final p = f(char('x') > char('a').committed, char('z')) > string('b')
+            | string('xaxazc');
+    return expect(p.run('xaxazc'), isFailure('c'));
+  }
+
+  test('commit 54 model', () => commit54Prop(manyUntilModel));
+  test('commit 54 impl', () => commit54Prop(manyUntilImpl));
+
+  commit55Prop(f) {
+    final p = f(char('x') > char('a').committed, char('z'))
+            | string('xaxazc');
+    return expect(p.run('xaxaw'), isFailure('w'));
+  }
+
+  test('commit 55 model', () => commit55Prop(manyUntilModel));
+  test('commit 55 impl', () => commit55Prop(manyUntilImpl));
 
   var big = "a";
   for (int i = 0; i < 15; i++) { big = '$big$big'; }

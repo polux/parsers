@@ -243,26 +243,25 @@ class Parser<A> {
       List res = [];
       int index = pos;
       var exps = _emptyExpectation(pos);
-      var commit = false;
+      bool committed = false;
       while(true) {
         final endRes = end._run(s, index);
         exps = exps.best(endRes.expectations);
-        commit = commit || endRes.isCommitted;
         if (endRes.isSuccess) {
           return endRes.with(value: res, expectations: exps,
-                             isCommitted: commit);
+                             isCommitted: committed);
         } else if (!endRes.isCommitted) {
           final xRes = this._run(s, index);
           exps = exps.best(xRes.expectations);
-          commit = commit || xRes.isCommitted;
+          committed = committed || xRes.isCommitted;
           if (xRes.isSuccess) {
             res.add(xRes.value);
             index = xRes.position;
           } else {
-            return xRes.with(expectations: exps, isCommitted: commit);
+            return xRes.with(expectations: exps, isCommitted: committed);
           }
         } else {
-          return endRes.with(expectations: exps);
+          return endRes.with(expectations: exps, isCommitted: committed);
         }
       }
     });
@@ -315,16 +314,18 @@ class Parser<A> {
       final res = acc();
       var exps = _emptyExpectation(pos);
       int index = pos;
+      bool committed = false;
       while(true) {
         ParseResult<A> o = this._run(s, index);
         exps = exps.best(o.expectations);
+        committed = committed || o.isCommitted;
         if (o.isSuccess) {
           res.add(o.value);
           index = o.position;
         } else if (o.isCommitted) {
           return o.with(expectations: exps);
         } else {
-          return _success(res, s, index, exps);
+          return _success(res, s, index, exps, committed);
         }
       }
     });
@@ -344,15 +345,17 @@ class Parser<A> {
     return new Parser((s, pos) {
       int index = pos;
       var exps = _emptyExpectation(pos);
+      bool committed = false;
       while(true) {
         ParseResult<A> o = this._run(s, index);
         exps = exps.best(o.expectations);
+        committed = committed || o.isCommitted;
         if (o.isSuccess) {
           index = o.position;
         } else if (o.isCommitted) {
           return o.with(expectations: exps);
         } else {
-          return _success(null, s, index, exps);
+          return _success(null, s, index, exps, committed);
         }
       }
     });

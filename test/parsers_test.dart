@@ -801,14 +801,37 @@ main() {
   test('commit 44 impl', () => commit44Prop(skipManyImpl));
 
   commit45Prop(f) {
-    final p = (char('a') > (char('b').committed > char('c')))
-            | (char('d') > (char('e') > char('f')));
-    return expect(p.many.run('abcdefabcdef'),
-                  isSuccess(['c','f','c','f'], ''));
+    t3(x) => (y) => (z) => '$x$y$z';
+    final p = (pure(t3) * char('a') * char('b').committed * char('c'))
+            | (pure(t3) * char('d') * char('e') * char('f'));
+    return expect(f(p).run('abcabczz'),
+                  isSuccess(['abc', 'abc'], 'zz'));
   }
 
-  test('commit 45 model', () => commit45Prop(skipManyModel));
-  test('commit 45 impl', () => commit45Prop(skipManyImpl));
+  test('commit 45 model', () => commit45Prop(manyModel));
+  test('commit 45 impl', () => commit45Prop(manyImpl));
+
+  commit46Prop(f) {
+    t3(x) => (y) => (z) => '$x$y$z';
+    final p = (pure(t3) * char('a') * char('b').committed * char('c'))
+            | (pure(t3) * char('d') * char('e') * char('f'));
+    return expect(f(p).run('abcdefabczz'),
+                  isSuccess(['abc', 'def', 'abc'], 'zz'));
+  }
+
+  test('commit 46 model', () => commit46Prop(manyModel));
+  test('commit 46 impl', () => commit46Prop(manyImpl));
+
+  commit47Prop(f) {
+    t3(x) => (y) => (z) => '$x$y$z';
+    final p = (pure(t3) * char('a') * char('b').committed * char('c'))
+            | (pure(t3) * char('a') * char('e') * char('f'));
+    return expect(f(p).run('abcaefzz'),
+                  isFailure('efzz'));
+  }
+
+  test('commit 47 model', () => commit47Prop(manyModel));
+  test('commit 47 impl', () => commit47Prop(manyImpl));
 
   var big = "a";
   for (int i = 0; i < 15; i++) { big = '$big$big'; }

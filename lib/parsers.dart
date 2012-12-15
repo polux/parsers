@@ -83,9 +83,12 @@ class ParseResult<A> {
 
   get _shortRest => rest.length < 10 ? rest : '${rest.substring(0, 10)}...';
 
-  toString() =>
-      isSuccess ? 'success: {value: $value, rest: "$_shortRest"}'
-                : 'failure: {message: $errorMessage, rest: "$_shortRest"}';
+  toString() {
+    final c = isCommitted ? '*' : '';
+    return isSuccess
+        ? 'success$c: {value: $value, rest: "$_shortRest"}'
+        : 'failure$c: {message: $errorMessage, rest: "$_shortRest"}';
+  }
 }
 
 ParseResult _success(value, String text, int position,
@@ -311,17 +314,15 @@ class Parser<A> {
     return new Parser((s, pos) {
       final res = acc();
       var exps = _emptyExpectation(pos);
-      var commit = false;
       int index = pos;
       while(true) {
         ParseResult<A> o = this._run(s, index);
         exps = exps.best(o.expectations);
-        commit = commit || o.isCommitted;
         if (o.isSuccess) {
           res.add(o.value);
           index = o.position;
-        } else if (commit) {
-          return _failure(s, index, exps, true);
+        } else if (o.isCommitted) {
+          return o.with(expectations: exps);
         } else {
           return _success(res, s, index, exps);
         }

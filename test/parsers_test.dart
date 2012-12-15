@@ -800,6 +800,16 @@ main() {
   test('commit 44 model', () => commit44Prop(skipManyModel));
   test('commit 44 impl', () => commit44Prop(skipManyImpl));
 
+  commit45Prop(f) {
+    final p = (char('a') > (char('b').committed > char('c')))
+            | (char('d') > (char('e') > char('f')));
+    return expect(p.many.run('abcdefabcdef'),
+                  isSuccess(['c','f','c','f'], ''));
+  }
+
+  test('commit 45 model', () => commit45Prop(skipManyModel));
+  test('commit 45 impl', () => commit45Prop(skipManyImpl));
+
   var big = "a";
   for (int i = 0; i < 15; i++) { big = '$big$big'; }
 

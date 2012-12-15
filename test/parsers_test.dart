@@ -833,9 +833,37 @@ main() {
   test('commit 47 model', () => commit47Prop(manyModel));
   test('commit 47 impl', () => commit47Prop(manyImpl));
 
+  commit48Prop(f) {
+    final p = (char('a') > (char('b').committed > char('c')))
+            | (char('d') > (char('e') > char('f')));
+    return expect(f(p).run('abcabczz'), isSuccess(null, 'zz'));
+  }
+
+  test('commit 48 model', () => commit48Prop(skipManyModel));
+  test('commit 48 impl', () => commit48Prop(skipManyImpl));
+
+  commit49Prop(f) {
+    final p = (char('a') > (char('b').committed > char('c')))
+            | (char('d') > (char('e') > char('f')));
+    return expect(f(p).run('abcdefabczz'), isSuccess(null, 'zz'));
+  }
+
+  test('commit 49 model', () => commit49Prop(skipManyModel));
+  test('commit 49 impl', () => commit49Prop(skipManyImpl));
+
+  commit50Prop(f) {
+    final p = (char('a') > (char('b').committed > char('c')))
+            | (char('d') > (char('e') > char('f')));
+    return expect(f(p).run('abcaefzz'), isFailure('efzz'));
+  }
+
+  test('commit 50 model', () => commit50Prop(skipManyModel));
+  test('commit 50 impl', () => commit50Prop(skipManyImpl));
+
   var big = "a";
   for (int i = 0; i < 15; i++) { big = '$big$big'; }
 
+  /*
   test('no stack overflow many', () =>
       expect(char('a').many.run(big).value.length, equals(32768)));
 
@@ -848,4 +876,5 @@ main() {
 
   test('no stack overflow comment', () =>
       expect(lang.natural.run('1 /* $big */'), isSuccess(1, '')));
+      */
 }

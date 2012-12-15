@@ -344,15 +344,13 @@ class Parser<A> {
     return new Parser((s, pos) {
       int index = pos;
       var exps = _emptyExpectation(pos);
-      var commit = false;
       while(true) {
         ParseResult<A> o = this._run(s, index);
         exps = exps.best(o.expectations);
-        commit = commit || o.isCommitted;
         if (o.isSuccess) {
           index = o.position;
-        } else if (commit) {
-          return _failure(s, index, exps, true);
+        } else if (o.isCommitted) {
+          return o.with(expectations: exps);
         } else {
           return _success(null, s, index, exps);
         }

@@ -9,7 +9,6 @@ import 'package:parsers/parsers.dart';
 import 'package:persistent/persistent.dart';
 import 'package:unittest/unittest.dart';
 
-part 'src/parsers_model.dart';
 
 class FailureMatcher extends BaseMatcher {
   String rest;
@@ -117,35 +116,11 @@ main() {
   test('notFollowedBy 2', () =>
       expect(let.run('letaa'), isFailure('aa')));
 
-  many1Prop(f) => expect(f(char('a')).run(''), isSuccess([], ''));
+  final comment = string('/*') > anyChar.manyUntil(string('*/'));
 
-  test('many 1 model', () => many1Prop(manyModel));
-  test('many 1 impl', () => many1Prop(manyModel));
-
-  many2Prop(f) => expect(f(char('a')).run('aab'), isSuccess(['a', 'a'], 'b'));
-
-  test('many 2 model', () => many2Prop(manyModel));
-  test('many 2 impl', () => many2Prop(manyModel));
-
-  many3Prop(f) => expect(f(char('a')).run('bab'), isSuccess([], 'bab'));
-
-  test('many 3 model', () => many3Prop(manyModel));
-  test('many 3 impl', () => many3Prop(manyModel));
-
-  skipMany1Prop(f) => expect(f(char('a')).run(''), isSuccess(null, ''));
-
-  test('skipMany 1 model', () => skipMany1Prop(skipManyModel));
-  test('skipMany 1 impl', () => skipMany1Prop(skipManyModel));
-
-  skipMany2Prop(f) => expect(f(char('a')).run('aab'), isSuccess(null, 'b'));
-
-  test('skipMany 2 model', () => skipMany2Prop(skipManyModel));
-  test('skipMany 2 impl', () => skipMany2Prop(skipManyModel));
-
-  skipMany3Prop(f) => expect(f(char('a')).run('bab'), isSuccess(null, 'bab'));
-
-  test('skipMany 3 model', () => skipMany3Prop(skipManyModel));
-  test('skipMany 3 impl', () => skipMany3Prop(skipManyModel));
+  test('manyUntil', () =>
+    expect(comment.run('/* abcdef */'),
+           isSuccess(' abcdef '.splitChars(), '')));
 
   test('maybe 1', () =>
       expect(char('a').maybe.run('a'), isSuccess(new Option.some('a'),'')));
@@ -222,54 +197,29 @@ main() {
   test('letter', () =>
       expect(letter.run('a'), isSuccess('a', '')));
 
-  manyUntilProp0(f) =>
-    expect((string('/*') > f(anyChar, string('*/'))).run('/* abcdef */'),
-           isSuccess(' abcdef '.splitChars(), ''));
+  test('manyUntil 1', () =>
+      expect(anyChar.manyUntil(string('*/')).run(' a b c d */ e'),
+             isSuccess(' a b c d '.splitChars(), ' e')));
 
-  test('manyUntil 0 model', () => manyUntilProp0(manyUntilModel));
-  test('manyUntil 0 impl', () => manyUntilProp0(manyUntilImpl));
+  test('manyUntil 2', () =>
+      expect(anyChar.manyUntil(string('*/')).run(' a b c d e'),
+             isFailure('')));
 
-  manyUntilProp1(f) =>
-      expect(f(anyChar, string('*/')).run(' a b c d */ e'),
-             isSuccess(' a b c d '.splitChars(), ' e'));
+  test('manyUntil 3', () =>
+      expect(anyChar.manyUntil(string('*/').lookAhead).run(' a b c d */ e'),
+             isSuccess(' a b c d '.splitChars(), '*/ e')));
 
-  test('manyUntil 1 model', () => manyUntilProp1(manyUntilModel));
-  test('manyUntil 1 impl', () => manyUntilProp1(manyUntilImpl));
+  test('skipManyUntil 1', () =>
+      expect(anyChar.skipManyUntil(string('*/')).run(' a b c d */ e'),
+             isSuccess(null, ' e')));
 
-  manyUntilProp2(f) =>
-      expect(f(anyChar, string('*/')).run(' a b c d e'),
-             isFailure(''));
+  test('skipManyUntil 2', () =>
+      expect(anyChar.skipManyUntil(string('*/')).run(' a b c d e'),
+             isFailure('')));
 
-  test('manyUntil 2 model', () => manyUntilProp2(manyUntilModel));
-  test('manyUntil 2 impl', () => manyUntilProp2(manyUntilImpl));
-
-  manyUntilProp3(f) =>
-      expect(f(anyChar, string('*/').lookAhead).run(' a b c d */ e'),
-             isSuccess(' a b c d '.splitChars(), '*/ e'));
-
-  test('manyUntil 3 model', () => manyUntilProp3(manyUntilModel));
-  test('manyUntil 3 impl', () => manyUntilProp3(manyUntilImpl));
-
-  skipManyUntilProp1(f) =>
-      expect(f(anyChar, string('*/')).run(' a b c d */ e'),
-             isSuccess(null, ' e'));
-
-  test('skipManyUntil 1 model', () => skipManyUntilProp1(skipManyUntilModel));
-  test('skipManyUntil 1 impl', () => skipManyUntilProp1(skipManyUntilImpl));
-
-  skipManyUntilProp2(f) =>
-      expect(f(anyChar, string('*/')).run(' a b c d e'),
-             isFailure(''));
-
-  test('skipManyUntil 2 model', () => skipManyUntilProp2(skipManyUntilModel));
-  test('skipManyUntil 2 impl', () => skipManyUntilProp2(skipManyUntilImpl));
-
-  skipManyUntilProp3(f) =>
-      expect(f(anyChar, string('*/').lookAhead).run(' a b c d */ e'),
-             isSuccess(null, '*/ e'));
-
-  test('skipManyUntil 3 model', () => skipManyUntilProp3(skipManyUntilModel));
-  test('skipManyUntil 3 impl', () => skipManyUntilProp3(skipManyUntilImpl));
+  test('skipManyUntil 3', () =>
+      expect(anyChar.skipManyUntil(string('*/').lookAhead).run(' a b c d */ e'),
+             isSuccess(null, '*/ e')));
 
   final lang = new LanguageParsers(
       nestedComments: true,
@@ -438,33 +388,21 @@ main() {
       expect(lang.natural.chainl(addop, 42).run('a - 1 - 2'),
               isSuccess(42, 'a - 1 - 2')));
 
-  chainl1Prop1(f) =>
-      expect(f(lang.natural, pure((x, y) => x + y)).run('1 2 3'),
-             isSuccess(6, ''));
+  test('chainl1 1', () =>
+      expect(lang.natural.chainl1(pure((x, y) => x + y)).run('1 2 3'),
+             isSuccess(6, '')));
 
-  test('chainl1 1 model', () => chainl1Prop1(chainl1Model));
-  test('chainl1 1 impl', () => chainl1Prop1(chainl1Impl));
+  test('chainl1 2', () =>
+      expect(lang.natural.chainl1(pure((x, y) => x + y)).run('a 2 3'),
+             isFailure('a 2 3')));
 
-  chainl1Prop2(f) =>
-      expect(f(lang.natural, pure((x, y) => x + y)).run('a 2 3'),
-             isFailure('a 2 3'));
+  test('chainl1 3', () =>
+      expect(lang.natural.chainl1(addop).run('3 - 1 - 2'),
+             isSuccess(0, '')));
 
-  test('chainl1 2 model', () => chainl1Prop2(chainl1Model));
-  test('chainl1 2 impl', () => chainl1Prop2(chainl1Impl));
-
-  chainl1Prop3(f) =>
-      expect(f(lang.natural, addop).run('3 - 1 - 2'),
-             isSuccess(0, ''));
-
-  test('chainl1 3 model', () => chainl1Prop3(chainl1Model));
-  test('chainl1 3 impl', () => chainl1Prop3(chainl1Impl));
-
-  chainl1Prop4(f) =>
-      expect(f(lang.natural, addop).run('a - 1 - 2'),
-             isFailure('a - 1 - 2'));
-
-  test('chainl1 4 model', () => chainl1Prop4(chainl1Model));
-  test('chainl1 4 impl', () => chainl1Prop4(chainl1Impl));
+  test('chainl1 4', () =>
+      expect(lang.natural.chainl1(addop).run('a - 1 - 2'),
+              isFailure('a - 1 - 2')));
 
   test('chainr 1', () =>
       expect(lang.natural.chainr(pure((x, y) => x + y), 42).run('1 2 3'),
@@ -517,288 +455,6 @@ main() {
   test('record 2', () =>
       expect(char('a').record.run(''),
              isFailure('')));
-
-  test('commit 1', () =>
-      expect((char('a').committed | char('b')).run('bc'),
-             isFailure('bc')));
-
-  test('commit 2', () =>
-      expect((char('a').committed | char('b')).run('ac'),
-             isSuccess('a', 'c')));
-
-  test('commit 3', () =>
-      expect((char('a') > char('b').committed | char('a')).run('acc'),
-             isFailure('cc')));
-
-  test('commit 4', () =>
-      expect((char('a') > char('b').committed | char('a')).run('abc'),
-             isSuccess('b', 'c')));
-
-  test('commit 5', () =>
-      expect(char('a').committed.many.run('ccc'),
-             isFailure('ccc')));
-
-  test('commit 6', () =>
-      expect(char('a').committed.many.run('aac'),
-             isFailure('c')));
-
-  test('commit 7', () =>
-      expect(char('a').committed.many.run('aaa'),
-             isFailure('')));
-
-  test('commit 8', () =>
-      expect(char('a').committed.many.run(''),
-             isFailure('')));
-
-  test('commit 9', () =>
-      expect(char('a').committed.skipMany.run('ccc'),
-             isFailure('ccc')));
-
-  test('commit 10', () =>
-      expect(char('a').committed.skipMany.run('aac'),
-             isFailure('c')));
-
-  test('commit 11', () =>
-      expect(char('a').committed.skipMany.run('aaa'),
-             isFailure('')));
-
-  test('commit 12', () =>
-      expect(char('a').committed.skipMany.run(''),
-             isFailure('')));
-
-  plus(x, y) => x + y;
-
-  test('commit 13', () =>
-      expect(lang.natural.committed.chainl(pure(plus), 42).run('1 2 3'),
-             isFailure('')));
-
-  commit135(f) =>
-      expect(f(lang.natural.committed, pure(plus)).run('1 2 3'),
-             isFailure(''));
-
-  test('commit 13.5 model', () => commit135(chainl1Model));
-  test('commit 13.5 model', () => commit135(chainl1Impl));
-
-  test('commit 14', () =>
-      expect(lang.natural.committed.chainl(pure(plus), 42).run('a 2 3'),
-             isFailure('a 2 3')));
-
-  commit145(f) =>
-      expect(f(lang.natural.committed, pure(plus)).run('a 2 3'),
-             isFailure('a 2 3'));
-
-  test('commit 14.5 model', () => commit145(chainl1Model));
-  test('commit 14.5 model', () => commit145(chainl1Impl));
-
-  test('commit 15', () =>
-      expect(lang.natural.chainl(pure(plus).committed, 42).run('1 2 3'),
-             isFailure('')));
-
-  commit155(f) =>
-      expect(f(lang.natural, pure(plus).committed).run('1 2 3'),
-             isFailure(''));
-
-  test('commit 15.5 model', () => commit155(chainl1Model));
-  test('commit 15.5 model', () => commit155(chainl1Impl));
-
-  test('commit 16', () =>
-      expect(lang.natural.chainl(pure(plus).committed, 42).run('a 2 3'),
-             isSuccess(42, 'a 2 3')));
-
-  commit165(f) =>
-      expect(f(lang.natural, pure(plus).committed).run('a 2 3'),
-             isFailure('a 2 3'));
-
-  test('commit 16.5 model', () => commit165(chainl1Model));
-  test('commit 16.5 model', () => commit165(chainl1Impl));
-
-  test('commit 17', () =>
-      expect(choice([char('a').committed, char('b'), char('c')]).run('az'),
-             isSuccess('a', 'z')));
-
-  test('commit 18', () =>
-      expect(choice([char('a').committed, char('b'), char('c')]).run('bz'),
-             isFailure('bz')));
-
-  test('commit 19', () =>
-      expect(choice([char('a'), char('b').committed, char('c')]).run('bz'),
-             isSuccess('b', 'z')));
-
-  test('commit 20', () =>
-      expect(choice([char('a'), char('b').committed, char('c')]).run('cz'),
-             isFailure('cz')));
-
-  commit21Prop(f) =>
-      expect(f(char('a').committed, char('z')).run('ccc'),
-             isFailure('ccc'));
-
-  test('commit 21 model', () => commit21Prop(skipManyUntilModel));
-  test('commit 21 impl', () => commit21Prop(skipManyUntilImpl));
-
-  commit22Prop(f) =>
-      expect(f(char('a').committed, char('z')).run('aac'),
-             isFailure('c'));
-
-  test('commit 22 model', () => commit22Prop(skipManyUntilModel));
-  test('commit 22 impl', () => commit22Prop(skipManyUntilImpl));
-
-  commit23Prop(f) =>
-      expect(f(char('a').committed, char('z')).run('aaa'),
-             isFailure(''));
-
-  test('commit 23 model', () => commit23Prop(skipManyUntilModel));
-  test('commit 23 impl', () => commit23Prop(skipManyUntilImpl));
-
-  commit24Prop(f) =>
-      expect(f(char('a').committed, char('z')).run(''),
-             isFailure(''));
-
-  test('commit 24 model', () => commit24Prop(skipManyUntilModel));
-  test('commit 24 impl', () => commit24Prop(skipManyUntilImpl));
-
-  commit25Prop(f) =>
-      expect(f(char('a').committed, char('z')).run('aaazw'),
-             isSuccess(null, 'w'));
-
-  test('commit 25 model', () => commit25Prop(skipManyUntilModel));
-  test('commit 25 impl', () => commit25Prop(skipManyUntilImpl));
-
-  commit26Prop(f) =>
-      expect(f(char('a'), char('z').committed).run('aaazw'),
-             isFailure('aaazw'));
-
-  test('commit 26 model', () => commit26Prop(skipManyUntilModel));
-  test('commit 26 impl', () => commit26Prop(skipManyUntilImpl));
-
-  commit27Prop(f) =>
-      expect(f(char('a'), char('z').committed).run('zw'),
-             isSuccess(null, 'w'));
-
-  test('commit 27 model', () => commit27Prop(skipManyUntilModel));
-  test('commit 27 impl', () => commit27Prop(skipManyUntilImpl));
-
-  commit28Prop(f) =>
-      expect(f(char('a').committed, char('z')).run('ccc'),
-             isFailure('ccc'));
-
-  test('commit 28 model', () => commit28Prop(manyUntilModel));
-  test('commit 28 impl', () => commit28Prop(manyUntilImpl));
-
-  commit29Prop(f) =>
-      expect(f(char('a').committed, char('z')).run('aac'),
-             isFailure('c'));
-
-  test('commit 29 model', () => commit29Prop(manyUntilModel));
-  test('commit 29 impl', () => commit29Prop(manyUntilImpl));
-
-  commit30Prop(f) =>
-      expect(f(char('a').committed, char('z')).run('aaa'),
-             isFailure(''));
-
-  test('commit 30 model', () => commit30Prop(manyUntilModel));
-  test('commit 30 impl', () => commit30Prop(manyUntilImpl));
-
-  commit31Prop(f) =>
-      expect(f(char('a').committed, char('z')).run(''),
-             isFailure(''));
-
-  test('commit 31 model', () => commit31Prop(manyUntilModel));
-  test('commit 31 impl', () => commit31Prop(manyUntilImpl));
-
-
-  commit32Prop(f) =>
-      expect(f(char('a').committed, char('z')).run('aaazw'),
-             isSuccess(['a','a','a'], 'w'));
-
-  test('commit 32 model', () => commit32Prop(manyUntilModel));
-  test('commit 32 impl', () => commit32Prop(manyUntilImpl));
-
-  commit33Prop(f) =>
-      expect(f(char('a'), char('z').committed).run('aaazw'),
-             isFailure('aaazw'));
-
-  test('commit 33 model', () => commit33Prop(manyUntilModel));
-  test('commit 33 impl', () => commit33Prop(manyUntilImpl));
-
-  commit34Prop(f) =>
-      expect(f(char('a'), char('z').committed).run('zw'),
-             isSuccess([], 'w'));
-
-  test('commit 34 model', () => commit34Prop(manyUntilModel));
-  test('commit 34 impl', () => commit34Prop(manyUntilImpl));
-
-
-
-
-  commit35Prop(f) =>
-      expect(f(char('a').committed).run('ccc'),
-             isFailure('ccc'));
-
-  test('commit 35 model', () => commit35Prop(manyModel));
-  test('commit 35 impl', () => commit35Prop(manyImpl));
-
-  commit36Prop(f) =>
-      expect(f(char('a').committed).run('aac'),
-             isFailure('c'));
-
-  test('commit 36 model', () => commit36Prop(manyModel));
-  test('commit 36 impl', () => commit36Prop(manyImpl));
-
-  commit37Prop(f) =>
-      expect(f(char('a').committed).run('aaa'),
-             isFailure(''));
-
-  test('commit 37 model', () => commit37Prop(manyModel));
-  test('commit 37 impl', () => commit37Prop(manyImpl));
-
-  commit38Prop(f) =>
-      expect(f(char('a').committed).run(''),
-             isFailure(''));
-
-  test('commit 38 model', () => commit38Prop(manyModel));
-  test('commit 38 impl', () => commit38Prop(manyImpl));
-
-  commit39Prop(f) =>
-      expect(f(char('a').committed).run('aaazw'),
-             isFailure('zw'));
-
-  test('commit 39 model', () => commit39Prop(manyModel));
-  test('commit 39 impl', () => commit39Prop(manyImpl));
-
-  commit40Prop(f) =>
-      expect(f(char('a').committed).run('ccc'),
-             isFailure('ccc'));
-
-  test('commit 40 model', () => commit40Prop(skipManyModel));
-  test('commit 40 impl', () => commit40Prop(skipManyImpl));
-
-  commit41Prop(f) =>
-      expect(f(char('a').committed).run('aac'),
-             isFailure('c'));
-
-  test('commit 41 model', () => commit41Prop(skipManyModel));
-  test('commit 41 impl', () => commit41Prop(skipManyImpl));
-
-  commit42Prop(f) =>
-      expect(f(char('a').committed).run('aaa'),
-             isFailure(''));
-
-  test('commit 42 model', () => commit42Prop(skipManyModel));
-  test('commit 42 impl', () => commit42Prop(skipManyImpl));
-
-  commit43Prop(f) =>
-      expect(f(char('a').committed).run(''),
-             isFailure(''));
-
-  test('commit 43 model', () => commit43Prop(skipManyModel));
-  test('commit 43 impl', () => commit43Prop(skipManyImpl));
-
-  commit44Prop(f) =>
-      expect(f(char('a').committed).run('aaazw'),
-             isFailure('zw'));
-
-  test('commit 44 model', () => commit44Prop(skipManyModel));
-  test('commit 44 impl', () => commit44Prop(skipManyImpl));
 
   var big = "a";
   for (int i = 0; i < 15; i++) { big = '$big$big'; }

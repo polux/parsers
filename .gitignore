@@ -2,6 +2,5 @@ example/packages
 packages/
 pubspec.lock
 test/packages
-test/src/packages
 tool/packages
 

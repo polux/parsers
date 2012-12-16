@@ -26,14 +26,34 @@ _humanOr(List es) {
     return result;
   }
 }
-_singleExpectation(String str, int pos) =>
+_singleExpectation(String str, Position pos) =>
     new Expectations(new Set()..add(str), pos);
-_emptyExpectation(int pos) =>
+_emptyExpectation(Position pos) =>
     new Expectations(new Set(), pos);
+
+class Position {
+  final int line;
+  final int character;
+  final int offset;
+
+  const Position(this.offset, this.line, this.character);
+
+  Position addChar(String c) {
+    assert(c.length == 1);
+    final isNewLine = c == '\n';
+    return new Position(
+        offset + 1,
+        line + (isNewLine ? 1 : 0),
+        isNewLine ? 1 : character + 1);
+  }
+
+  bool operator <(Position p) => offset < p.offset;
+  bool operator >(Position p) => offset > p.offset;
+}
 
 class Expectations {
   final Set<String> expected;
-  final int position;
+  final Position position;
   Expectations(this.expected, this.position);
 
   Expectations best(Expectations other) {
@@ -50,20 +70,24 @@ class ParseResult<A> {
   /// [:null:] if [:!isSuccess:]
   final A value;
   final String text;
-  final int position;
+  final Position position;
   final Expectations expectations;
 
-  String get rest => text.substring(position);
+  String get _rest => text.substring(position.offset);
 
   String get errorMessage {
-    final maxPos = expectations.position;
-    final seen = (maxPos < text.length) ? "'${text[maxPos]}'" : 'eof';
+    final pos = expectations.position;
+    final maxSeenChar = (pos.offset < text.length)
+        ? "'${text[pos.offset]}'"
+        : 'eof';
+    final prelude =
+        'line ${pos.line}, character ${pos.character}:';
     final expected = expectations.expected;
     if (expected.isEmpty) {
-      return 'unexpected $seen.';
+      return '$prelude unexpected $maxSeenChar.';
     } else {
       final or = _humanOr(new List.from(expected));
-      return "expected $or, got $seen.";
+      return "$prelude expected $or, got $maxSeenChar.";
     }
   }
 
@@ -81,7 +105,7 @@ class ParseResult<A> {
         ?value        ? value        : this.value);
   }
 
-  get _shortRest => rest.length < 10 ? rest : '${rest.substring(0, 10)}...';
+  get _shortRest => _rest.length < 10 ? _rest : '${_rest.substring(0, 10)}...';
 
   toString() {
     final c = isCommitted ? '*' : '';
@@ -91,29 +115,30 @@ class ParseResult<A> {
   }
 }
 
-ParseResult _success(value, String text, int position,
+ParseResult _success(value, String text, Position position,
                      [Expectations expectations, bool committed = false]) {
   final exps = ?expectations ? expectations : _emptyExpectation(position);
   return new ParseResult(text, exps, position, true, committed, value);
 }
 
-ParseResult _failure(String text, int position,
+ParseResult _failure(String text, Position position,
                      [Expectations expectations, bool committed = false]) {
   final exps = ?expectations ? expectations : _emptyExpectation(position);
   return new ParseResult(text, exps, position, false, committed, null);
 }
 
-typedef ParseResult ParseFunction(String s, int pos);
+typedef ParseResult ParseFunction(String s, Position pos);
 
 class Parser<A> {
   final ParseFunction _run;
 
-  Parser(ParseResult<A> f(String s, int pos)) : this._run = f;
+  Parser(ParseResult<A> f(String s, Position pos)) : this._run = f;
 
-  ParseResult run(String s, [int pos = 0]) => _run(s, pos);
+  ParseResult run(String s, [Position pos = const Position(0, 1, 1)]) =>
+      _run(s, pos);
 
   Object parse(String s) {
-    ParseResult<A> result = _run(s, 0);
+    ParseResult<A> result = run(s);
     if (result.isSuccess) return result.value;
     else throw result.errorMessage;
   }
@@ -241,7 +266,7 @@ class Parser<A> {
     // Imperative version to avoid stack overflows.
     return new Parser((s, pos) {
       List res = [];
-      int index = pos;
+      Position index = pos;
       var exps = _emptyExpectation(pos);
       bool committed = false;
       while(true) {
@@ -276,7 +301,7 @@ class Parser<A> {
   Parser skipManyUntil(Parser end) {
     // Imperative version to avoid stack overflows.
     return new Parser((s, pos) {
-      int index = pos;
+      Position index = pos;
       var exps = _emptyExpectation(pos);
       var commit = false;
       while(true) {
@@ -313,7 +338,7 @@ class Parser<A> {
     return new Parser((s, pos) {
       final res = acc();
       var exps = _emptyExpectation(pos);
-      int index = pos;
+      Position index = pos;
       bool committed = false;
       while(true) {
         ParseResult<A> o = this._run(s, index);
@@ -343,7 +368,7 @@ class Parser<A> {
   Parser get skipMany {
     // Imperative version to avoid stack overflows.
     return new Parser((s, pos) {
-      int index = pos;
+      Position index = pos;
       var exps = _emptyExpectation(pos);
       bool committed = false;
       while(true) {
@@ -394,7 +419,7 @@ class Parser<A> {
   Parser chainl1(Parser sep) {
     rest(acc) {
       return new Parser((s, pos) {
-        int index = pos;
+        Position index = pos;
         var exps = _emptyExpectation(pos);
         var commit = false;
         while(true) {
@@ -433,7 +458,8 @@ class Parser<A> {
     return new Parser((s, pos) {
         final result = run(s, pos);
         if (result.isSuccess) {
-          return result.with(value: s.substring(pos, result.position));
+          return result.with(
+              value: s.substring(pos.offset, result.position.offset));
         } else {
           return result;
         }
@@ -497,15 +523,16 @@ final Parser fail = new Parser((s, pos) => _failure(s, pos));
 Parser pure(value) => new Parser((s, pos) => _success(value, s, pos));
 
 final Parser eof = new Parser((s, pos) =>
-    pos >= s.length ? _success(null, s, pos)
-                    : _failure(s, pos, _singleExpectation("eof", pos)));
+    pos.offset >= s.length
+        ? _success(null, s, pos)
+        : _failure(s, pos, _singleExpectation("eof", pos)));
 
 Parser pred(bool p(String char)) {
   return new Parser((s, pos) {
-    if (pos >= s.length) return _failure(s, pos);
+    if (pos.offset >= s.length) return _failure(s, pos);
     else {
-      String c = s[pos];
-      return p(c) ? _success(c, s, pos + 1)
+      String c = s[pos.offset];
+      return p(c) ? _success(c, s, pos.addChar(c))
                   : _failure(s, pos);
     }
   });
@@ -522,13 +549,26 @@ Parser char(String chr) => pred((c) => c == chr) % "'$chr'";
 Parser string(String str) {
   // Primitive version for efficiency
   return new Parser((s, pos) {
-    int max = pos + str.length;
+    final int offset = pos.offset;
+    final int max = offset + str.length;
+
+    int newline = pos.line;
+    int newchar = pos.character;
+    // This replicates Position#addChar for efficiency purposes.
+    void update(c) {
+      final isNewLine = c == '\n';
+      newline = newline + (isNewLine ? 1 : 0);
+      newchar = isNewLine ? 1 : newchar + 1;
+    }
+
     bool match = s.length >= max;
     for (int i = 0; i < str.length && match; i++) {
-      match = match && str[i] == s[pos + i];
+      final c = s[offset + i];
+      match = match && c == str[i];
+      update(c);
     }
     if (match) {
-      return _success(str, s, max);
+      return _success(str, s, new Position(max, newline, newchar));
     } else {
       return _failure(s, pos, _singleExpectation("'$str'", pos));
     }

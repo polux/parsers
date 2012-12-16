@@ -49,6 +49,19 @@ class Position {
 
   bool operator <(Position p) => offset < p.offset;
   bool operator >(Position p) => offset > p.offset;
+
+  String toString() => '(line $line, char $character, offset $offset)';
+}
+
+/**
+ * The value computed by a parser along with the position at which it was
+ * parsed.
+ */
+class PointedValue<A> {
+  final A value;
+  final Position position;
+  PointedValue(this.value, this.position);
+  String toString() => '$value @ $position';
 }
 
 class Expectations {
@@ -452,7 +465,7 @@ class Parser<A> {
 
   Parser<A> between(Parser left, Parser right) => left > (this < right);
 
-  /// Returns the substring comsumed by [this].
+  /// Returns the substring consumed by [this].
   Parser<String> get record {
     return new Parser((s, pos) {
         final result = run(s, pos);
@@ -462,6 +475,16 @@ class Parser<A> {
         } else {
           return result;
         }
+    });
+  }
+
+  /**
+   * Returns the value parsed by [this] along with the position at which it
+   * has been parsed.
+   */
+  Parser<PointedValue<A>> get withPosition {
+    return new Parser((s, pos) {
+      return this.map((v) => new PointedValue(v, pos))._run(s, pos);
     });
   }
 }
@@ -537,12 +560,6 @@ Parser pred(bool p(String char)) {
   });
 }
 
-// Util
-
-rec(f) => new Parser((s, pos) => f()._run(s, pos));
-
-// Derived combinators
-
 Parser char(String chr) => pred((c) => c == chr) % "'$chr'";
 
 Parser string(String str) {
@@ -573,6 +590,13 @@ Parser string(String str) {
     }
   });
 }
+
+Parser rec(Parser f()) => new Parser((s, pos) => f()._run(s, pos));
+
+final Parser<Position> position =
+    new Parser((s, pos) => _success(pos, s, pos));
+
+// Derived combinators
 
 Parser choice(List<Parser> ps) {
   // Imperative version for efficiency

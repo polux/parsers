@@ -41,7 +41,7 @@ class MiniLang extends LanguageParsers {
   disj() => comp().sepBy1(symbol('&&'));
   comp() => arith().sepBy1(symbol('<') | symbol('>'));
   arith() => term().sepBy1(symbol('+') | symbol('-'));
-  term() => atom().sepBy1(symbol('*') | symbol('/'));
+  term() => atom().withPosition.sepBy1(symbol('*') | symbol('/'));
 
   atom() => floatLiteral
           | intLiteral

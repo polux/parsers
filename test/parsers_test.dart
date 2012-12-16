@@ -11,12 +11,14 @@ import 'package:unittest/unittest.dart';
 
 part 'src/parsers_model.dart';
 
+_rest(parseResult) => parseResult.text.substring(parseResult.position.offset);
+
 class FailureMatcher extends BaseMatcher {
   String rest;
   FailureMatcher(this.rest);
-  bool matches(item, MatchState matchState) {
-    return !item.isSuccess
-        && item.rest == rest;
+  bool matches(ParseResult parseResult, MatchState matchState) {
+    return !parseResult.isSuccess
+        && _rest(parseResult) == rest;
   }
   Description describe(Description description) =>
     description.add('a parse failure with rest "$rest"');
@@ -44,10 +46,10 @@ class SuccessMatcher extends BaseMatcher {
     }
   }
 
-  bool matches(item, MatchState matchState) {
-    return item.isSuccess
-        && _equals(item.value)
-        && item.rest == rest;
+  bool matches(ParseResult parseResult, MatchState matchState) {
+    return parseResult.isSuccess
+        && _equals(parseResult.value)
+        && parseResult.text.substring(parseResult.position.offset) == rest;
   }
   Description describe(Description description) =>
     description.add('a parse success with value $res and rest "$rest"');

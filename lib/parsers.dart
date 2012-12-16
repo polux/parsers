@@ -73,8 +73,6 @@ class ParseResult<A> {
   final Position position;
   final Expectations expectations;
 
-  String get _rest => text.substring(position.offset);
-
   String get errorMessage {
     final pos = expectations.position;
     final maxSeenChar = (pos.offset < text.length)
@@ -105,6 +103,7 @@ class ParseResult<A> {
         ?value        ? value        : this.value);
   }
 
+  String get _rest => text.substring(position.offset);
   get _shortRest => _rest.length < 10 ? _rest : '${_rest.substring(0, 10)}...';
 
   toString() {

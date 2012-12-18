@@ -1,6 +1,6 @@
 # Parsers User Guide
 
-This document guides you through the [parsers][parsers hompage] library, a
+This document guides you through the [parsers][parsers homepage] library, a
 parser combinators library for Dart. It assumes some basic knowledge of Dart.
 
 ## Introduction

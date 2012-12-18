@@ -5,8 +5,8 @@ library for Dart. It assumes some basic knowledge of Dart.
 
 ## Introduction
 
-Parsers is a library that helps you building functions that take a string,
-check that it belongs to some language and compute something out of it.
+The `parsers` library helps you build functions that take a string, check that
+it belongs to some language and compute something out of it.
 
 ![parser image]
 

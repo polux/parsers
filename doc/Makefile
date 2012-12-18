@@ -27,7 +27,7 @@ gen/filter: filter.hs
 	ghc --make $< -outputdir gen -o $@
 
 out/%.html: %.md out/style.css out/pygments.css gen/filter out/images
-	pandoc -S -t json $< | gen/filter | pandoc -f json -s -c style.css -c pygments.css > $@
+	pandoc -S -t json $< | gen/filter | pandoc -f json -s -H analytics.header -c style.css -c pygments.css > $@
 
 gen/parsers:
 	mkdir -p gen/parsers

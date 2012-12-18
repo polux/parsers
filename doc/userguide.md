@@ -6,8 +6,11 @@ library for Dart. It assumes some basic knowledge of Dart.
 ## Introduction
 
 Parsers is a library that helps you building functions that take a string,
-check that it belongs to some language and compute something out of it. For
-instance, it helps you write a function that accepts strings made of digits
+check that it belongs to some language and compute something out of it.
+
+![parser image]
+
+For instance, it helps you write a function that accepts strings made of digits
 only and compute the integer they represent. But it can also help you building
 more involved functions, like one that accepts valid Java programs only and
 returns their AST (Abstract Syntax Tree).
@@ -261,4 +264,4 @@ defined this way.
 [or dartdoc]: dartdoc/parsers/Parser.html#|
 [map dartdoc]: dartdoc/parsers/Parser.html#^
 [precedence]: https://www.dartlang.org/docs/spec/latest/dart-language-specification.html#h.sn1uuf2ffwwd
- 
+[parser image]: images/parser.png 

@@ -1,8 +1,8 @@
 PAGES=out/userguide.html out/dartdoc
 
-.PHONY: clean out gen
+.PHONY: all clean out gen
 
-all: out gen $(PAGES)
+all: out gen  $(PAGES)
 
 gen:
 	mkdir -p gen
@@ -13,6 +13,10 @@ out:
 clean:
 	rm -rf out gen
 
+out/images: images/*
+	cp -r images out
+	touch out/images
+
 out/style.css: style.css
 	cp style.css $@
 
@@ -22,7 +26,7 @@ out/pygments.css:
 gen/filter: filter.hs
 	ghc --make $< -outputdir gen -o $@
 
-out/%.html: %.md out/style.css out/pygments.css gen/filter
+out/%.html: %.md out/style.css out/pygments.css gen/filter out/images
 	pandoc -S -t json $< | gen/filter | pandoc -f json -s -c style.css -c pygments.css > $@
 
 gen/parsers:

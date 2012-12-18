@@ -7,15 +7,15 @@ library for Dart. It assumes some basic knowledge of Dart.
 
 Parsers is a library that helps you building functions that take a string,
 check that it belongs to some language and compute something out of it. For
-instance, it helps you write a functions that accepts strings made of digits
-only and compute the integers they represent. But it can also help you building
+instance, it helps you write a function that accepts strings made of digits
+only and compute the integer they represent. But it can also help you building
 more involved functions, like one that accepts valid Java programs only and
-returns their ASTs (Abstract Syntax Tree).
+returns their AST (Abstract Syntax Tree).
 
 It is called a [parser combinator] library because it is made of functions
 which build complex parsers out of simpler parsers. For instance, by feeding
 the `sepBy` function with a parser of integers and a parser of commas, we
-obtain a parser of integers separated by commas.  These parsers are themselves
+obtain a parser of integers separated by commas. These parsers are themselves
 a combination of simple parsers, etc. Ultimately, the library exposes a very
 small set of primitive parsers and every other function it defines is built on
 top of them.
@@ -32,7 +32,7 @@ sliced bread, let's get started!
 
 ## Getting Started
 
-Is you know how to set up a Dart project with dependencies on third-party
+If you know how to set up a Dart project with dependencies on third-party
 libraries, you can safely [skip this section](#simple-parsers). Simply create
 a project depending on the latest version of the `parsers` library.
 
@@ -77,7 +77,7 @@ Downloading args 0.2.8+2...
 Dependencies installed!
 ~~~
 
-And finally run the demo.
+And finally run your program.
 
 ~~~{.bash}
 $ dart bin/tutorial.dart 

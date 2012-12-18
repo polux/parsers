@@ -1,7 +1,7 @@
 # Parsers User Guide
 
-This document guides you through the `parsers` library, a parser combinators
-library for Dart. It assumes some basic knowledge of Dart.
+This document guides you through the [parsers][parsers hompage] library, a
+parser combinators library for Dart. It assumes some basic knowledge of Dart.
 
 ## Introduction
 
@@ -259,6 +259,7 @@ defined this way.
 
 ### Recursion
 
+[parsers homepage]: http://code.google.com/p/parsers/
 [parser combinator]: https://en.wikipedia.org/wiki/Parser_combinator
 [Parser dartdoc]: dartdoc/parsers/Parser.html
 [parse dartdoc]: dartdoc/parsers/Parser.html#parse

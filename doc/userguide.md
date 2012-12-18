@@ -36,8 +36,8 @@ sliced bread, let's get started!
 ## Getting Started
 
 If you know how to set up a Dart project with dependencies on third-party
-libraries, you can safely [skip this section](#simple-parsers). Simply create
-a project depending on the latest version of the `parsers` library.
+libraries, you can safely [skip this section](#primitive-parsers). Simply
+create a project depending on the latest version of the `parsers` library.
 
 Create a directory called `tutorial` with the following layout.
 

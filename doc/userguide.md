@@ -23,6 +23,8 @@ a combination of simple parsers, etc. Ultimately, the library exposes a very
 small set of primitive parsers and every other function it defines is built on
 top of them.
 
+![parser combinator image]
+
 It is a powerful concept because it allows you to define *domain specific*
 combinators and *parameterized* parsers. For instance, the `LanguageParser`
 class that ships with the library defines a set of parsers specialized in
@@ -265,3 +267,4 @@ defined this way.
 [map dartdoc]: dartdoc/parsers/Parser.html#^
 [precedence]: https://www.dartlang.org/docs/spec/latest/dart-language-specification.html#h.sn1uuf2ffwwd
 [parser image]: images/parser.png 
+[parser combinator image]: images/parser_combinator.png 

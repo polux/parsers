@@ -91,8 +91,9 @@ You're all Set!
 The main class exposed by the library is [`Parser<A>`][Parser dartdoc]. What we
 refer to as "parsers" in this document are instances of this class.
 
-An instance of `Parser<A>` is an object which -- via the [`parse`][parse dartdoc]
-method -- consumes a string and computes a value of type `A` or fails.
+An instance of `Parser<A>` is an object which -- via the
+[`parse`][parse dartdoc] method -- consumes a string and either computes a
+value of type `A` or fails.
 
 ~~~{.dart}
 Parser<Foo> p = ...;

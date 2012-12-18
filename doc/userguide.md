@@ -5,7 +5,7 @@ parser combinators library for Dart. It assumes some basic knowledge of Dart.
 
 ## Introduction
 
-The `parsers` library helps you build functions that take a string, check that
+The _parsers_ library helps you build functions that take a string, check that
 it belongs to some language and compute something out of it.
 
 ![parser image]
@@ -25,8 +25,8 @@ top of them.
 
 ![parser combinator image]
 
-It is a powerful concept because it allows you to define *domain specific*
-combinators and *parameterized* parsers. For instance, the `LanguageParser`
+It is a powerful concept because it allows you to define domain specific
+combinators and parameterized parsers. For instance, the `LanguageParser`
 class that ships with the library defines a set of parsers specialized in
 parsing programming languages. It is parameterized by things like the keywords
 of the programming language, or the syntax of its comments, which gives you
@@ -39,7 +39,7 @@ sliced bread, let's get started!
 
 If you know how to set up a Dart project with dependencies on third-party
 libraries, you can safely [skip this section](#primitive-parsers). Simply
-create a project depending on the latest version of the `parsers` library.
+create a project depending on the latest version of the _parsers_ library.
 
 Create a directory called `tutorial` with the following layout.
 
@@ -51,7 +51,7 @@ tutorial/
 ~~~
 
 In `pubspec.yaml`, define a project named `tutorial` depending the latest
-version of the `parsers` library.
+version of the _parsers_ library.
 
 ~~~{.yaml}
 name: tutorial
@@ -59,7 +59,7 @@ dependencies:
   parsers: any
 ~~~
 
-In `bin/tutorial.dart`, import the `parsers` library and define the main
+In `bin/tutorial.dart`, import the _parsers_ library and define the main
 function as below.
 
 ~~~{.dart}
@@ -208,10 +208,9 @@ of times, which is what the next two sections are about.
 
 ### Sequencing
 
-It would have been natural to introduce the sequencing of parsers -- a
-conceptually simple and essential operation -- earlier in this guide. However,
-the way it is exposed in the `parsers` library requires some understanding of
-the `^` operator, which is why we only tackle it now.
+It would have been natural to introduce the sequencing of parsers earlier in
+this guide. However, the way it is exposed in the _parsers_ library requires
+some understanding of the `^` operator, which is why we only tackle it now.
 
 Sequencing is achieved via the `+` operator.
 
@@ -236,7 +235,7 @@ p.parse('foobarbaz');  // returns ['bazbar', 'foo]
 ~~~
 
 Since [+ has a higher precedence than ^][precedence] in Dart, `combine`
-applies to the whole sequence. The operators in `parsers` are chosen so that
+applies to the whole sequence. The operators in _parsers_ are chosen so that
 they usually "do the right thing", but precedence can be tricky. When in doubt,
 use parenthesis.
 
@@ -254,7 +253,7 @@ p.parse('(foo)');  // returns 'foo'
 
 That's the beauty of parser combinator libraries: we piggyback on the host
 language's abstraction mechanisms (here Dart functions) to define reusable
-parsing behaviours. Most of the combinators of the `parsers` library are
+parsing behaviours. Most of the combinators of the _parsers_ library are
 defined this way.
 
 ### Recursion

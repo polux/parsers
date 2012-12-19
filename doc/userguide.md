@@ -159,7 +159,7 @@ p.parse('qux');  // fails
 
 What is the type of `p`? In this case it is `Parser<String>` because both
 `string('foo')` and `string('bar')` are parsers of type `Parser<String>`. But
-it they were computing values of different types that would be their closest
+if they were computing values of different types that would be their closest
 common ancestor (usually `Parser<Object>`). So far however we have only
 encountered parsers that compute strings. Let us see how to create parsers
 computing something else.

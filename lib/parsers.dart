@@ -139,10 +139,10 @@ ParseResult _failure(String text, Position position,
   return new ParseResult(text, exps, position, false, committed, null);
 }
 
-typedef ParseResult ParseFunction(String s, Position pos);
+typedef ParseResult _ParseFunction(String s, Position pos);
 
 class Parser<A> {
-  final ParseFunction _run;
+  final _ParseFunction _run;
 
   Parser(ParseResult<A> f(String s, Position pos)) : this._run = f;
 

@@ -8,6 +8,8 @@ library parsers;
 import 'package:persistent/persistent.dart';
 import 'dart:math';
 
+part 'src/accumulators.dart';
+
 _consStr(c) => (String cs) => "$c$cs";
 String _strHead(String s) => s[0];
 String _strTail(String s) => s.substring(1);
@@ -487,55 +489,6 @@ class Parser<A> {
       return this.map((v) => new PointedValue(v, pos))._run(s, pos);
     });
   }
-}
-
-class ParserAccumulator2 {
-  final Parser p1, p2;
-  ParserAccumulator2(this.p1, this.p2);
-
-  /// Parser sequencing: creates a parser accumulator
-  ParserAccumulator3 operator +(Parser p) => new ParserAccumulator3(p1, p2, p);
-
-  /// Action application
-  Parser operator ^(Object f(x1, x2)) =>
-      pure((x1) => (x2) => f(x1, x2)) * p1 * p2;
-}
-
-class ParserAccumulator3 {
-  final Parser p1, p2, p3;
-  ParserAccumulator3(this.p1, this.p2, this.p3);
-
-  /// Parser sequencing: creates a parser accumulator
-  ParserAccumulator4 operator +(Parser p) =>
-      new ParserAccumulator4(p1, p2, p3, p);
-
-  /// Action application
-  Parser operator ^(Object f(x1, x2, x3)) =>
-      pure((x1) => (x2) => (x3) => f(x1, x2, x3)) * p1 * p2 * p3;
-}
-
-class ParserAccumulator4 {
-  final Parser p1, p2, p3, p4;
-  ParserAccumulator4(this.p1, this.p2, this.p3, this.p4);
-
-  /// Parser sequencing: creates a parser accumulator
-  ParserAccumulator5 operator +(Parser p) =>
-      new ParserAccumulator5(p1, p2, p3, p4, p);
-
-  /// Action application
-  Parser operator ^(Object f(x1, x2, x3, x4)) =>
-      pure((x1) => (x2) => (x3) => (x4) => f(x1, x2, x3, x4))
-      * p1 * p2 * p3 * p4;
-}
-
-class ParserAccumulator5 {
-  final Parser p1, p2, p3, p4, p5;
-  ParserAccumulator5(this.p1, this.p2, this.p3, this.p4, this.p5);
-
-  /// Action application
-  Parser operator ^(Object f(x1, x2, x3, x4, x5)) =>
-      pure((x1) => (x2) => (x3) => (x4) => (x5) => f(x1, x2, x3, x4, x5))
-      * p1 * p2 * p3 * p4 * p5;
 }
 
 // Primitive parsers

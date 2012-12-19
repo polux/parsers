@@ -39,7 +39,7 @@ class ParserAccumulator$i {
   print('''
   /// Action application
   Parser operator ^(Object f($xs)) =>
-      pure($curriedXs => f($xs)) * $psProduct;
+      success($curriedXs => f($xs)) * $psProduct;
 }
 ''');
   }

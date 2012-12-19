@@ -151,7 +151,7 @@ class Parser<A> {
   ParseResult run(String s, [Position pos = const Position(0, 1, 1)]) =>
       _run(s, pos);
 
-  Object parse(String s) {
+  A parse(String s) {
     ParseResult<A> result = run(s);
     if (result.isSuccess) return result.value;
     else throw result.errorMessage;
@@ -187,19 +187,19 @@ class Parser<A> {
   }
 
   /// Alias for [:expecting:].
-  Parser operator %(String expected) => this.expecting(expected);
+  Parser<A> operator %(String expected) => this.expecting(expected);
 
   /// Applicative <*>
-  Parser operator *(Parser p) => this >> (f) => p >> (x) => pure(f(x));
+  Parser operator *(Parser p) => this >> (f) => p >> (x) => success(f(x));
 
   /// Applicative *>
   Parser operator >(Parser p) => this >> (_) => p;
 
   /// Applicative <*
-  Parser operator <(Parser p) => this >> (x) => p > pure(x);
+  Parser<A> operator <(Parser p) => this >> (x) => p > success(x);
 
   /// Functor map
-  Parser map(Object f(A x)) => pure(f) * this;
+  Parser map(Object f(A x)) => success(f) * this;
 
   /// Infix syntax for map
   Parser operator ^(Object f(A x)) => map(f);
@@ -208,7 +208,7 @@ class Parser<A> {
   ParserAccumulator2 operator +(Parser p) => new ParserAccumulator2(this, p);
 
   /// Alternative
-  Parser operator |(Parser p) {
+  Parser<A> operator |(Parser<A> p) {
     return new Parser((s, pos) {
       ParseResult<A> res = _run(s, pos);
       if (res.isSuccess || res.isCommitted) {
@@ -226,7 +226,7 @@ class Parser<A> {
    *
    * Used for defining followedBy, which is probably what you're looking for.
    */
-  Parser get lookAhead {
+  Parser<A> get lookAhead {
     return new Parser((s, pos) {
       ParseResult res = _run(s, pos);
       return res.isSuccess
@@ -309,7 +309,7 @@ class Parser<A> {
   /**
    * Parses [this] 0 or more times until [end] succeeds and discards the result.
    *
-   * Equivalent to [:this.manyUntil(end) > pure(null):] but faster. The input
+   * Equivalent to [:this.manyUntil(end) > success(null):] but faster. The input
    * parsed by [end] is consumed. Use [:end.lookAhead:] if you don't want this.
    */
   Parser skipManyUntil(Parser end) {
@@ -343,7 +343,7 @@ class Parser<A> {
 
   // Derived combinators, defined here for infix notation
 
-  Parser orElse(A value) => this | pure(value);
+  Parser<A> orElse(A value) => this | success(value);
 
   Parser<Option<A>> get maybe => this.map(_some).orElse(_none);
 
@@ -377,7 +377,7 @@ class Parser<A> {
   /**
    * Parses [this] zero or more time, skipping its result.
    *
-   * Equivalent to [:this.many > pure(null):] but more efficient.
+   * Equivalent to [:this.many > success(null):] but more efficient.
    */
   Parser get skipMany {
     // Imperative version to avoid stack overflows.
@@ -403,7 +403,7 @@ class Parser<A> {
   /**
    * Parses [this] one or more time, skipping its result.
    *
-   * Equivalent to [:this.many1 > pure(null):] but more efficient.
+   * Equivalent to [:this.many1 > success(null):] but more efficient.
    */
   Parser get skipMany1 => this > this.skipMany;
 
@@ -428,7 +428,8 @@ class Parser<A> {
    */
   Parser<List<A>> sepEndBy1(Parser sep) => sepBy1(sep) < sep.maybe;
 
-  Parser chainl(Parser sep, defaultValue) => chainl1(sep) | pure(defaultValue);
+  Parser chainl(Parser sep, defaultValue) =>
+      chainl1(sep) | success(defaultValue);
 
   Parser chainl1(Parser sep) {
     rest(acc) {
@@ -438,7 +439,7 @@ class Parser<A> {
         var commit = false;
         while(true) {
           combine(f) => (x) => f(acc, x);
-          final res = (pure(combine) * sep * this)._run(s, index);
+          final res = (success(combine) * sep * this)._run(s, index);
           exps = exps.best(res.expectations);
           commit = commit || res.isCommitted;
           if (res.isSuccess) {
@@ -456,12 +457,13 @@ class Parser<A> {
   }
 
   /// Warning: may lead to stack overflows.
-  Parser chainr(Parser sep, defaultValue) => chainr1(sep) | pure(defaultValue);
+  Parser chainr(Parser sep, defaultValue) =>
+      chainr1(sep) | success(defaultValue);
 
   /// Warning: may lead to stack overflows.
   Parser chainr1(Parser sep) {
-    rest(x) => pure((f) => (y) => f(x, y)) * sep * chainr1(sep)
-             | pure(x);
+    rest(x) => success((f) => (y) => f(x, y)) * sep * chainr1(sep)
+             | success(x);
     return this >> rest;
   }
 
@@ -495,7 +497,7 @@ class Parser<A> {
 
 final Parser fail = new Parser((s, pos) => _failure(s, pos));
 
-Parser pure(value) => new Parser((s, pos) => _success(value, s, pos));
+Parser success(value) => new Parser((s, pos) => _success(value, s, pos));
 
 final Parser eof = new Parser((s, pos) =>
     pos.offset >= s.length
@@ -591,13 +593,13 @@ final Parser<String> newline = char('\n') % 'newline';
 
 final Parser<String> space = oneOf(_spaces) % 'space';
 
-final Parser spaces = (space.many > pure(null)) % 'spaces';
+final Parser spaces = (space.many > success(null)) % 'spaces';
 
 final Parser<String> upper = oneOf(_upper) % 'uppercase letter';
 
 final Parser<String> lower = oneOf(_lower) % 'lowercase letter';
 
-final Parser<String> alphanum = oneOf(_alphanum) /* % 'alphanumeric character' */;
+final Parser<String> alphanum = oneOf(_alphanum); // % 'alphanumeric character'
 
 final Parser<String> letter = oneOf(_alpha) % 'letter';
 
@@ -653,13 +655,13 @@ class LanguageParsers {
   Parser<String> get dot   => symbol('.') % 'dot';
 
   Parser<String> get _ident =>
-      pure((c) => (cs) => _consStr(c)(Strings.concatAll(cs)))
+      success((c) => (cs) => _consStr(c)(Strings.concatAll(cs)))
       * _identStart
       * _identLetter.many;
 
   Parser<String> get identifier =>
       lexeme(_ident >> (name) =>
-             _reservedNames.contains(name) ? fail : pure(name))
+             _reservedNames.contains(name) ? fail : success(name))
       % 'identifier';
 
   ReservedNames get reserved {
@@ -674,11 +676,11 @@ class LanguageParsers {
   }
 
   final Parser<String> _escapeCode =
-      char('a')  > pure('\a') | char('b')  > pure('\b')
-    | char('f')  > pure('\f') | char('n')  > pure('\n')
-    | char('r')  > pure('\r') | char('t')  > pure('\t')
-    | char('v')  > pure('\v') | char('\\') > pure('\\')
-    | char('"')  > pure('"')  | char("'")  > pure("'");
+      char('a')  > success('\a') | char('b')  > success('\b')
+    | char('f')  > success('\f') | char('n')  > success('\n')
+    | char('r')  > success('\r') | char('t')  > success('\t')
+    | char('v')  > success('\v') | char('\\') > success('\\')
+    | char('"')  > success('"')  | char("'")  > success("'");
 
   Parser<String> get _charChar => char('\\') > _escapeCode
                                 | pred((c) => c != "'");
@@ -704,19 +706,19 @@ class LanguageParsers {
   Parser<int> _number(int base, Parser baseDigit) => baseDigit.many1 >> (ds) {
     int res = 0;
     for (final d in ds) { res = base * res + _digitToInt[d]; }
-    return pure(res);
+    return success(res);
   };
 
   Parser<int> get _zeroNumber =>
-      char('0') > (hexaDecimal | octal | decimal | pure(0));
+      char('0') > (hexaDecimal | octal | decimal | success(0));
 
   Parser<int> get _nat => _zeroNumber | decimal;
 
   Parser<int> get _int => lexeme(_sign) * _nat;
 
-  Parser<Function> get _sign => char('-') > pure((n) => -n)
-                              | char('+') > pure((n) => n)
-                              | pure((n) => n);
+  Parser<Function> get _sign => char('-') > success((n) => -n)
+                              | char('+') > success((n) => n)
+                              | success((n) => n);
 
   Parser<int> get natural => lexeme(_nat) % 'natural number';
 
@@ -725,18 +727,18 @@ class LanguageParsers {
   num _power(num e) => e < 0 ? 1.0 / _power(-e) : pow(10, e);
 
   Parser<double> get _exponent =>
-      oneOf('eE') > pure((f) => (e) => _power(f(e))) * _sign * decimal;
+      oneOf('eE') > success((f) => (e) => _power(f(e))) * _sign * decimal;
 
   Parser<double> get _fraction => char('.') > digit.many1 >> (ds) {
     double res = 0.0;
     for (int i = ds.length - 1; i >= 0; i--) {
       res = (res + _digitToInt[ds[i]]) / 10.0;
     }
-    return pure(res);
+    return success(res);
   };
 
   Parser<double> _fractExponent(int n) =>
-      (pure((fract) => (expo) => (n + fract) * expo)
+      (success((fract) => (expo) => (n + fract) * expo)
           * _fraction
           * _exponent.orElse(1.0))
       | _exponent.map((expo) => n * expo);
@@ -770,12 +772,12 @@ class LanguageParsers {
   Parser _inCommentMulti() => _notStartNorEnd.skipMany > _recOrEnd();
 
   Parser _recOrEnd() => rec(_multiLineComment) > rec(_inCommentMulti)
-                      | _end > pure(null);
+                      | _end > success(null);
 
   Parser _inCommentSingle() => anyChar.skipManyUntil(_end);
 
   Parser get _oneLineComment =>
-      string(_commentLine) > (pred((c) => c != '\n').skipMany > pure(null));
+      string(_commentLine) > (pred((c) => c != '\n').skipMany > success(null));
 
   Parser get whiteSpace => _whiteSpace % 'whitespace/comment';
 

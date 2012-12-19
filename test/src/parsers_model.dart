@@ -6,25 +6,25 @@ part of parsers_test;
 _cons(x) => (xs) => []..add(x)..addAll(xs);
 
 Parser<List> manyModel(Parser p) {
-  go () => pure(_cons) * p * rec(go) | pure([]);
+  go () => success(_cons) * p * rec(go) | success([]);
   return go();
 }
 
 Parser<List> manyImpl(Parser p) => p.many;
 
-Parser skipManyModel(Parser p) => manyModel(p) > pure(null);
+Parser skipManyModel(Parser p) => manyModel(p) > success(null);
 
 Parser skipManyImpl(Parser p) => p.skipMany;
 
 Parser<List> manyUntilModel(Parser p, Parser end) {
-  go () => end > pure([]) | pure(_cons) * p * rec(go);
+  go () => end > success([]) | success(_cons) * p * rec(go);
   return go();
 }
 
 Parser<List> manyUntilImpl(Parser p, Parser end) => p.manyUntil(end);
 
 Parser skipManyUntilModel(Parser p, Parser end) {
-  return manyUntilModel(p, end) > pure(null);
+  return manyUntilModel(p, end) > success(null);
 }
 
 Parser skipManyUntilImpl(Parser p, Parser end) => p.skipManyUntil(end);
@@ -32,7 +32,7 @@ Parser skipManyUntilImpl(Parser p, Parser end) => p.skipManyUntil(end);
 Parser chainl1Model(Parser p, Parser sep) {
   rest(acc) {
     combine(f) => (x) => f(acc, x);
-    return (pure(combine) * sep * p) >> rest | pure(acc);
+    return (success(combine) * sep * p) >> rest | success(acc);
   }
   return p >> rest;
 }

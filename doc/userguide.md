@@ -226,7 +226,7 @@ is not obvious what it should compute. Parser `a` computes some value, parser
 `b` computes some other value, but what should `a + b` compute?
 
 The only available way to turn a proto parser into a real one is by calling its
-`^` operator. It takes as many arguments as they are elements in the sequence.
+`^` operator. It takes as many arguments as there are elements in the sequence.
 
 ~~~{.dart}
 combine(x, y, z) => ['$z$y', x];

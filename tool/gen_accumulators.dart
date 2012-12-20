@@ -40,6 +40,10 @@ class ParserAccumulator$i {
   /// Action application
   Parser operator ^(Object f($xs)) =>
       success($curriedXs => f($xs)) * $psProduct;
+
+  /// Creates a [:Parser<List>:] from [this].
+  Parser<List> get list =>
+      success($curriedXs => [$xs]) * $psProduct;
 }
 ''');
   }

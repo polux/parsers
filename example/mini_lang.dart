@@ -7,16 +7,6 @@ library misc;
 
 import 'package:parsers/parsers.dart';
 
-// In a real parser, these would be AST node constructors. We use nested lists
-// for simplicity here.
-
-list1(a) => [a];
-list2(a, b) => [a, b];
-list3(a, b, c) => [a, b, c];
-list4(a, b, c, d) => [a, b, c, d];
-list5(a, b, c, d, e) => [a, b, c, d, e];
-list6(a, b, c, d, e, f) => [a, b, c, d, e, f];
-
 // We extend LanguageParsers to benefit from all the C-like language-specific
 // comment-aware, reserved names-aware, literals combinators.
 
@@ -29,13 +19,15 @@ class MiniLang extends LanguageParsers {
   stmt() => declStmt()
           | assignStmt()
           | ifStmt();
-  declStmt() => reserved['var'] + identifier + symbol('=') + expr() ^ list4;
-  assignStmt() => identifier + symbol('=') + expr() ^ list3;
-  ifStmt() => reserved['if']
-                 + parens(expr())
-                 + braces(rec(stmts))
-                 + reserved['else']
-                 + braces(rec(stmts)) ^ list5;
+  // In a real parser, we would build AST nodes, but here we turn sequences
+  // into lists via the list getter for simplicity.
+  declStmt() => (reserved['var'] + identifier + symbol('=') + expr()).list;
+  assignStmt() => (identifier + symbol('=') + expr()).list;
+  ifStmt() => (reserved['if']
+               + parens(expr())
+               + braces(rec(stmts))
+               + reserved['else']
+               + braces(rec(stmts))).list;
 
   expr() => disj().sepBy1(symbol('||'));
   disj() => comp().sepBy1(symbol('&&'));

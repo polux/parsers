@@ -11,6 +11,10 @@ class ParserAccumulator2 {
   /// Action application
   Parser operator ^(Object f(x1, x2)) =>
       success((x1) => (x2) => f(x1, x2)) * p1 * p2;
+
+  /// Creates a [:Parser<List>:] from [this].
+  Parser<List> get list =>
+      success((x1) => (x2) => [x1, x2]) * p1 * p2;
 }
 
 class ParserAccumulator3 {
@@ -24,6 +28,10 @@ class ParserAccumulator3 {
   /// Action application
   Parser operator ^(Object f(x1, x2, x3)) =>
       success((x1) => (x2) => (x3) => f(x1, x2, x3)) * p1 * p2 * p3;
+
+  /// Creates a [:Parser<List>:] from [this].
+  Parser<List> get list =>
+      success((x1) => (x2) => (x3) => [x1, x2, x3]) * p1 * p2 * p3;
 }
 
 class ParserAccumulator4 {
@@ -37,6 +45,10 @@ class ParserAccumulator4 {
   /// Action application
   Parser operator ^(Object f(x1, x2, x3, x4)) =>
       success((x1) => (x2) => (x3) => (x4) => f(x1, x2, x3, x4)) * p1 * p2 * p3 * p4;
+
+  /// Creates a [:Parser<List>:] from [this].
+  Parser<List> get list =>
+      success((x1) => (x2) => (x3) => (x4) => [x1, x2, x3, x4]) * p1 * p2 * p3 * p4;
 }
 
 class ParserAccumulator5 {
@@ -50,6 +62,10 @@ class ParserAccumulator5 {
   /// Action application
   Parser operator ^(Object f(x1, x2, x3, x4, x5)) =>
       success((x1) => (x2) => (x3) => (x4) => (x5) => f(x1, x2, x3, x4, x5)) * p1 * p2 * p3 * p4 * p5;
+
+  /// Creates a [:Parser<List>:] from [this].
+  Parser<List> get list =>
+      success((x1) => (x2) => (x3) => (x4) => (x5) => [x1, x2, x3, x4, x5]) * p1 * p2 * p3 * p4 * p5;
 }
 
 class ParserAccumulator6 {
@@ -63,6 +79,10 @@ class ParserAccumulator6 {
   /// Action application
   Parser operator ^(Object f(x1, x2, x3, x4, x5, x6)) =>
       success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => f(x1, x2, x3, x4, x5, x6)) * p1 * p2 * p3 * p4 * p5 * p6;
+
+  /// Creates a [:Parser<List>:] from [this].
+  Parser<List> get list =>
+      success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => [x1, x2, x3, x4, x5, x6]) * p1 * p2 * p3 * p4 * p5 * p6;
 }
 
 class ParserAccumulator7 {
@@ -76,6 +96,10 @@ class ParserAccumulator7 {
   /// Action application
   Parser operator ^(Object f(x1, x2, x3, x4, x5, x6, x7)) =>
       success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => f(x1, x2, x3, x4, x5, x6, x7)) * p1 * p2 * p3 * p4 * p5 * p6 * p7;
+
+  /// Creates a [:Parser<List>:] from [this].
+  Parser<List> get list =>
+      success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => [x1, x2, x3, x4, x5, x6, x7]) * p1 * p2 * p3 * p4 * p5 * p6 * p7;
 }
 
 class ParserAccumulator8 {
@@ -89,6 +113,10 @@ class ParserAccumulator8 {
   /// Action application
   Parser operator ^(Object f(x1, x2, x3, x4, x5, x6, x7, x8)) =>
       success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => f(x1, x2, x3, x4, x5, x6, x7, x8)) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8;
+
+  /// Creates a [:Parser<List>:] from [this].
+  Parser<List> get list =>
+      success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => [x1, x2, x3, x4, x5, x6, x7, x8]) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8;
 }
 
 class ParserAccumulator9 {
@@ -102,6 +130,10 @@ class ParserAccumulator9 {
   /// Action application
   Parser operator ^(Object f(x1, x2, x3, x4, x5, x6, x7, x8, x9)) =>
       success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => (x9) => f(x1, x2, x3, x4, x5, x6, x7, x8, x9)) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8 * p9;
+
+  /// Creates a [:Parser<List>:] from [this].
+  Parser<List> get list =>
+      success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => (x9) => [x1, x2, x3, x4, x5, x6, x7, x8, x9]) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8 * p9;
 }
 
 class ParserAccumulator10 {
@@ -115,6 +147,10 @@ class ParserAccumulator10 {
   /// Action application
   Parser operator ^(Object f(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10)) =>
       success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => (x9) => (x10) => f(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10)) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8 * p9 * p10;
+
+  /// Creates a [:Parser<List>:] from [this].
+  Parser<List> get list =>
+      success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => (x9) => (x10) => [x1, x2, x3, x4, x5, x6, x7, x8, x9, x10]) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8 * p9 * p10;
 }
 
 class ParserAccumulator11 {
@@ -128,6 +164,10 @@ class ParserAccumulator11 {
   /// Action application
   Parser operator ^(Object f(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11)) =>
       success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => (x9) => (x10) => (x11) => f(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11)) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8 * p9 * p10 * p11;
+
+  /// Creates a [:Parser<List>:] from [this].
+  Parser<List> get list =>
+      success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => (x9) => (x10) => (x11) => [x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11]) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8 * p9 * p10 * p11;
 }
 
 class ParserAccumulator12 {
@@ -141,6 +181,10 @@ class ParserAccumulator12 {
   /// Action application
   Parser operator ^(Object f(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12)) =>
       success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => (x9) => (x10) => (x11) => (x12) => f(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12)) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8 * p9 * p10 * p11 * p12;
+
+  /// Creates a [:Parser<List>:] from [this].
+  Parser<List> get list =>
+      success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => (x9) => (x10) => (x11) => (x12) => [x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12]) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8 * p9 * p10 * p11 * p12;
 }
 
 class ParserAccumulator13 {
@@ -154,6 +198,10 @@ class ParserAccumulator13 {
   /// Action application
   Parser operator ^(Object f(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13)) =>
       success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => (x9) => (x10) => (x11) => (x12) => (x13) => f(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13)) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8 * p9 * p10 * p11 * p12 * p13;
+
+  /// Creates a [:Parser<List>:] from [this].
+  Parser<List> get list =>
+      success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => (x9) => (x10) => (x11) => (x12) => (x13) => [x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13]) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8 * p9 * p10 * p11 * p12 * p13;
 }
 
 class ParserAccumulator14 {
@@ -167,6 +215,10 @@ class ParserAccumulator14 {
   /// Action application
   Parser operator ^(Object f(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14)) =>
       success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => (x9) => (x10) => (x11) => (x12) => (x13) => (x14) => f(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14)) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8 * p9 * p10 * p11 * p12 * p13 * p14;
+
+  /// Creates a [:Parser<List>:] from [this].
+  Parser<List> get list =>
+      success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => (x9) => (x10) => (x11) => (x12) => (x13) => (x14) => [x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14]) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8 * p9 * p10 * p11 * p12 * p13 * p14;
 }
 
 class ParserAccumulator15 {
@@ -180,6 +232,10 @@ class ParserAccumulator15 {
   /// Action application
   Parser operator ^(Object f(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15)) =>
       success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => (x9) => (x10) => (x11) => (x12) => (x13) => (x14) => (x15) => f(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15)) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8 * p9 * p10 * p11 * p12 * p13 * p14 * p15;
+
+  /// Creates a [:Parser<List>:] from [this].
+  Parser<List> get list =>
+      success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => (x9) => (x10) => (x11) => (x12) => (x13) => (x14) => (x15) => [x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15]) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8 * p9 * p10 * p11 * p12 * p13 * p14 * p15;
 }
 
 class ParserAccumulator16 {
@@ -193,6 +249,10 @@ class ParserAccumulator16 {
   /// Action application
   Parser operator ^(Object f(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16)) =>
       success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => (x9) => (x10) => (x11) => (x12) => (x13) => (x14) => (x15) => (x16) => f(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16)) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8 * p9 * p10 * p11 * p12 * p13 * p14 * p15 * p16;
+
+  /// Creates a [:Parser<List>:] from [this].
+  Parser<List> get list =>
+      success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => (x9) => (x10) => (x11) => (x12) => (x13) => (x14) => (x15) => (x16) => [x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16]) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8 * p9 * p10 * p11 * p12 * p13 * p14 * p15 * p16;
 }
 
 class ParserAccumulator17 {
@@ -206,6 +266,10 @@ class ParserAccumulator17 {
   /// Action application
   Parser operator ^(Object f(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17)) =>
       success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => (x9) => (x10) => (x11) => (x12) => (x13) => (x14) => (x15) => (x16) => (x17) => f(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17)) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8 * p9 * p10 * p11 * p12 * p13 * p14 * p15 * p16 * p17;
+
+  /// Creates a [:Parser<List>:] from [this].
+  Parser<List> get list =>
+      success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => (x9) => (x10) => (x11) => (x12) => (x13) => (x14) => (x15) => (x16) => (x17) => [x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17]) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8 * p9 * p10 * p11 * p12 * p13 * p14 * p15 * p16 * p17;
 }
 
 class ParserAccumulator18 {
@@ -219,6 +283,10 @@ class ParserAccumulator18 {
   /// Action application
   Parser operator ^(Object f(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18)) =>
       success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => (x9) => (x10) => (x11) => (x12) => (x13) => (x14) => (x15) => (x16) => (x17) => (x18) => f(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18)) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8 * p9 * p10 * p11 * p12 * p13 * p14 * p15 * p16 * p17 * p18;
+
+  /// Creates a [:Parser<List>:] from [this].
+  Parser<List> get list =>
+      success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => (x9) => (x10) => (x11) => (x12) => (x13) => (x14) => (x15) => (x16) => (x17) => (x18) => [x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18]) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8 * p9 * p10 * p11 * p12 * p13 * p14 * p15 * p16 * p17 * p18;
 }
 
 class ParserAccumulator19 {
@@ -232,6 +300,10 @@ class ParserAccumulator19 {
   /// Action application
   Parser operator ^(Object f(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18, x19)) =>
       success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => (x9) => (x10) => (x11) => (x12) => (x13) => (x14) => (x15) => (x16) => (x17) => (x18) => (x19) => f(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18, x19)) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8 * p9 * p10 * p11 * p12 * p13 * p14 * p15 * p16 * p17 * p18 * p19;
+
+  /// Creates a [:Parser<List>:] from [this].
+  Parser<List> get list =>
+      success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => (x9) => (x10) => (x11) => (x12) => (x13) => (x14) => (x15) => (x16) => (x17) => (x18) => (x19) => [x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18, x19]) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8 * p9 * p10 * p11 * p12 * p13 * p14 * p15 * p16 * p17 * p18 * p19;
 }
 
 class ParserAccumulator20 {
@@ -241,5 +313,9 @@ class ParserAccumulator20 {
   /// Action application
   Parser operator ^(Object f(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18, x19, x20)) =>
       success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => (x9) => (x10) => (x11) => (x12) => (x13) => (x14) => (x15) => (x16) => (x17) => (x18) => (x19) => (x20) => f(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18, x19, x20)) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8 * p9 * p10 * p11 * p12 * p13 * p14 * p15 * p16 * p17 * p18 * p19 * p20;
+
+  /// Creates a [:Parser<List>:] from [this].
+  Parser<List> get list =>
+      success((x1) => (x2) => (x3) => (x4) => (x5) => (x6) => (x7) => (x8) => (x9) => (x10) => (x11) => (x12) => (x13) => (x14) => (x15) => (x16) => (x17) => (x18) => (x19) => (x20) => [x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18, x19, x20]) * p1 * p2 * p3 * p4 * p5 * p6 * p7 * p8 * p9 * p10 * p11 * p12 * p13 * p14 * p15 * p16 * p17 * p18 * p19 * p20;
 }
 

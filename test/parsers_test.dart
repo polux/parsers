@@ -980,6 +980,22 @@ main() {
   test('commit 59 model', () => commit59Prop(chainl1Model));
   test('commit 59 impl', () => commit59Prop(chainl1Impl));
 
+  test('sequence map 1', () =>
+      expect((char('a') + char('b') ^ (x,y) => '$y$x').run('abc'),
+             isSuccess('ba', 'c')));
+
+  test('sequence map 2', () =>
+      expect((char('a') + char('b') ^ (x,y) => '$y$x').run('acb'),
+             isFailure('cb')));
+
+  test('sequence list 1', () =>
+      expect((char('a') + char('b')).list.run('abc'),
+             isSuccess(['a', 'b'], 'c')));
+
+  test('sequence list 2', () =>
+      expect((char('a') + char('b')).list.run('acb'),
+             isFailure('cb')));
+
   var big = "a";
   for (int i = 0; i < 15; i++) { big = '$big$big'; }
 

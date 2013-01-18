@@ -5,19 +5,11 @@ Check out the [user guide](http://doc.parsers.googlecode.com/git/userguide.html)
 
 ## Quick Start
 
-`pubspec.yaml`
-
-```
-name: demo
-dependencies:
-  parsers: any
-```
-
-`bin/demo.dart`
-
 ```dart
 import 'package:parsers/parsers.dart';
 import 'dart:math';
+
+// grammar
 
 final number = digit.many1       ^ digits2int
              | string('none')    ^ none
@@ -27,15 +19,20 @@ final comma = char(',') < spaces;
 
 final numbers = number.sepBy(comma) < eof;
 
+// actions
 
 digits2int(digits) => parseInt(Strings.concatAll(digits));
 none(_) => null;
 answer(_) => 42;
 
+// parsing
 
 main() {
-  print(numbers.parse('0,1, none, 3,answer')); // [0, 1, null, 3, 42]
-  print(numbers.parse('0,1, boom, 3,answer')); // line 1, character 6: expected digit, 'none' or 'answer', got 'b'.
+  print(numbers.parse('0,1, none, 3,answer'));
+  // [0, 1, null, 3, 42]
+
+  print(numbers.parse('0,1, boom, 3,answer'));
+  // line 1, character 6: expected digit, 'none' or 'answer', got 'b'.
 }
 ```
 

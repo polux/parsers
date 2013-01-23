@@ -107,7 +107,7 @@ class ParseResult<A> {
   ParseResult(this.text, this.expectations, this.position, this.isSuccess,
               this.isCommitted, this.value);
 
-  ParseResult with({String text, Expectations expectations, int position,
+  ParseResult copy({String text, Expectations expectations, int position,
                     bool isSuccess, bool isCommitted, Object value}) {
     return new ParseResult(
         ?text         ? text         : this.text,
@@ -163,7 +163,7 @@ class Parser<A> {
       ParseResult res = _run(text, pos);
       if (res.isSuccess) {
         final res2 = g(res.value)._run(text, res.position);
-        return res2.with(
+        return res2.copy(
             expectations: res.expectations.best(res2.expectations),
             isCommitted: res.isCommitted || res2.isCommitted);
       } else {
@@ -175,14 +175,14 @@ class Parser<A> {
   Parser expecting(String expected) {
     return new Parser((s, pos) {
       final res = _run(s, pos);
-      return res.with(expectations: _singleExpectation(expected, pos));
+      return res.copy(expectations: _singleExpectation(expected, pos));
     });
   }
 
   Parser get committed {
     return new Parser((s, pos) {
       final res = _run(s, pos);
-      return res.with(isCommitted: true);
+      return res.copy(isCommitted: true);
     });
   }
 
@@ -190,7 +190,10 @@ class Parser<A> {
   Parser<A> operator %(String expected) => this.expecting(expected);
 
   /// Applicative <*>
-  Parser operator *(Parser p) => this >> (f) => p >> (x) => success(f(x));
+  Parser operator *(Parser p) => this >> (f) => p >> (x) {
+    Function ff = f;
+    return success(ff(x));
+  };
 
   /// Applicative *>
   Parser operator >(Parser p) => this >> (_) => p;
@@ -208,14 +211,14 @@ class Parser<A> {
   ParserAccumulator2 operator +(Parser p) => new ParserAccumulator2(this, p);
 
   /// Alternative
-  Parser<A> operator |(Parser<A> p) {
+  Parser operator |(Parser p) {
     return new Parser((s, pos) {
       ParseResult<A> res = _run(s, pos);
       if (res.isSuccess || res.isCommitted) {
         return res;
       } else {
         ParseResult res2 = p._run(s, pos);
-        return res2.with(
+        return res2.copy(
             expectations: res.expectations.best(res2.expectations));
       }
     });
@@ -287,7 +290,7 @@ class Parser<A> {
         final endRes = end._run(s, index);
         exps = exps.best(endRes.expectations);
         if (endRes.isSuccess) {
-          return endRes.with(value: res, expectations: exps,
+          return endRes.copy(value: res, expectations: exps,
                              isCommitted: committed);
         } else if (!endRes.isCommitted) {
           final xRes = this._run(s, index);
@@ -297,10 +300,10 @@ class Parser<A> {
             res.add(xRes.value);
             index = xRes.position;
           } else {
-            return xRes.with(expectations: exps, isCommitted: committed);
+            return xRes.copy(expectations: exps, isCommitted: committed);
           }
         } else {
-          return endRes.with(expectations: exps, isCommitted: committed);
+          return endRes.copy(expectations: exps, isCommitted: committed);
         }
       }
     });
@@ -323,7 +326,7 @@ class Parser<A> {
         exps = exps.best(endRes.expectations);
         commit = commit || endRes.isCommitted;
         if (endRes.isSuccess) {
-          return endRes.with(value: null, expectations: exps,
+          return endRes.copy(value: null, expectations: exps,
                              isCommitted: commit);
         } else if (!endRes.isCommitted) {
           final xRes = this._run(s, index);
@@ -332,10 +335,10 @@ class Parser<A> {
           if (xRes.isSuccess) {
             index = xRes.position;
           } else {
-            return xRes.with(expectations: exps, isCommitted: commit);
+            return xRes.copy(expectations: exps, isCommitted: commit);
           }
         } else {
-          return endRes.with(expectations: exps);
+          return endRes.copy(expectations: exps);
         }
       }
     });
@@ -362,7 +365,7 @@ class Parser<A> {
           res.add(o.value);
           index = o.position;
         } else if (o.isCommitted) {
-          return o.with(expectations: exps);
+          return o.copy(expectations: exps);
         } else {
           return _success(res, s, index, exps, committed);
         }
@@ -392,7 +395,7 @@ class Parser<A> {
         if (o.isSuccess) {
           index = o.position;
         } else if (o.isCommitted) {
-          return o.with(expectations: exps);
+          return o.copy(expectations: exps);
         } else {
           return _success(null, s, index, exps, committed);
         }
@@ -446,7 +449,7 @@ class Parser<A> {
             acc = res.value;
             index = res.position;
           } else if (res.isCommitted) {
-            return res.with(expectations: exps);
+            return res.copy(expectations: exps);
           } else {
             return _success(acc, s, index, exps, commit);
           }
@@ -474,7 +477,7 @@ class Parser<A> {
     return new Parser((s, pos) {
         final result = run(s, pos);
         if (result.isSuccess) {
-          return result.with(
+          return result.copy(
               value: s.substring(pos.offset, result.position.offset));
         } else {
           return result;
@@ -561,7 +564,7 @@ Parser choice(List<Parser> ps) {
       final res = p._run(s, pos);
       exps = exps.best(res.expectations);
       if (res.isSuccess) {
-        return res.with(expectations: exps);
+        return res.copy(expectations: exps);
       } else if (res.isCommitted) {
         return res;
       }

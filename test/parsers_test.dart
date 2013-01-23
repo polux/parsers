@@ -31,15 +31,17 @@ class SuccessMatcher extends BaseMatcher {
 
   bool _equals(value) {
     if (res is List) {
+      List list = res;
       if (value is! List) return false;
-      if (value.length != res.length) return false;
+      if (value.length != list.length) return false;
       bool same = true;
-      for (int i = 0; i < res.length && same; i++) {
-        same = same && res[i] == value[i];
+      for (int i = 0; i < list.length && same; i++) {
+        same = same && list[i] == value[i];
       }
       return same;
     } else if (res is double) {
       if (value is! double) return false;
+      double d = res;
       return (res - value).abs() < 0.00001;
     } else {
       return res == value;

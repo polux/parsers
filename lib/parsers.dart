@@ -658,7 +658,7 @@ class LanguageParsers {
   Parser<String> get dot   => symbol('.') % 'dot';
 
   Parser<String> get _ident =>
-      success((c) => (cs) => _consStr(c)(Strings.concatAll(cs)))
+      success((c) => (cs) => _consStr(c)(cs.join()))
       * _identStart
       * _identLetter.many;
 
@@ -697,7 +697,7 @@ class LanguageParsers {
 
   Parser<String> get stringLiteral =>
       lexeme(_stringChar.many.between(char('"'), char('"')))
-      .map(Strings.concatAll)
+      .map((cs) => cs.join())
       % 'string literal';
 
   Map<String, int> _digitToInt = {

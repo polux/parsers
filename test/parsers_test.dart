@@ -228,14 +228,14 @@ main() {
 
   manyUntilProp0(f) =>
     expect((string('/*') > f(anyChar, string('*/'))).run('/* abcdef */'),
-           isSuccess(' abcdef '.splitChars(), ''));
+           isSuccess(' abcdef '.split(''), ''));
 
   test('manyUntil 0 model', () => manyUntilProp0(manyUntilModel));
   test('manyUntil 0 impl', () => manyUntilProp0(manyUntilImpl));
 
   manyUntilProp1(f) =>
       expect(f(anyChar, string('*/')).run(' a b c d */ e'),
-             isSuccess(' a b c d '.splitChars(), ' e'));
+             isSuccess(' a b c d '.split(''), ' e'));
 
   test('manyUntil 1 model', () => manyUntilProp1(manyUntilModel));
   test('manyUntil 1 impl', () => manyUntilProp1(manyUntilImpl));
@@ -249,7 +249,7 @@ main() {
 
   manyUntilProp3(f) =>
       expect(f(anyChar, string('*/').lookAhead).run(' a b c d */ e'),
-             isSuccess(' a b c d '.splitChars(), '*/ e'));
+             isSuccess(' a b c d '.split(''), '*/ e'));
 
   test('manyUntil 3 model', () => manyUntilProp3(manyUntilModel));
   test('manyUntil 3 impl', () => manyUntilProp3(manyUntilImpl));

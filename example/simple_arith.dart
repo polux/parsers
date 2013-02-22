@@ -37,7 +37,7 @@ class Arith {
   // These are simple Dart functions used as "actions" above to transform the
   // results of intermediate parsing steps.
 
-  digits2int(digits) => int.parse(Strings.concatAll(digits));
+  digits2int(digits) => int.parse(digits.join());
   prod(xs) => xs.reduce(1, (a,b) => a * b);
   sum(xs) => xs.reduce(0, (a,b) => a + b);
 }

@@ -22,9 +22,9 @@ _humanOr(List es) {
   } else {
     StringBuffer result = new StringBuffer();
     for (int i = 0; i < es.length - 2; i++) {
-      result.add('${es[i]}, ');
+      result.write('${es[i]}, ');
     }
-    result.add('${es[es.length - 2]} or ${es[es.length - 1]}');
+    result.write('${es[es.length - 2]} or ${es[es.length - 1]}');
     return result;
   }
 }

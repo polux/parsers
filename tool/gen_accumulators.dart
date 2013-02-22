@@ -5,8 +5,6 @@
 
 // Author: Paul Brauner (polux@google.com)
 
-join(xs, s) => Strings.join(xs, s);
-
 main() {
   final n = int.parse(new Options().arguments[0]);
   for (int i = 2; i <= n; i++) {
@@ -16,18 +14,18 @@ main() {
       plist.add('p$j');
       xlist.add('x$j');
     }
-    final ps = join(plist, ', ');
-    final these = join(plist.map((p) => 'this.$p'), ', ');
-    final xs = join(xlist, ', ');
-    final curriedXs = join(xlist.map((x) => '($x)'), ' => ');
-    final psProduct = join(plist, ' * '); 
+    final ps = plist.join(', ');
+    final these = plist.map((p) => 'this.$p').join(', ');
+    final xs = xlist.join(', ');
+    final curriedXs = xlist.map((x) => '($x)').join(' => ');
+    final psProduct = plist.join(' * ');
 
   print('''
 class ParserAccumulator$i {
   final Parser $ps;
   ParserAccumulator$i($these);
 ''');
-  
+
   if (i < n) {
     print('''
   /// Parser sequencing: creates a parser accumulator
@@ -35,7 +33,7 @@ class ParserAccumulator$i {
     new ParserAccumulator${i+1}($ps, p);
 ''');
   }
-  
+
   print('''
   /// Action application
   Parser operator ^(Object f($xs)) =>

@@ -13,7 +13,7 @@ import 'dart:math';
 
 class Arith {
 
-  digits2int(digits) => int.parse(Strings.concatAll(digits));
+  digits2int(digits) => int.parse(digits.join());
 
   lexeme(parser) => parser < spaces;
   token(str)     => lexeme(string(str));

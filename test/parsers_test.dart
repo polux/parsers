@@ -42,7 +42,7 @@ class SuccessMatcher extends BaseMatcher {
     } else if (res is double) {
       if (value is! double) return false;
       double d = res;
-      return (res - value).abs() < 0.00001;
+      return (d - value).abs() < 0.00001;
     } else {
       return res == value;
     }

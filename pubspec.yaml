@@ -1,5 +1,5 @@
 name: parsers
-description: Parser combinators for Dart.
+description: Parser combinators for Dart
 version: 0.11.3
 author: Paul Brauner <polux@google.com>
 homepage: http://code.google.com/p/parsers/

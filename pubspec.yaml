@@ -1,9 +1,10 @@
 name: parsers
-description: Parser combinators for Dart
-version: 0.11.3
+version: 0.11.4
 author: Paul Brauner <polux@google.com>
+description: Parser combinators for Dart
 homepage: http://code.google.com/p/parsers/
 documentation: http://goo.gl/OqXXb
 dependencies:
-  unittest: any
   persistent: any
+dev_dependencies:
+  unittest: any

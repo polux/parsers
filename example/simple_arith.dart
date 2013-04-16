@@ -38,8 +38,8 @@ class Arith {
   // results of intermediate parsing steps.
 
   digits2int(digits) => int.parse(digits.join());
-  prod(xs) => xs.reduce(1, (a,b) => a * b);
-  sum(xs) => xs.reduce(0, (a,b) => a + b);
+  prod(xs) => xs.fold(1, (a,b) => a * b);
+  sum(xs) => xs.fold(0, (a,b) => a + b);
 }
 
 main() {

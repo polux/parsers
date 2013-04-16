@@ -583,7 +583,7 @@ Parser<String> oneOf(String chars) =>
 Parser<String> noneOf(String chars) =>
     pred((c) => !chars.contains(c)).expecting("none of '$chars'");
 
-final _spaces = " \t\n";
+final _spaces = " \t\n\r\v\f";
 final _lower = "abcdefghijklmnopqrstuvwxyz";
 final _upper = _lower.toUpperCase();
 final _alpha = "$_lower$_upper";

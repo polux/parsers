@@ -16,7 +16,7 @@ _rest(parseResult) => parseResult.text.substring(parseResult.position.offset);
 class FailureMatcher extends BaseMatcher {
   String rest;
   FailureMatcher(this.rest);
-  bool matches(ParseResult parseResult, MatchState matchState) {
+  bool matches(ParseResult parseResult, Map matchState) {
     return !parseResult.isSuccess
         && _rest(parseResult) == rest;
   }
@@ -48,7 +48,7 @@ class SuccessMatcher extends BaseMatcher {
     }
   }
 
-  bool matches(ParseResult parseResult, MatchState matchState) {
+  bool matches(ParseResult parseResult, Map matchState) {
     return parseResult.isSuccess
         && _equals(parseResult.value)
         && parseResult.text.substring(parseResult.position.offset) == rest;

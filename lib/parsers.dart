@@ -110,12 +110,12 @@ class ParseResult<A> {
   ParseResult copy({String text, Expectations expectations, int position,
                     bool isSuccess, bool isCommitted, Object value}) {
     return new ParseResult(
-        ?text         ? text         : this.text,
-        ?expectations ? expectations : this.expectations,
-        ?position     ? position     : this.position,
-        ?isSuccess    ? isSuccess    : this.isSuccess,
-        ?isCommitted  ? isCommitted  : this.isCommitted,
-        ?value        ? value        : this.value);
+        (text != null)         ? text         : this.text,
+        (expectations != null) ? expectations : this.expectations,
+        (position != null)     ? position     : this.position,
+        (isSuccess != null)    ? isSuccess    : this.isSuccess,
+        (isCommitted != null)  ? isCommitted  : this.isCommitted,
+        (value != null)        ? value        : this.value);
   }
 
   String get _rest => text.substring(position.offset);
@@ -131,13 +131,15 @@ class ParseResult<A> {
 
 ParseResult _success(value, String text, Position position,
                      [Expectations expectations, bool committed = false]) {
-  final exps = ?expectations ? expectations : _emptyExpectation(position);
+  final exps = (expectations != null)
+      ? expectations : _emptyExpectation(position);
   return new ParseResult(text, exps, position, true, committed, value);
 }
 
 ParseResult _failure(String text, Position position,
                      [Expectations expectations, bool committed = false]) {
-  final exps = ?expectations ? expectations : _emptyExpectation(position);
+  final exps = (expectations != null)
+      ? expectations : _emptyExpectation(position);
   return new ParseResult(text, exps, position, false, committed, null);
 }
 

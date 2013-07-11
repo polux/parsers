@@ -10,6 +10,7 @@ import 'dart:math';
 
 part 'src/accumulators.dart';
 
+class Undefined { const Undefined(); }  // simulates the old ? operator
 _consStr(c) => (String cs) => "$c$cs";
 String _strHead(String s) => s[0];
 String _strTail(String s) => s.substring(1);
@@ -108,14 +109,15 @@ class ParseResult<A> {
               this.isCommitted, this.value);
 
   ParseResult copy({String text, Expectations expectations, int position,
-                    bool isSuccess, bool isCommitted, Object value}) {
+                    bool isSuccess, bool isCommitted,
+                    Object value: const Undefined()}) {
     return new ParseResult(
-        (text != null)         ? text         : this.text,
-        (expectations != null) ? expectations : this.expectations,
-        (position != null)     ? position     : this.position,
-        (isSuccess != null)    ? isSuccess    : this.isSuccess,
-        (isCommitted != null)  ? isCommitted  : this.isCommitted,
-        (value != null)        ? value        : this.value);
+        (text != null)               ? text         : this.text,
+        (expectations != null)       ? expectations : this.expectations,
+        (position != null)           ? position     : this.position,
+        (isSuccess != null)          ? isSuccess    : this.isSuccess,
+        (isCommitted != null)        ? isCommitted  : this.isCommitted,
+        (value != const Undefined()) ? value        : this.value);
   }
 
   String get _rest => text.substring(position.offset);

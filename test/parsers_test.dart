@@ -13,7 +13,7 @@ part 'src/parsers_model.dart';
 
 _rest(parseResult) => parseResult.text.substring(parseResult.position.offset);
 
-class FailureMatcher extends BaseMatcher {
+class FailureMatcher extends Matcher {
   String rest;
   FailureMatcher(this.rest);
   bool matches(ParseResult parseResult, Map matchState) {
@@ -24,7 +24,7 @@ class FailureMatcher extends BaseMatcher {
     description.add('a parse failure with rest "$rest"');
 }
 
-class SuccessMatcher extends BaseMatcher {
+class SuccessMatcher extends Matcher {
   final Object res;
   final String rest;
   SuccessMatcher(this.res, this.rest);

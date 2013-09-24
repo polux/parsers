@@ -431,8 +431,8 @@ main() {
       expect(lang.natural.chainl(success((x, y) => x + y), 42).run('a 2 3'),
              isSuccess(42, 'a 2 3')));
 
-  final addop = lang.symbol('+') > success((x, y) => x + y)
-              | lang.symbol('-') > success((x, y) => x - y);
+  final addop = (lang.symbol('+') > success((x, y) => x + y))
+              | (lang.symbol('-') > success((x, y) => x - y));
 
   test('chainl 3', () =>
       expect(lang.natural.chainl(addop, 42).run('3 - 1 - 2'),
@@ -885,7 +885,7 @@ main() {
   test('commit 51 impl', () => commit51Prop(manyUntilImpl));
 
   commit515Prop(f) {
-    final p = f(char('x') > char('a').committed) > string('b')
+    final p = (f(char('x') > char('a').committed) > string('b'))
             | string('xaxac');
     return expect(p.run('xaxac'), isFailure('c'));
   }

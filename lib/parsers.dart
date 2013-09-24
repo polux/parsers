@@ -203,7 +203,7 @@ class Parser<A> {
   Parser operator >(Parser p) => this >> (_) => p;
 
   /// Applicative <*
-  Parser<A> operator <(Parser p) => this >> (x) => p > success(x);
+  Parser<A> operator <(Parser p) => this >> ((x) => p > success(x));
 
   /// Functor map
   Parser map(Object f(A x)) => success(f) * this;
@@ -683,20 +683,25 @@ class LanguageParsers {
   }
 
   final Parser<String> _escapeCode =
-      char('a')  > success('\a') | char('b')  > success('\b')
-    | char('f')  > success('\f') | char('n')  > success('\n')
-    | char('r')  > success('\r') | char('t')  > success('\t')
-    | char('v')  > success('\v') | char('\\') > success('\\')
-    | char('"')  > success('"')  | char("'")  > success("'");
+      (char('a')  > success('\a'))
+    | (char('b')  > success('\b'))
+    | (char('f')  > success('\f'))
+    | (char('n')  > success('\n'))
+    | (char('r')  > success('\r'))
+    | (char('t')  > success('\t'))
+    | (char('v')  > success('\v'))
+    | (char('\\') > success('\\'))
+    | (char('"')  > success('"'))
+    | (char("'")  > success("'"));
 
-  Parser<String> get _charChar => char('\\') > _escapeCode
+  Parser<String> get _charChar => (char('\\') > _escapeCode)
                                 | pred((c) => c != "'");
 
   Parser<String> get charLiteral =>
       lexeme(_charChar.between(char("'"), char("'")))
       % 'character literal';
 
-  Parser<String> get _stringChar => char('\\') > _escapeCode
+  Parser<String> get _stringChar => (char('\\') > _escapeCode)
                                   | pred((c) => c != '"');
 
   Parser<String> get stringLiteral =>
@@ -723,8 +728,8 @@ class LanguageParsers {
 
   Parser<int> get _int => lexeme(_sign) * _nat;
 
-  Parser<Function> get _sign => char('-') > success((n) => -n)
-                              | char('+') > success((n) => n)
+  Parser<Function> get _sign => (char('-') > success((n) => -n))
+                              | (char('+') > success((n) => n))
                               | success((n) => n);
 
   Parser<int> get natural => lexeme(_nat) % 'natural number';
@@ -778,8 +783,8 @@ class LanguageParsers {
 
   Parser _inCommentMulti() => _notStartNorEnd.skipMany > _recOrEnd();
 
-  Parser _recOrEnd() => rec(_multiLineComment) > rec(_inCommentMulti)
-                      | _end > success(null);
+  Parser _recOrEnd() => (rec(_multiLineComment) > rec(_inCommentMulti))
+                      | (_end > success(null));
 
   Parser _inCommentSingle() => anyChar.skipManyUntil(_end);
 

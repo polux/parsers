@@ -32,11 +32,11 @@ class Arith {
   term() => rec(atom).chainl1(mulop);
   atom() => number | parens(rec(expr));
 
-  get addop => plus  > success((x, y) => x + y)
-             | minus > success((x, y) => x - y);
+  get addop => (plus  > success((x, y) => x + y))
+             | (minus > success((x, y) => x - y));
 
-  get mulop => times > success((x, y) => x * y)
-             | div   > success((x, y) => x ~/ y);
+  get mulop => (times > success((x, y) => x * y))
+             | (div   > success((x, y) => x ~/ y));
 }
 
 main() {

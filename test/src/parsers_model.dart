@@ -17,7 +17,8 @@ Parser skipManyModel(Parser p) => manyModel(p) > success(null);
 Parser skipManyImpl(Parser p) => p.skipMany;
 
 Parser<List> manyUntilModel(Parser p, Parser end) {
-  go () => end > success([]) | success(_cons) * p * rec(go);
+  go () => (end > success([]))
+         | success(_cons) * p * rec(go);
   return go();
 }
 

@@ -408,11 +408,26 @@ main() {
   test('natural 6', () =>
       expect(lang.natural.run('-0x42'), isFailure('-0x42')));
 
+  test('decimal 1', () =>
+      expect(lang.decimal.run('42'), isSuccess(42, '')));
+
+  test('decimal 2', () =>
+      expect(lang.decimal.run('-0x42'), isFailure('-0x42')));
+
   test('int 1', () =>
       expect(lang.intLiteral.run('-0x42'), isSuccess(-66, '')));
 
   test('int 2', () =>
       expect(lang.intLiteral.run('-  0x42'), isSuccess(-66, '')));
+
+  test('int 3', () =>
+      expect(lang.intLiteral.run('1'), isSuccess(1, '')));
+
+  test('int 4', () =>
+      expect(lang.intLiteral.run(' 1'), isSuccess(1, '')));
+
+  test('int 5', () =>
+      expect(lang.intLiteral.run('6492   '), isSuccess(6492, '')));
 
   test('float 1', () =>
       expect(lang.floatLiteral.run('3.14'), isSuccess(3.14, '')));

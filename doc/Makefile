@@ -1,4 +1,5 @@
-PAGES=out/userguide.html out/dartdoc
+VERSION=0.13.5
+PAGES=out/index.html out/dartdoc
 
 .PHONY: all clean out gen
 
@@ -31,8 +32,8 @@ out/%.html: %.md out/style.css out/pygments.css gen/filter out/images
 
 gen/parsers:
 	mkdir -p gen/parsers
-	wget -P gen http://commondatastorage.googleapis.com/pub.dartlang.org/packages/parsers-0.9.1.tar.gz
-	tar xvzf gen/parsers-0.9.1.tar.gz --directory=gen/parsers
+	wget -P gen http://commondatastorage.googleapis.com/pub.dartlang.org/packages/parsers-${VERSION}.tar.gz
+	tar xvzf gen/parsers-${VERSION}.tar.gz --directory=gen/parsers
 
 gen/parsers/packages: gen/parsers
 	cd gen/parsers; pub install

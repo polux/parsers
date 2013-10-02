@@ -3,9 +3,10 @@
 
 import Text.Pandoc
 import System.Process
+import Text.Pandoc.JSON (toJSONFilter)
 
-main = toJsonFilter hilight
-  where hilight (CodeBlock (_,[lang], _) code) = RawBlock "html" `fmap` pygments code lang
+main = toJSONFilter hilight
+  where hilight (CodeBlock (_,[lang], _) code) = RawBlock (Format "html") `fmap` pygments code lang
         hilight x = return x
 
 {-

@@ -259,7 +259,7 @@ defined this way.
 
 ### Recursion
 
-[parsers homepage]: http://code.google.com/p/parsers/
+[parsers homepage]: https://github.com/polux/parsers
 [parser combinator]: https://en.wikipedia.org/wiki/Parser_combinator
 [Parser dartdoc]: dartdoc/parsers/Parser.html
 [parse dartdoc]: dartdoc/parsers/Parser.html#parse

@@ -1,8 +1,8 @@
 name: parsers
-version: 0.13.5
+version: 0.13.6
 author: Paul Brauner <polux@google.com>
 description: Parser combinators for Dart
-homepage: http://code.google.com/p/parsers/
+homepage: https://github.com/polux/parsers
 documentation: http://goo.gl/OqXXb
 environment:
   sdk: '>=0.4.7'

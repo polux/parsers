@@ -1,7 +1,7 @@
 # [Parser Combinators](http://en.wikipedia.org/wiki/Parser_combinator) for Dart
 
 Check out the [user guide](http://polux.github.io/parsers/) 
-(work in progress).
+(work in progress) and the [API reference](http://polux.github.io/parsers/dartdoc/parsers.html).
 
 ## Quick Start
 

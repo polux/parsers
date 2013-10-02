@@ -3,7 +3,7 @@ version: 0.13.6
 author: Paul Brauner <polux@google.com>
 description: Parser combinators for Dart
 homepage: https://github.com/polux/parsers
-documentation: http://goo.gl/OqXXb
+documentation: http://goo.gl/ZNqdEH
 environment:
   sdk: '>=0.4.7'
 dependencies:

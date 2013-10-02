@@ -1,6 +1,6 @@
 # [Parser Combinators](http://en.wikipedia.org/wiki/Parser_combinator) for Dart
 
-Check out the [user guide](http://doc.parsers.googlecode.com/git/userguide.html) 
+Check out the [user guide](http://polux.github.io/parsers/) 
 (work in progress).
 
 ## Quick Start
@@ -37,7 +37,7 @@ main() {
 ```
 
 See the
-[example](http://code.google.com/p/parsers/source/browse/#git%2Fexample)
+[example](https://github.com/polux/parsers/tree/master/example)
 directory for advanced usage.
 
 ## About

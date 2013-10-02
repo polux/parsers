@@ -1,0 +1,167 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <link rel="stylesheet" href="style.css" type="text/css" />
+  <link rel="stylesheet" href="pygments.css" type="text/css" />
+  <script type="text/javascript">
+  
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-37155809-1']);
+    _gaq.push(['_trackPageview']);
+  
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  
+  </script>
+</head>
+<body>
+<h1 id="parsers-user-guide">Parsers User Guide</h1>
+<p>This document guides you through the usage of the <a href="http://code.google.com/p/parsers/">parsers</a> library, a parser combinator library for Dart. It assumes some basic knowledge of Dart.</p>
+<h2 id="introduction">Introduction</h2>
+<p>The <em>parsers</em> library helps you build functions that take a string, check that it belongs to some language and compute something out of it.</p>
+<div class="figure">
+<img src="images/parser.png" alt="parser image" /><p class="caption">parser image</p>
+</div>
+<p>For instance, it helps you write a function that accepts strings made of digits only and compute the integer they represent. But it can also help you building more involved functions, like one that accepts valid Java programs only and returns their AST (Abstract Syntax Tree).</p>
+<p>It is called a <a href="https://en.wikipedia.org/wiki/Parser_combinator">parser combinator</a> library because it is made of functions which build complex parsers out of simpler parsers. For instance, by feeding the <code>sepBy</code> function with a parser of integers and a parser of commas, we obtain a parser of integers separated by commas. These parsers are themselves a combination of simple parsers, etc. Ultimately, the library exposes a very small set of primitive parsers and every other function it defines is built on top of them.</p>
+<div class="figure">
+<img src="images/parser_combinator.png" alt="parser combinator image" /><p class="caption">parser combinator image</p>
+</div>
+<p>It is a powerful concept because it allows you to define domain specific combinators and parameterized parsers. For instance, the <code>LanguageParser</code> class that ships with the library defines a set of parsers specialized in parsing programming languages. It is parameterized by things like the keywords of the programming language, or the syntax of its comments, which gives you control over the behaviour of these parsers while sparing you the gory details.</p>
+<p>Now that you’re convinced parser combinators are the greatest thing since sliced bread, let’s get started!</p>
+<h2 id="getting-started">Getting Started</h2>
+<p>If you know how to set up a Dart project with dependencies on third-party libraries, you can safely <a href="#primitive-parsers">skip this section</a>. Simply create a project depending on the latest version of the <em>parsers</em> library.</p>
+<p>Create a directory called <code>tutorial</code> with the following layout.</p>
+<div class="highlight"><pre>tutorial/
+  pubspec.yaml
+  bin/
+    tutorial.dart
+</pre></div>
+
+<p>In <code>pubspec.yaml</code>, define a project named <code>tutorial</code> depending the latest version of the <em>parsers</em> library.</p>
+<div class="highlight"><pre><span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">tutorial</span>
+<span class="l-Scalar-Plain">dependencies</span><span class="p-Indicator">:</span>
+  <span class="l-Scalar-Plain">parsers</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">any</span>
+</pre></div>
+
+<p>In <code>bin/tutorial.dart</code>, import the <em>parsers</em> library and define the main function as below.</p>
+<div class="highlight"><pre><span class="n">import</span> <span class="s1">&#39;package:parsers/parsers.dart&#39;</span><span class="p">;</span>
+
+<span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">final</span> <span class="n">p</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="s1">&#39;Hello World&#39;</span><span class="p">);</span>
+  <span class="n">print</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;Hello World&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>Install the dependencies by running <code>pub install</code> in the <code>tutorial</code> directory.</p>
+<div class="highlight"><pre><span class="nv">$ </span>pub install
+Resolving dependencies...
+Downloading parsers 0.9.1...
+Downloading unittest 0.2.8+2...
+Downloading args 0.2.8+2...
+Dependencies installed!
+</pre></div>
+
+<p>And finally run your program.</p>
+<div class="highlight"><pre><span class="nv">$ </span>dart bin/tutorial.dart 
+Hello World
+</pre></div>
+
+<p>You’re all Set!</p>
+<h2 id="primitive-parsers">Primitive Parsers</h2>
+<p>The main class exposed by the library is <a href="dartdoc/parsers/Parser.html"><code>Parser&lt;A&gt;</code></a>. What we refer to as “parsers” in this document are instances of this class.</p>
+<p>An instance of <code>Parser&lt;A&gt;</code> is an object which – via the <a href="dartdoc/parsers/Parser.html#parse"><code>parse</code></a> method – consumes a string and either computes a value of type <code>A</code> or fails.</p>
+<div class="highlight"><pre><span class="n">Parser</span><span class="o">&lt;</span><span class="n">Foo</span><span class="o">&gt;</span> <span class="n">p</span> <span class="o">=</span> <span class="p">...;</span>
+<span class="n">p</span><span class="p">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;some string&quot;</span><span class="p">);</span>  <span class="c1">// returns a Foo or throws a parse error </span>
+</pre></div>
+
+<p>You should never have to call the constructor of <code>Parser</code>. That’s what primitive parsers combinators do for you. We introduce them below.</p>
+<h3 id="string">String</h3>
+<p>One of the most primitive and simple parser combinators is <a href="dartdoc/parsers.html#string"><code>string</code></a>. It is a function that takes a string and returns a <code>Parser&lt;String&gt;</code>.</p>
+<div class="highlight"><pre><span class="n">Parser</span><span class="o">&lt;</span><span class="kt">String</span><span class="o">&gt;</span> <span class="n">p</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">);</span>
+</pre></div>
+
+<p>Here <code>p</code> expects the string <code>'foo'</code> and will return <code>'foo'</code> on success.</p>
+<div class="highlight"><pre><span class="n">p</span><span class="p">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">);</span>  <span class="c1">// returns &#39;foo&#39;</span>
+<span class="n">p</span><span class="p">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;bar&#39;</span><span class="p">);</span>  <span class="c1">// parse error</span>
+</pre></div>
+
+<p>One thing to be aware of is that <code>p</code> accepts any string <em>starting with</em> <code>'foo'</code> and not only the 3-character long <code>'foo'</code> string.</p>
+<div class="highlight"><pre><span class="n">p</span><span class="p">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;foobar&#39;</span><span class="p">);</span>  <span class="c1">// returns &#39;foo&#39;</span>
+</pre></div>
+
+<p>It simply consumes the three first characters and leaves the rest to whichever parser it is chained with, as we will see later.</p>
+<h3 id="disjunction">Disjunction</h3>
+<p>The <code>Parser</code> class overrides the <a href="dartdoc/parsers/Parser.html#|"><code>|</code></a> operator which is the first “real” parser combinator we’ll encounter: it combines two <code>Parser</code>s to create a new one.</p>
+<p>Given two parsers <code>a</code> and <code>b</code>, the parser <code>a | b</code> (pronounced “a or b”) is the parser that returns <code>a</code>’s result if <code>a</code> succeeds, <code>b</code>’s result otherwise.</p>
+<div class="highlight"><pre><span class="kd">final</span> <span class="n">p</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span> <span class="o">|</span> <span class="n">string</span><span class="p">(</span><span class="s1">&#39;bar&#39;</span><span class="p">);</span>
+
+<span class="n">p</span><span class="p">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">);</span>  <span class="c1">// returns &#39;foo&#39;</span>
+<span class="n">p</span><span class="p">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;bar&#39;</span><span class="p">);</span>  <span class="c1">// returns &#39;bar&#39;</span>
+</pre></div>
+
+<p>Of course, <code>b</code> can fail too, in which case <code>a | b</code> fails as a whole.</p>
+<div class="highlight"><pre><span class="n">p</span><span class="p">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;qux&#39;</span><span class="p">);</span>  <span class="c1">// fails</span>
+</pre></div>
+
+<p>What is the type of <code>p</code>? In this case it is <code>Parser&lt;String&gt;</code> because both <code>string('foo')</code> and <code>string('bar')</code> are parsers of type <code>Parser&lt;String&gt;</code>. But if they were computing values of different types that would be their closest common ancestor (usually <code>Parser&lt;Object&gt;</code>). So far however we have only encountered parsers that compute strings. Let us see how to create parsers computing something else.</p>
+<h3 id="mapping">Mapping</h3>
+<p>The <a href="dartdoc/parsers/Parser.html#^"><code>^</code></a> operator of <code>Parser</code> transforms the result of a successful parse. It leaves a failure unchanged.</p>
+<div class="highlight"><pre><span class="n">Parser</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">p</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="s1">&#39;123&#39;</span><span class="p">)</span> <span class="o">^</span> <span class="p">((</span><span class="n">s</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="kt">int</span><span class="p">.</span><span class="n">parse</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">+</span> <span class="m">1</span><span class="p">);</span>
+
+<span class="n">p</span><span class="p">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;123&#39;</span><span class="p">);</span>  <span class="c1">// returns 124</span>
+<span class="n">p</span><span class="p">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">);</span>  <span class="c1">// parse error</span>
+</pre></div>
+
+<p>This is how we obtain parsers which compute something useful (like an AST) instead of simply echoing their input. It should be stressed that <code>^</code> doesn’t change which input the parser it applies to accepts, only its result.</p>
+<p>As any other combinator, <code>^</code> applies to any parser, even to composite ones.</p>
+<div class="highlight"><pre><span class="n">Parser</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="n">string</span><span class="p">(</span><span class="s1">&#39;1&#39;</span><span class="p">)</span> <span class="o">|</span> <span class="n">string</span><span class="p">(</span><span class="s1">&#39;2&#39;</span><span class="p">)</span> <span class="o">|</span> <span class="n">string</span><span class="p">(</span><span class="s1">&#39;3&#39;</span><span class="p">))</span> <span class="o">^</span> <span class="kt">int</span><span class="p">.</span><span class="n">parse</span><span class="p">;</span>
+
+<span class="n">p</span><span class="p">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;1&#39;</span><span class="p">);</span>  <span class="c1">// returns 1 </span>
+<span class="n">p</span><span class="p">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;2&#39;</span><span class="p">);</span>  <span class="c1">// returns 2 </span>
+<span class="n">p</span><span class="p">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;3&#39;</span><span class="p">);</span>  <span class="c1">// returns 3 </span>
+</pre></div>
+
+<p>It can as well apply to individual branches of a disjunction, to unify their types.</p>
+<div class="highlight"><pre><span class="n">Parser</span><span class="o">&lt;</span><span class="kt">String</span><span class="o">&gt;</span> <span class="n">one</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="s1">&#39;one&#39;</span><span class="p">);</span>
+<span class="n">Parser</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">two</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="s1">&#39;2&#39;</span><span class="p">)</span> <span class="o">^</span> <span class="kt">int</span><span class="p">.</span><span class="n">parse</span><span class="p">;</span>
+
+<span class="n">Parser</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">oneOrTwo</span> <span class="o">=</span> <span class="n">one</span> <span class="o">^</span> <span class="p">((</span><span class="n">_</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="m">1</span><span class="p">)</span> <span class="o">|</span> <span class="n">two</span><span class="p">;</span>
+</pre></div>
+
+<p>These examples however are not very exciting, because we might as well write <code>string('2') ^ ((_) =&gt; 2)</code> instead of <code>string('a') ^ int.parse</code> since <code>string('2')</code> is always going to return <code>'2'</code> on success anyway. In order to build more interesting parsers we need to chain them an undetermined number of times, which is what the next two sections are about.</p>
+<h3 id="sequencing">Sequencing</h3>
+<p>It would have been natural to introduce the sequencing of parsers earlier in this guide. However, the way it is exposed in the <em>parsers</em> library requires some understanding of the <code>^</code> operator, which is why we only tackle it now.</p>
+<p>Sequencing is achieved via the <code>+</code> operator.</p>
+<div class="highlight"><pre><span class="kd">final</span> <span class="n">protoParser</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</pre></div>
+
+<p>Given two parsers <code>a</code> and <code>b</code>, <code>a + b</code> parses <code>a</code> then <code>b</code>. If one of them fails, it fails altogether. However <code>a + b</code> is not quite completely a parser, hence the name <code>protoParser</code>. The reason why it is not a parser is because it is not obvious what it should compute. Parser <code>a</code> computes some value, parser <code>b</code> computes some other value, but what should <code>a + b</code> compute?</p>
+<p>The only available way to turn a proto parser into a real one is by calling its <code>^</code> operator. It takes as many arguments as there are elements in the sequence.</p>
+<div class="highlight"><pre><span class="n">combine</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">&#39;</span><span class="si">$</span><span class="n">z</span><span class="si">$</span><span class="n">y</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">x</span><span class="p">];</span>
+<span class="kd">final</span> <span class="n">p</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">string</span><span class="p">(</span><span class="s1">&#39;bar&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">string</span><span class="p">(</span><span class="s1">&#39;baz&#39;</span><span class="p">)</span> <span class="o">^</span> <span class="n">combine</span><span class="p">;</span>
+
+<span class="n">p</span><span class="p">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;foobarbaz&#39;</span><span class="p">);</span>  <span class="c1">// returns [&#39;bazbar&#39;, &#39;foo]</span>
+</pre></div>
+
+<p>Since <a href="https://www.dartlang.org/docs/spec/latest/dart-language-specification.html#h.sn1uuf2ffwwd">+ has a higher precedence than ^</a> in Dart, <code>combine</code> applies to the whole sequence. The operators in <em>parsers</em> are chosen so that they usually “do the right thing”, but precedence can be tricky. When in doubt, use parenthesis.</p>
+<p>Thanks to <code>+</code> and <code>^</code> we can now define our very first combinator: a combinator that takes a parser <code>p</code> and returns a parser of <code>p</code> parenthesized.</p>
+<div class="highlight"><pre><span class="n">Parser</span> <span class="n">parens</span><span class="p">(</span><span class="n">Parser</span> <span class="n">p</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="n">string</span><span class="p">(</span><span class="s1">&#39;(&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">p</span> <span class="o">+</span> <span class="n">string</span><span class="p">(</span><span class="s1">&#39;)&#39;</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">x</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="kd">final</span> <span class="n">p</span> <span class="o">=</span> <span class="n">parens</span><span class="p">(</span><span class="n">string</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">));</span>
+
+<span class="n">p</span><span class="p">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;(foo)&#39;</span><span class="p">);</span>  <span class="c1">// returns &#39;foo&#39;</span>
+</pre></div>
+
+<p>That’s the beauty of parser combinator libraries: we piggyback on the host language’s abstraction mechanisms (here Dart functions) to define reusable parsing behaviours. Most of the combinators of the <em>parsers</em> library are defined this way.</p>
+<h3 id="recursion">Recursion</h3>
+</body>
+</html>

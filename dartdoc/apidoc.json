@@ -1,0 +1,1 @@
+{"name":"dart:","description":"Dart System Libraries","libraries":[{"refId":"parsers"},{"name":"package:persistent/persistent.dart","refId":"persistent"}],"revision":"0","location":"0","dependencies":[]}

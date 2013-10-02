@@ -1,0 +1,72 @@
+        <!DOCTYPE html>
+        <html>
+        <head>
+                <meta charset="utf-8">
+        <title>ReservedNames class / parsers Library / Dart Documentation</title>
+        <link rel="stylesheet" type="text/css"
+            href="../styles.css">
+        <link href="//fonts.googleapis.com/css?family=Open+Sans:400,600,700,800" rel="stylesheet" type="text/css">
+        <link rel="shortcut icon" href="../favicon.ico">
+        
+        </head>
+        <body data-library="parsers" data-type="ReservedNames">
+        <div class="page">
+        <div class="header">
+          <a href="../index.html"><div class="logo"></div></a>
+          <a href="../index.html">Dart Documentation</a>
+         &rsaquo; <a href="../parsers.html">parsers</a> &rsaquo; <a href="../parsers/ReservedNames.html">ReservedNames</a>        <div id="search-box">
+          <input type="search" name="q" id="q" autocomplete="off"
+              class="search-input" placeholder="Search API">
+        </div>
+        
+      </div>
+      <div class="drop-down" id="drop-down"></div>
+      
+        <div class="nav">
+        
+</div>
+<div class="content">
+        <h2><strong>ReservedNames</strong>
+          class
+        </h2>
+        
+<button id="show-inherited" class="show-inherited">Hide inherited</button>
+<div class="doc">
+<pre class="source">
+class ReservedNames {
+ Map&lt;String, Parser&lt;String&gt;&gt; _map;
+ ReservedNames._(this._map);
+ Parser&lt;String&gt; operator[](String key) {
+   final res = _map[key];
+   if (res == null) throw "$key is not a reserved name";
+   else return res;
+ }
+}
+</pre>
+</div>
+<div>
+<h3>Operators</h3>
+<div class="method"><h4 id="[]">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a>&lt;<a href="http://api.dartlang.org/dart_core/String.html">String</a>&gt; <strong>operator []</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> key) <a class="anchor-link" href="#[]"
+              title="Permalink to ReservedNames.operator []">#</a></h4>
+<div class="doc">
+<pre class="source">
+Parser&lt;String&gt; operator[](String key) {
+ final res = _map[key];
+ if (res == null) throw "$key is not a reserved name";
+ else return res;
+}
+</pre>
+</div>
+</div>
+</div>
+        </div>
+        <div class="clear"></div>
+        </div>
+        <div class="footer">
+          <div>This page was generated at 2013-10-03 00:45:51.278</div>
+        </div>
+        <script async src="../client-live-nav.js"></script>
+        </body></html>
+        

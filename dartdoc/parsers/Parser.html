@@ -1,0 +1,1051 @@
+        <!DOCTYPE html>
+        <html>
+        <head>
+                <meta charset="utf-8">
+        <title>Parser&lt;A&gt; class / parsers Library / Dart Documentation</title>
+        <link rel="stylesheet" type="text/css"
+            href="../styles.css">
+        <link href="//fonts.googleapis.com/css?family=Open+Sans:400,600,700,800" rel="stylesheet" type="text/css">
+        <link rel="shortcut icon" href="../favicon.ico">
+        
+        </head>
+        <body data-library="parsers" data-type="Parser&amp;lt;A&amp;gt;">
+        <div class="page">
+        <div class="header">
+          <a href="../index.html"><div class="logo"></div></a>
+          <a href="../index.html">Dart Documentation</a>
+         &rsaquo; <a href="../parsers.html">parsers</a> &rsaquo; <a href="../parsers/Parser.html">Parser&lt;A&gt;</a>        <div id="search-box">
+          <input type="search" name="q" id="q" autocomplete="off"
+              class="search-input" placeholder="Search API">
+        </div>
+        
+      </div>
+      <div class="drop-down" id="drop-down"></div>
+      
+        <div class="nav">
+        
+</div>
+<div class="content">
+        <h2><strong>Parser&lt;A&gt;</strong>
+          class
+        </h2>
+        
+<button id="show-inherited" class="show-inherited">Hide inherited</button>
+<div class="doc">
+<pre class="source">
+class Parser&lt;A&gt; {
+ final _ParseFunction _run;
+
+ Parser(ParseResult&lt;A&gt; f(String s, Position pos)) : this._run = f;
+
+ ParseResult run(String s, [Position pos = const Position(0, 1, 1)]) =&gt;
+     _run(s, pos);
+
+ A parse(String s) {
+   ParseResult&lt;A&gt; result = run(s);
+   if (result.isSuccess) return result.value;
+   else throw result.errorMessage;
+ }
+
+ /// Monadic bind.
+ Parser operator &gt;&gt;(Parser g(A x)) {
+   return new Parser((text, pos) {
+     ParseResult res = _run(text, pos);
+     if (res.isSuccess) {
+       final res2 = g(res.value)._run(text, res.position);
+       return res2.copy(
+           expectations: res.expectations.best(res2.expectations),
+           isCommitted: res.isCommitted || res2.isCommitted);
+     } else {
+       return res;
+     }
+   });
+ }
+
+ Parser expecting(String expected) {
+   return new Parser((s, pos) {
+     final res = _run(s, pos);
+     return res.copy(expectations: _singleExpectation(expected, pos));
+   });
+ }
+
+ Parser get committed {
+   return new Parser((s, pos) {
+     final res = _run(s, pos);
+     return res.copy(isCommitted: true);
+   });
+ }
+
+ /// Alias for [:expecting:].
+ Parser&lt;A&gt; operator %(String expected) =&gt; this.expecting(expected);
+
+ /// Applicative &lt;*&gt;
+ Parser operator *(Parser p) =&gt; this &gt;&gt; (f) =&gt; p &gt;&gt; (x) {
+   Function ff = f;
+   return success(ff(x));
+ };
+
+ /// Applicative *&gt;
+ Parser operator &gt;(Parser p) =&gt; this &gt;&gt; (_) =&gt; p;
+
+ /// Applicative &lt;*
+ Parser&lt;A&gt; operator &lt;(Parser p) =&gt; this &gt;&gt; ((x) =&gt; p &gt; success(x));
+
+ /// Functor map
+ Parser map(Object f(A x)) =&gt; success(f) * this;
+
+ /// Infix syntax for map
+ Parser operator ^(Object f(A x)) =&gt; map(f);
+
+ /// Parser sequencing: creates a parser accumulator.
+ ParserAccumulator2 operator +(Parser p) =&gt; new ParserAccumulator2(this, p);
+
+ /// Alternative
+ Parser operator |(Parser p) {
+   return new Parser((s, pos) {
+     ParseResult&lt;A&gt; res = _run(s, pos);
+     if (res.isSuccess || res.isCommitted) {
+       return res;
+     } else {
+       ParseResult res2 = p._run(s, pos);
+       return res2.copy(
+           expectations: res.expectations.best(res2.expectations));
+     }
+   });
+ }
+
+ /**
+  * Parses without consuming any input.
+  *
+  * Used for defining followedBy, which is probably what you're looking for.
+  */
+ Parser&lt;A&gt; get lookAhead {
+   return new Parser((s, pos) {
+     ParseResult res = _run(s, pos);
+     return res.isSuccess
+         ? _success(res.value, s, pos)
+         : res;
+   });
+ }
+
+ /**
+  * Succeeds if and only if [this] succeeds and [p] succeeds on what remains to
+  * parse without cosuming it.
+  *
+  *     string("let").followedBy(space)
+  */
+ Parser&lt;A&gt; followedBy(Parser p) =&gt; this &lt; p.lookAhead;
+
+ /**
+  * Fails if and only if [this] succeeds on what's ahead.
+  *
+  * Used for defining notFollowedBy, which is probably what you're looking for.
+  */
+ Parser get notAhead {
+   return new Parser((s, pos) {
+     ParseResult res = _run(s, pos);
+     return res.isSuccess
+         ? _failure(s, pos)
+         : _success(null, s, pos);
+   });
+ }
+
+ /**
+  * Succeeds if and only if [this] succeeds and [p] fails on what remains to
+  * parse.
+  *
+  *     string("let").notFollowedBy(alphanum)
+  */
+ Parser&lt;A&gt; notFollowedBy(Parser p) =&gt; this &lt; p.notAhead;
+
+ /**
+  * Parses [this] 0 or more times until [end] succeeds.
+  *
+  * Returns the list of values returned by [this]. It is useful for parsing
+  * comments.
+  *
+  *     string('/*') &gt; anyChar.manyUntil(string('*/'))
+  *
+  * The input parsed by [end] is consumed. Use [:end.lookAhead:] if you don't
+  * want this.
+  */
+ Parser&lt;List&lt;A&gt;&gt; manyUntil(Parser end) {
+   // Imperative version to avoid stack overflows.
+   return new Parser((s, pos) {
+     List res = [];
+     Position index = pos;
+     var exps = _emptyExpectation(pos);
+     bool committed = false;
+     while(true) {
+       final endRes = end._run(s, index);
+       exps = exps.best(endRes.expectations);
+       if (endRes.isSuccess) {
+         return endRes.copy(value: res, expectations: exps,
+                            isCommitted: committed);
+       } else if (!endRes.isCommitted) {
+         final xRes = this._run(s, index);
+         exps = exps.best(xRes.expectations);
+         committed = committed || xRes.isCommitted;
+         if (xRes.isSuccess) {
+           res.add(xRes.value);
+           index = xRes.position;
+         } else {
+           return xRes.copy(expectations: exps, isCommitted: committed);
+         }
+       } else {
+         return endRes.copy(expectations: exps, isCommitted: committed);
+       }
+     }
+   });
+ }
+
+ /**
+  * Parses [this] 0 or more times until [end] succeeds and discards the result.
+  *
+  * Equivalent to [:this.manyUntil(end) &gt; success(null):] but faster. The input
+  * parsed by [end] is consumed. Use [:end.lookAhead:] if you don't want this.
+  */
+ Parser skipManyUntil(Parser end) {
+   // Imperative version to avoid stack overflows.
+   return new Parser((s, pos) {
+     Position index = pos;
+     var exps = _emptyExpectation(pos);
+     var commit = false;
+     while(true) {
+       final endRes = end._run(s, index);
+       exps = exps.best(endRes.expectations);
+       commit = commit || endRes.isCommitted;
+       if (endRes.isSuccess) {
+         return endRes.copy(value: null, expectations: exps,
+                            isCommitted: commit);
+       } else if (!endRes.isCommitted) {
+         final xRes = this._run(s, index);
+         exps = exps.best(xRes.expectations);
+         commit = commit || xRes.isCommitted;
+         if (xRes.isSuccess) {
+           index = xRes.position;
+         } else {
+           return xRes.copy(expectations: exps, isCommitted: commit);
+         }
+       } else {
+         return endRes.copy(expectations: exps);
+       }
+     }
+   });
+ }
+
+ // Derived combinators, defined here for infix notation
+
+ Parser&lt;A&gt; orElse(A value) =&gt; this | success(value);
+
+ Parser&lt;Option&lt;A&gt;&gt; get maybe =&gt; this.map(_some).orElse(_none);
+
+ // Imperative version to avoid stack overflows.
+ Parser&lt;List&lt;A&gt;&gt; _many(List&lt;A&gt; acc()) {
+   return new Parser((s, pos) {
+     final res = acc();
+     var exps = _emptyExpectation(pos);
+     Position index = pos;
+     bool committed = false;
+     while(true) {
+       ParseResult&lt;A&gt; o = this._run(s, index);
+       exps = exps.best(o.expectations);
+       committed = committed || o.isCommitted;
+       if (o.isSuccess) {
+         res.add(o.value);
+         index = o.position;
+       } else if (o.isCommitted) {
+         return o.copy(expectations: exps);
+       } else {
+         return _success(res, s, index, exps, committed);
+       }
+     }
+   });
+ }
+
+ Parser&lt;List&lt;A&gt;&gt; get many =&gt; _many(() =&gt; []);
+
+ Parser&lt;List&lt;A&gt;&gt; get many1 =&gt; this &gt;&gt; (x) =&gt; _many(() =&gt; [x]);
+
+ /**
+  * Parses [this] zero or more time, skipping its result.
+  *
+  * Equivalent to [:this.many &gt; success(null):] but more efficient.
+  */
+ Parser get skipMany {
+   // Imperative version to avoid stack overflows.
+   return new Parser((s, pos) {
+     Position index = pos;
+     var exps = _emptyExpectation(pos);
+     bool committed = false;
+     while(true) {
+       ParseResult&lt;A&gt; o = this._run(s, index);
+       exps = exps.best(o.expectations);
+       committed = committed || o.isCommitted;
+       if (o.isSuccess) {
+         index = o.position;
+       } else if (o.isCommitted) {
+         return o.copy(expectations: exps);
+       } else {
+         return _success(null, s, index, exps, committed);
+       }
+     }
+   });
+ }
+
+ /**
+  * Parses [this] one or more time, skipping its result.
+  *
+  * Equivalent to [:this.many1 &gt; success(null):] but more efficient.
+  */
+ Parser get skipMany1 =&gt; this &gt; this.skipMany;
+
+ Parser&lt;List&lt;A&gt;&gt; sepBy(Parser sep) =&gt; sepBy1(sep).orElse([]);
+
+ Parser&lt;List&lt;A&gt;&gt; sepBy1(Parser sep) =&gt;
+     this &gt;&gt; (x) =&gt; (sep &gt; this)._many(() =&gt; [x]);
+
+ Parser&lt;List&lt;A&gt;&gt; endBy(Parser sep) =&gt; (this &lt; sep).many;
+
+ Parser&lt;List&lt;A&gt;&gt; endBy1(Parser sep) =&gt; (this &lt; sep).many1;
+
+ /**
+  * Parses zero or more occurences of [this] separated and optionally ended
+  * by [sep].
+  */
+ Parser&lt;List&lt;A&gt;&gt; sepEndBy(Parser sep) =&gt; sepEndBy1(sep).orElse([]);
+
+ /**
+  * Parses one or more occurences of [this] separated and optionally ended
+  * by [sep].
+  */
+ Parser&lt;List&lt;A&gt;&gt; sepEndBy1(Parser sep) =&gt; sepBy1(sep) &lt; sep.maybe;
+
+ Parser chainl(Parser sep, defaultValue) =&gt;
+     chainl1(sep) | success(defaultValue);
+
+ Parser chainl1(Parser sep) {
+   rest(acc) {
+     return new Parser((s, pos) {
+       Position index = pos;
+       var exps = _emptyExpectation(pos);
+       var commit = false;
+       while(true) {
+         combine(f) =&gt; (x) =&gt; f(acc, x);
+         final res = (success(combine) * sep * this)._run(s, index);
+         exps = exps.best(res.expectations);
+         commit = commit || res.isCommitted;
+         if (res.isSuccess) {
+           acc = res.value;
+           index = res.position;
+         } else if (res.isCommitted) {
+           return res.copy(expectations: exps);
+         } else {
+           return _success(acc, s, index, exps, commit);
+         }
+       }
+     });
+   }
+   return this &gt;&gt; rest;
+ }
+
+ /// Warning: may lead to stack overflows.
+ Parser chainr(Parser sep, defaultValue) =&gt;
+     chainr1(sep) | success(defaultValue);
+
+ /// Warning: may lead to stack overflows.
+ Parser chainr1(Parser sep) {
+   rest(x) =&gt; success((f) =&gt; (y) =&gt; f(x, y)) * sep * chainr1(sep)
+            | success(x);
+   return this &gt;&gt; rest;
+ }
+
+ Parser&lt;A&gt; between(Parser left, Parser right) =&gt; left &gt; (this &lt; right);
+
+ /// Returns the substring consumed by [this].
+ Parser&lt;String&gt; get record {
+   return new Parser((s, pos) {
+       final result = run(s, pos);
+       if (result.isSuccess) {
+         return result.copy(
+             value: s.substring(pos.offset, result.position.offset));
+       } else {
+         return result;
+       }
+   });
+ }
+
+ /**
+  * Returns the value parsed by [this] along with the position at which it
+  * has been parsed.
+  */
+ Parser&lt;PointedValue&lt;A&gt;&gt; get withPosition {
+   return new Parser((s, pos) {
+     return this.map((v) =&gt; new PointedValue(v, pos))._run(s, pos);
+   });
+ }
+}
+</pre>
+</div>
+<div>
+<h3>Constructors</h3>
+<div class="method"><h4 id="">
+<button class="show-code">Code</button>
+new <strong>Parser</strong>(<a href="../parsers/ParseResult.html">ParseResult</a>&lt;<a href="../parsers/Parser.html">A</a>&gt; f(<a href="http://api.dartlang.org/dart_core/String.html">String</a> s, <a href="../parsers/Position.html">Position</a> pos)) <a class="anchor-link" href="#"
+              title="Permalink to Parser&lt;A&gt;.Parser">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>Creates a new <a class="crossref" href="../dart_core/Object.html">Object</a> instance.</p>
+<p><a class="crossref" href="../dart_core/Object.html">Object</a> instances have no meaningful state, and are only useful
+through their identity. An <a class="crossref" href="../dart_core/Object.html">Object</a> instance is equal to itself
+only.</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_core/Object.html">Object</a> </div></div>
+<pre class="source">
+Parser(ParseResult&lt;A&gt; f(String s, Position pos)) : this._run = f;
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Properties</h3>
+<div class="field"><h4 id="committed">
+<button class="show-code">Code</button>
+final <a href="../parsers/Parser.html">Parser</a>         <strong>committed</strong> <a class="anchor-link"
+            href="#committed"
+            title="Permalink to Parser&lt;A&gt;.committed">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+Parser get committed {
+ return new Parser((s, pos) {
+   final res = _run(s, pos);
+   return res.copy(isCommitted: true);
+ });
+}
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="lookAhead">
+<button class="show-code">Code</button>
+final <a href="../parsers/Parser.html">Parser</a>&lt;<a href="../parsers/Parser.html">A</a>&gt;         <strong>lookAhead</strong> <a class="anchor-link"
+            href="#lookAhead"
+            title="Permalink to Parser&lt;A&gt;.lookAhead">#</a>
+        </h4>
+        <div class="doc">
+<p>Parses without consuming any input.</p>
+<p>Used for defining followedBy, which is probably what you're looking for.</p>
+<pre class="source">
+Parser&lt;A&gt; get lookAhead {
+ return new Parser((s, pos) {
+   ParseResult res = _run(s, pos);
+   return res.isSuccess
+       ? _success(res.value, s, pos)
+       : res;
+ });
+}
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="many">
+<button class="show-code">Code</button>
+final <a href="../parsers/Parser.html">Parser</a>&lt;<a href="http://api.dartlang.org/dart_core/List.html">List</a>&lt;<a href="../parsers/Parser.html">A</a>&gt;&gt;         <strong>many</strong> <a class="anchor-link"
+            href="#many"
+            title="Permalink to Parser&lt;A&gt;.many">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+Parser&lt;List&lt;A&gt;&gt; get many =&gt; _many(() =&gt; []);
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="many1">
+<button class="show-code">Code</button>
+final <a href="../parsers/Parser.html">Parser</a>&lt;<a href="http://api.dartlang.org/dart_core/List.html">List</a>&lt;<a href="../parsers/Parser.html">A</a>&gt;&gt;         <strong>many1</strong> <a class="anchor-link"
+            href="#many1"
+            title="Permalink to Parser&lt;A&gt;.many1">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+Parser&lt;List&lt;A&gt;&gt; get many1 =&gt; this &gt;&gt; (x) =&gt; _many(() =&gt; [x]);
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="maybe">
+<button class="show-code">Code</button>
+final <a href="../parsers/Parser.html">Parser</a>&lt;<a href="../persistent/Option.html">Option</a>&lt;<a href="../parsers/Parser.html">A</a>&gt;&gt;         <strong>maybe</strong> <a class="anchor-link"
+            href="#maybe"
+            title="Permalink to Parser&lt;A&gt;.maybe">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+Parser&lt;Option&lt;A&gt;&gt; get maybe =&gt; this.map(_some).orElse(_none);
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="notAhead">
+<button class="show-code">Code</button>
+final <a href="../parsers/Parser.html">Parser</a>         <strong>notAhead</strong> <a class="anchor-link"
+            href="#notAhead"
+            title="Permalink to Parser&lt;A&gt;.notAhead">#</a>
+        </h4>
+        <div class="doc">
+<p>Fails if and only if <code>this</code> succeeds on what's ahead.</p>
+<p>Used for defining notFollowedBy, which is probably what you're looking for.</p>
+<pre class="source">
+Parser get notAhead {
+ return new Parser((s, pos) {
+   ParseResult res = _run(s, pos);
+   return res.isSuccess
+       ? _failure(s, pos)
+       : _success(null, s, pos);
+ });
+}
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="record">
+<button class="show-code">Code</button>
+final <a href="../parsers/Parser.html">Parser</a>&lt;<a href="http://api.dartlang.org/dart_core/String.html">String</a>&gt;         <strong>record</strong> <a class="anchor-link"
+            href="#record"
+            title="Permalink to Parser&lt;A&gt;.record">#</a>
+        </h4>
+        <div class="doc">
+<p>Returns the substring consumed by <code>this</code>.</p>
+<pre class="source">
+Parser&lt;String&gt; get record {
+ return new Parser((s, pos) {
+     final result = run(s, pos);
+     if (result.isSuccess) {
+       return result.copy(
+           value: s.substring(pos.offset, result.position.offset));
+     } else {
+       return result;
+     }
+ });
+}
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="skipMany">
+<button class="show-code">Code</button>
+final <a href="../parsers/Parser.html">Parser</a>         <strong>skipMany</strong> <a class="anchor-link"
+            href="#skipMany"
+            title="Permalink to Parser&lt;A&gt;.skipMany">#</a>
+        </h4>
+        <div class="doc">
+<p>Parses <code>this</code> zero or more time, skipping its result.</p>
+<p>Equivalent to <code>this.many &gt; success(null)</code> but more efficient.</p>
+<pre class="source">
+Parser get skipMany {
+ // Imperative version to avoid stack overflows.
+ return new Parser((s, pos) {
+   Position index = pos;
+   var exps = _emptyExpectation(pos);
+   bool committed = false;
+   while(true) {
+     ParseResult&lt;A&gt; o = this._run(s, index);
+     exps = exps.best(o.expectations);
+     committed = committed || o.isCommitted;
+     if (o.isSuccess) {
+       index = o.position;
+     } else if (o.isCommitted) {
+       return o.copy(expectations: exps);
+     } else {
+       return _success(null, s, index, exps, committed);
+     }
+   }
+ });
+}
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="skipMany1">
+<button class="show-code">Code</button>
+final <a href="../parsers/Parser.html">Parser</a>         <strong>skipMany1</strong> <a class="anchor-link"
+            href="#skipMany1"
+            title="Permalink to Parser&lt;A&gt;.skipMany1">#</a>
+        </h4>
+        <div class="doc">
+<p>Parses <code>this</code> one or more time, skipping its result.</p>
+<p>Equivalent to <code>this.many1 &gt; success(null)</code> but more efficient.</p>
+<pre class="source">
+Parser get skipMany1 =&gt; this &gt; this.skipMany;
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="withPosition">
+<button class="show-code">Code</button>
+final <a href="../parsers/Parser.html">Parser</a>&lt;<a href="../parsers/PointedValue.html">PointedValue</a>&lt;<a href="../parsers/Parser.html">A</a>&gt;&gt;         <strong>withPosition</strong> <a class="anchor-link"
+            href="#withPosition"
+            title="Permalink to Parser&lt;A&gt;.withPosition">#</a>
+        </h4>
+        <div class="doc">
+<p>Returns the value parsed by <code>this</code> along with the position at which it
+has been parsed.</p>
+<pre class="source">
+Parser&lt;PointedValue&lt;A&gt;&gt; get withPosition {
+ return new Parser((s, pos) {
+   return this.map((v) =&gt; new PointedValue(v, pos))._run(s, pos);
+ });
+}
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Operators</h3>
+<div class="method"><h4 id="+">
+<button class="show-code">Code</button>
+<a href="../parsers/ParserAccumulator2.html">ParserAccumulator2</a> <strong>operator +</strong>(<a href="../parsers/Parser.html">Parser</a> p) <a class="anchor-link" href="#+"
+              title="Permalink to Parser&lt;A&gt;.operator +">#</a></h4>
+<div class="doc">
+<p>Parser sequencing: creates a parser accumulator.</p>
+<pre class="source">
+ParserAccumulator2 operator +(Parser p) =&gt; new ParserAccumulator2(this, p);
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="*">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a> <strong>operator *</strong>(<a href="../parsers/Parser.html">Parser</a> p) <a class="anchor-link" href="#*"
+              title="Permalink to Parser&lt;A&gt;.operator *">#</a></h4>
+<div class="doc">
+<p>Applicative &lt;*></p>
+<pre class="source">
+Parser operator *(Parser p) =&gt; this &gt;&gt; (f) =&gt; p &gt;&gt; (x) {
+ Function ff = f;
+ return success(ff(x));
+};
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="%">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a>&lt;<a href="../parsers/Parser.html">A</a>&gt; <strong>operator %</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> expected) <a class="anchor-link" href="#%"
+              title="Permalink to Parser&lt;A&gt;.operator %">#</a></h4>
+<div class="doc">
+<p>Alias for <code>expecting</code>.</p>
+<pre class="source">
+Parser&lt;A&gt; operator %(String expected) =&gt; this.expecting(expected);
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="|">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a> <strong>operator |</strong>(<a href="../parsers/Parser.html">Parser</a> p) <a class="anchor-link" href="#|"
+              title="Permalink to Parser&lt;A&gt;.operator |">#</a></h4>
+<div class="doc">
+<p>Alternative</p>
+<pre class="source">
+Parser operator |(Parser p) {
+ return new Parser((s, pos) {
+   ParseResult&lt;A&gt; res = _run(s, pos);
+   if (res.isSuccess || res.isCommitted) {
+     return res;
+   } else {
+     ParseResult res2 = p._run(s, pos);
+     return res2.copy(
+         expectations: res.expectations.best(res2.expectations));
+   }
+ });
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="^">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a> <strong>operator ^</strong>(<a href="http://api.dartlang.org/dart_core/Object.html">Object</a> f(<a href="../parsers/Parser.html">A</a> x)) <a class="anchor-link" href="#^"
+              title="Permalink to Parser&lt;A&gt;.operator ^">#</a></h4>
+<div class="doc">
+<p>Infix syntax for map</p>
+<pre class="source">
+Parser operator ^(Object f(A x)) =&gt; map(f);
+</pre>
+</div>
+</div>
+<div class="method"><h4 id=">>">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a> <strong>operator >></strong>(<a href="../parsers/Parser.html">Parser</a> g(<a href="../parsers/Parser.html">A</a> x)) <a class="anchor-link" href="#>>"
+              title="Permalink to Parser&lt;A&gt;.operator >>">#</a></h4>
+<div class="doc">
+<p>Monadic bind.</p>
+<pre class="source">
+Parser operator &gt;&gt;(Parser g(A x)) {
+ return new Parser((text, pos) {
+   ParseResult res = _run(text, pos);
+   if (res.isSuccess) {
+     final res2 = g(res.value)._run(text, res.position);
+     return res2.copy(
+         expectations: res.expectations.best(res2.expectations),
+         isCommitted: res.isCommitted || res2.isCommitted);
+   } else {
+     return res;
+   }
+ });
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="<">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a>&lt;<a href="../parsers/Parser.html">A</a>&gt; <strong>operator <</strong>(<a href="../parsers/Parser.html">Parser</a> p) <a class="anchor-link" href="#<"
+              title="Permalink to Parser&lt;A&gt;.operator <">#</a></h4>
+<div class="doc">
+<p>Applicative &lt;*</p>
+<pre class="source">
+Parser&lt;A&gt; operator &lt;(Parser p) =&gt; this &gt;&gt; ((x) =&gt; p &gt; success(x));
+</pre>
+</div>
+</div>
+<div class="method"><h4 id=">">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a> <strong>operator ></strong>(<a href="../parsers/Parser.html">Parser</a> p) <a class="anchor-link" href="#>"
+              title="Permalink to Parser&lt;A&gt;.operator >">#</a></h4>
+<div class="doc">
+<p>Applicative *></p>
+<pre class="source">
+Parser operator &gt;(Parser p) =&gt; this &gt;&gt; (_) =&gt; p;
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Methods</h3>
+<div class="method"><h4 id="between">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a>&lt;<a href="../parsers/Parser.html">A</a>&gt; <strong>between</strong>(<a href="../parsers/Parser.html">Parser</a> left, <a href="../parsers/Parser.html">Parser</a> right) <a class="anchor-link" href="#between"
+              title="Permalink to Parser&lt;A&gt;.between">#</a></h4>
+<div class="doc">
+<pre class="source">
+Parser&lt;A&gt; between(Parser left, Parser right) =&gt; left &gt; (this &lt; right);
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="chainl">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a> <strong>chainl</strong>(<a href="../parsers/Parser.html">Parser</a> sep, defaultValue) <a class="anchor-link" href="#chainl"
+              title="Permalink to Parser&lt;A&gt;.chainl">#</a></h4>
+<div class="doc">
+<pre class="source">
+Parser chainl(Parser sep, defaultValue) =&gt;
+   chainl1(sep) | success(defaultValue);
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="chainl1">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a> <strong>chainl1</strong>(<a href="../parsers/Parser.html">Parser</a> sep) <a class="anchor-link" href="#chainl1"
+              title="Permalink to Parser&lt;A&gt;.chainl1">#</a></h4>
+<div class="doc">
+<pre class="source">
+Parser chainl1(Parser sep) {
+ rest(acc) {
+   return new Parser((s, pos) {
+     Position index = pos;
+     var exps = _emptyExpectation(pos);
+     var commit = false;
+     while(true) {
+       combine(f) =&gt; (x) =&gt; f(acc, x);
+       final res = (success(combine) * sep * this)._run(s, index);
+       exps = exps.best(res.expectations);
+       commit = commit || res.isCommitted;
+       if (res.isSuccess) {
+         acc = res.value;
+         index = res.position;
+       } else if (res.isCommitted) {
+         return res.copy(expectations: exps);
+       } else {
+         return _success(acc, s, index, exps, commit);
+       }
+     }
+   });
+ }
+ return this &gt;&gt; rest;
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="chainr">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a> <strong>chainr</strong>(<a href="../parsers/Parser.html">Parser</a> sep, defaultValue) <a class="anchor-link" href="#chainr"
+              title="Permalink to Parser&lt;A&gt;.chainr">#</a></h4>
+<div class="doc">
+<p>Warning: may lead to stack overflows.</p>
+<pre class="source">
+Parser chainr(Parser sep, defaultValue) =&gt;
+   chainr1(sep) | success(defaultValue);
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="chainr1">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a> <strong>chainr1</strong>(<a href="../parsers/Parser.html">Parser</a> sep) <a class="anchor-link" href="#chainr1"
+              title="Permalink to Parser&lt;A&gt;.chainr1">#</a></h4>
+<div class="doc">
+<p>Warning: may lead to stack overflows.</p>
+<pre class="source">
+Parser chainr1(Parser sep) {
+ rest(x) =&gt; success((f) =&gt; (y) =&gt; f(x, y)) * sep * chainr1(sep)
+          | success(x);
+ return this &gt;&gt; rest;
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="endBy">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a>&lt;<a href="http://api.dartlang.org/dart_core/List.html">List</a>&lt;<a href="../parsers/Parser.html">A</a>&gt;&gt; <strong>endBy</strong>(<a href="../parsers/Parser.html">Parser</a> sep) <a class="anchor-link" href="#endBy"
+              title="Permalink to Parser&lt;A&gt;.endBy">#</a></h4>
+<div class="doc">
+<pre class="source">
+Parser&lt;List&lt;A&gt;&gt; endBy(Parser sep) =&gt; (this &lt; sep).many;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="endBy1">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a>&lt;<a href="http://api.dartlang.org/dart_core/List.html">List</a>&lt;<a href="../parsers/Parser.html">A</a>&gt;&gt; <strong>endBy1</strong>(<a href="../parsers/Parser.html">Parser</a> sep) <a class="anchor-link" href="#endBy1"
+              title="Permalink to Parser&lt;A&gt;.endBy1">#</a></h4>
+<div class="doc">
+<pre class="source">
+Parser&lt;List&lt;A&gt;&gt; endBy1(Parser sep) =&gt; (this &lt; sep).many1;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="expecting">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a> <strong>expecting</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> expected) <a class="anchor-link" href="#expecting"
+              title="Permalink to Parser&lt;A&gt;.expecting">#</a></h4>
+<div class="doc">
+<pre class="source">
+Parser expecting(String expected) {
+ return new Parser((s, pos) {
+   final res = _run(s, pos);
+   return res.copy(expectations: _singleExpectation(expected, pos));
+ });
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="followedBy">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a>&lt;<a href="../parsers/Parser.html">A</a>&gt; <strong>followedBy</strong>(<a href="../parsers/Parser.html">Parser</a> p) <a class="anchor-link" href="#followedBy"
+              title="Permalink to Parser&lt;A&gt;.followedBy">#</a></h4>
+<div class="doc">
+<p>Succeeds if and only if <code>this</code> succeeds and 
+<span class="param">p</span> succeeds on what remains to
+parse without cosuming it.</p>
+<pre><code>string("let").followedBy(space)
+</code></pre>
+<pre class="source">
+Parser&lt;A&gt; followedBy(Parser p) =&gt; this &lt; p.lookAhead;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="manyUntil">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a>&lt;<a href="http://api.dartlang.org/dart_core/List.html">List</a>&lt;<a href="../parsers/Parser.html">A</a>&gt;&gt; <strong>manyUntil</strong>(<a href="../parsers/Parser.html">Parser</a> end) <a class="anchor-link" href="#manyUntil"
+              title="Permalink to Parser&lt;A&gt;.manyUntil">#</a></h4>
+<div class="doc">
+<p>Parses <code>this</code> 0 or more times until 
+<span class="param">end</span> succeeds.</p>
+<p>Returns the list of values returned by <code>this</code>. It is useful for parsing
+comments.</p>
+<pre><code>string('/*') &gt; anyChar.manyUntil(string('*/'))
+</code></pre>
+<p>The input parsed by 
+<span class="param">end</span> is consumed. Use <code>end.lookAhead</code> if you don't
+want this.</p>
+<pre class="source">
+Parser&lt;List&lt;A&gt;&gt; manyUntil(Parser end) {
+ // Imperative version to avoid stack overflows.
+ return new Parser((s, pos) {
+   List res = [];
+   Position index = pos;
+   var exps = _emptyExpectation(pos);
+   bool committed = false;
+   while(true) {
+     final endRes = end._run(s, index);
+     exps = exps.best(endRes.expectations);
+     if (endRes.isSuccess) {
+       return endRes.copy(value: res, expectations: exps,
+                          isCommitted: committed);
+     } else if (!endRes.isCommitted) {
+       final xRes = this._run(s, index);
+       exps = exps.best(xRes.expectations);
+       committed = committed || xRes.isCommitted;
+       if (xRes.isSuccess) {
+         res.add(xRes.value);
+         index = xRes.position;
+       } else {
+         return xRes.copy(expectations: exps, isCommitted: committed);
+       }
+     } else {
+       return endRes.copy(expectations: exps, isCommitted: committed);
+     }
+   }
+ });
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="map">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a> <strong>map</strong>(<a href="http://api.dartlang.org/dart_core/Object.html">Object</a> f(<a href="../parsers/Parser.html">A</a> x)) <a class="anchor-link" href="#map"
+              title="Permalink to Parser&lt;A&gt;.map">#</a></h4>
+<div class="doc">
+<p>Functor map</p>
+<pre class="source">
+Parser map(Object f(A x)) =&gt; success(f) * this;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="notFollowedBy">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a>&lt;<a href="../parsers/Parser.html">A</a>&gt; <strong>notFollowedBy</strong>(<a href="../parsers/Parser.html">Parser</a> p) <a class="anchor-link" href="#notFollowedBy"
+              title="Permalink to Parser&lt;A&gt;.notFollowedBy">#</a></h4>
+<div class="doc">
+<p>Succeeds if and only if <code>this</code> succeeds and 
+<span class="param">p</span> fails on what remains to
+parse.</p>
+<pre><code>string("let").notFollowedBy(alphanum)
+</code></pre>
+<pre class="source">
+Parser&lt;A&gt; notFollowedBy(Parser p) =&gt; this &lt; p.notAhead;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="orElse">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a>&lt;<a href="../parsers/Parser.html">A</a>&gt; <strong>orElse</strong>(<a href="../parsers/Parser.html">A</a> value) <a class="anchor-link" href="#orElse"
+              title="Permalink to Parser&lt;A&gt;.orElse">#</a></h4>
+<div class="doc">
+<pre class="source">
+Parser&lt;A&gt; orElse(A value) =&gt; this | success(value);
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="parse">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">A</a> <strong>parse</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> s) <a class="anchor-link" href="#parse"
+              title="Permalink to Parser&lt;A&gt;.parse">#</a></h4>
+<div class="doc">
+<pre class="source">
+A parse(String s) {
+ ParseResult&lt;A&gt; result = run(s);
+ if (result.isSuccess) return result.value;
+ else throw result.errorMessage;
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="run">
+<button class="show-code">Code</button>
+<a href="../parsers/ParseResult.html">ParseResult</a> <strong>run</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> s, [<a href="../parsers/Position.html">Position</a> pos = const Position(0,1,1)]) <a class="anchor-link" href="#run"
+              title="Permalink to Parser&lt;A&gt;.run">#</a></h4>
+<div class="doc">
+<pre class="source">
+ParseResult run(String s, [Position pos = const Position(0, 1, 1)]) =&gt;
+   _run(s, pos);
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="sepBy">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a>&lt;<a href="http://api.dartlang.org/dart_core/List.html">List</a>&lt;<a href="../parsers/Parser.html">A</a>&gt;&gt; <strong>sepBy</strong>(<a href="../parsers/Parser.html">Parser</a> sep) <a class="anchor-link" href="#sepBy"
+              title="Permalink to Parser&lt;A&gt;.sepBy">#</a></h4>
+<div class="doc">
+<pre class="source">
+Parser&lt;List&lt;A&gt;&gt; sepBy(Parser sep) =&gt; sepBy1(sep).orElse([]);
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="sepBy1">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a>&lt;<a href="http://api.dartlang.org/dart_core/List.html">List</a>&lt;<a href="../parsers/Parser.html">A</a>&gt;&gt; <strong>sepBy1</strong>(<a href="../parsers/Parser.html">Parser</a> sep) <a class="anchor-link" href="#sepBy1"
+              title="Permalink to Parser&lt;A&gt;.sepBy1">#</a></h4>
+<div class="doc">
+<pre class="source">
+Parser&lt;List&lt;A&gt;&gt; sepBy1(Parser sep) =&gt;
+   this &gt;&gt; (x) =&gt; (sep &gt; this)._many(() =&gt; [x]);
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="sepEndBy">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a>&lt;<a href="http://api.dartlang.org/dart_core/List.html">List</a>&lt;<a href="../parsers/Parser.html">A</a>&gt;&gt; <strong>sepEndBy</strong>(<a href="../parsers/Parser.html">Parser</a> sep) <a class="anchor-link" href="#sepEndBy"
+              title="Permalink to Parser&lt;A&gt;.sepEndBy">#</a></h4>
+<div class="doc">
+<p>Parses zero or more occurences of <code>this</code> separated and optionally ended
+by 
+<span class="param">sep</span>.</p>
+<pre class="source">
+Parser&lt;List&lt;A&gt;&gt; sepEndBy(Parser sep) =&gt; sepEndBy1(sep).orElse([]);
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="sepEndBy1">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a>&lt;<a href="http://api.dartlang.org/dart_core/List.html">List</a>&lt;<a href="../parsers/Parser.html">A</a>&gt;&gt; <strong>sepEndBy1</strong>(<a href="../parsers/Parser.html">Parser</a> sep) <a class="anchor-link" href="#sepEndBy1"
+              title="Permalink to Parser&lt;A&gt;.sepEndBy1">#</a></h4>
+<div class="doc">
+<p>Parses one or more occurences of <code>this</code> separated and optionally ended
+by 
+<span class="param">sep</span>.</p>
+<pre class="source">
+Parser&lt;List&lt;A&gt;&gt; sepEndBy1(Parser sep) =&gt; sepBy1(sep) &lt; sep.maybe;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="skipManyUntil">
+<button class="show-code">Code</button>
+<a href="../parsers/Parser.html">Parser</a> <strong>skipManyUntil</strong>(<a href="../parsers/Parser.html">Parser</a> end) <a class="anchor-link" href="#skipManyUntil"
+              title="Permalink to Parser&lt;A&gt;.skipManyUntil">#</a></h4>
+<div class="doc">
+<p>Parses <code>this</code> 0 or more times until 
+<span class="param">end</span> succeeds and discards the result.</p>
+<p>Equivalent to <code>this.manyUntil(end) &gt; success(null)</code> but faster. The input
+parsed by 
+<span class="param">end</span> is consumed. Use <code>end.lookAhead</code> if you don't want this.</p>
+<pre class="source">
+Parser skipManyUntil(Parser end) {
+ // Imperative version to avoid stack overflows.
+ return new Parser((s, pos) {
+   Position index = pos;
+   var exps = _emptyExpectation(pos);
+   var commit = false;
+   while(true) {
+     final endRes = end._run(s, index);
+     exps = exps.best(endRes.expectations);
+     commit = commit || endRes.isCommitted;
+     if (endRes.isSuccess) {
+       return endRes.copy(value: null, expectations: exps,
+                          isCommitted: commit);
+     } else if (!endRes.isCommitted) {
+       final xRes = this._run(s, index);
+       exps = exps.best(xRes.expectations);
+       commit = commit || xRes.isCommitted;
+       if (xRes.isSuccess) {
+         index = xRes.position;
+       } else {
+         return xRes.copy(expectations: exps, isCommitted: commit);
+       }
+     } else {
+       return endRes.copy(expectations: exps);
+     }
+   }
+ });
+}
+</pre>
+</div>
+</div>
+</div>
+        </div>
+        <div class="clear"></div>
+        </div>
+        <div class="footer">
+          <div>This page was generated at 2013-10-03 00:45:51.306</div>
+        </div>
+        <script async src="../client-live-nav.js"></script>
+        </body></html>
+        

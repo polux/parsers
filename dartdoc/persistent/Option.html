@@ -1,0 +1,306 @@
+        <!DOCTYPE html>
+        <html>
+        <head>
+                <meta charset="utf-8">
+        <title>Option&lt;T&gt; class / persistent Library / Dart Documentation</title>
+        <link rel="stylesheet" type="text/css"
+            href="../styles.css">
+        <link href="//fonts.googleapis.com/css?family=Open+Sans:400,600,700,800" rel="stylesheet" type="text/css">
+        <link rel="shortcut icon" href="../favicon.ico">
+        
+        </head>
+        <body data-library="persistent" data-type="Option&amp;lt;T&amp;gt;">
+        <div class="page">
+        <div class="header">
+          <a href="../index.html"><div class="logo"></div></a>
+          <a href="../index.html">Dart Documentation</a>
+         &rsaquo; <a href="../persistent.html">persistent</a> &rsaquo; <a href="../persistent/Option.html">Option&lt;T&gt;</a>        <div id="search-box">
+          <input type="search" name="q" id="q" autocomplete="off"
+              class="search-input" placeholder="Search API">
+        </div>
+        
+      </div>
+      <div class="drop-down" id="drop-down"></div>
+      
+        <div class="nav">
+        
+</div>
+<div class="content">
+        <h2><strong>Option&lt;T&gt;</strong>
+          class
+        </h2>
+        
+<button id="show-inherited" class="show-inherited">Hide inherited</button>
+<div class="doc">
+<pre class="source">
+class Option&lt;T&gt; {
+ static final _none = new Option._internal(false, null);
+
+ final T _value;
+ final bool isDefined;
+
+ Option._internal(this.isDefined, this._value);
+
+ factory Option.none() =&gt; _none;
+
+ factory Option.some(T value) =&gt; new Option._internal(true, value);
+
+ factory Option.fromNullable(T nullableValue) =&gt;
+     nullableValue == null ? _none : new Option.some(nullableValue);
+
+ T get value {
+   if (isDefined) return _value;
+   throw new StateError('Option.none() has no value');
+ }
+
+ T get asNullable =&gt; isDefined ? _value : null;
+
+ T orElse(T defaultValue) =&gt; isDefined ? _value : defaultValue;
+
+ T orElseCompute(T defaultValue()) =&gt; isDefined ? _value : defaultValue();
+
+ /// [:forall U, Option&lt;U&gt; map(U f(T value)):]
+ Option map(f(T value)) =&gt;
+     isDefined ? new Option.some(f(_value)) : this;
+
+ /// [:forall U, Option&lt;U&gt; map(Option&lt;U&gt; f(T value)):]
+ Option expand(Option f(T value)) =&gt;
+     isDefined ? f(_value) : this;
+
+ /// Precondition: [:this is Option&lt;Option&gt;:]
+ Option get flattened {
+   assert(isDefined ? _value is Option : true);
+   return orElse(_none);
+ }
+
+ bool operator ==(Option&lt;T&gt; other) =&gt;
+     (isDefined &amp;&amp; other.isDefined &amp;&amp; _value == other._value)
+  || (!isDefined &amp;&amp; !other.isDefined);
+
+ int get hashCode =&gt; asNullable.hashCode;
+
+ String toString() =&gt;
+     isDefined ? "Option.some($_value)" : "Option.none()";
+}
+</pre>
+</div>
+<div>
+<h3>Constructors</h3>
+<div class="method"><h4 id="fromNullable">
+<button class="show-code">Code</button>
+factory <strong>Option.fromNullable</strong>(<a href="../persistent/Option.html">T</a> nullableValue) <a class="anchor-link" href="#fromNullable"
+              title="Permalink to Option&lt;T&gt;.Option.fromNullable">#</a></h4>
+<div class="doc">
+<pre class="source">
+factory Option.fromNullable(T nullableValue) =&gt;
+   nullableValue == null ? _none : new Option.some(nullableValue);
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="none">
+<button class="show-code">Code</button>
+factory <strong>Option.none</strong>() <a class="anchor-link" href="#none"
+              title="Permalink to Option&lt;T&gt;.Option.none">#</a></h4>
+<div class="doc">
+<pre class="source">
+factory Option.none() =&gt; _none;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="some">
+<button class="show-code">Code</button>
+factory <strong>Option.some</strong>(<a href="../persistent/Option.html">T</a> value) <a class="anchor-link" href="#some"
+              title="Permalink to Option&lt;T&gt;.Option.some">#</a></h4>
+<div class="doc">
+<pre class="source">
+factory Option.some(T value) =&gt; new Option._internal(true, value);
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Properties</h3>
+<div class="field"><h4 id="asNullable">
+<button class="show-code">Code</button>
+final <a href="../persistent/Option.html">T</a>         <strong>asNullable</strong> <a class="anchor-link"
+            href="#asNullable"
+            title="Permalink to Option&lt;T&gt;.asNullable">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+T get asNullable =&gt; isDefined ? _value : null;
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="flattened">
+<button class="show-code">Code</button>
+final <a href="../persistent/Option.html">Option</a>         <strong>flattened</strong> <a class="anchor-link"
+            href="#flattened"
+            title="Permalink to Option&lt;T&gt;.flattened">#</a>
+        </h4>
+        <div class="doc">
+<p>Precondition: <code>this is Option&lt;Option&gt;</code></p>
+<pre class="source">
+Option get flattened {
+ assert(isDefined ? _value is Option : true);
+ return orElse(_none);
+}
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="hashCode">
+<button class="show-code">Code</button>
+final <a href="http://api.dartlang.org/dart_core/int.html">int</a>         <strong>hashCode</strong> <a class="anchor-link"
+            href="#hashCode"
+            title="Permalink to Option&lt;T&gt;.hashCode">#</a>
+        </h4>
+        <div class="doc">
+<div class="inherited">
+<p>Get a hash code for this object.</p>
+<p>All objects have hash codes. Hash codes are guaranteed to be the
+same for objects that are equal when compared using the equality
+operator <code>==</code>. Other than that there are no guarantees about
+the hash codes. They will not be consistent between runs and
+there are no distribution guarantees.</p>
+<p>If a subclass overrides <a class="crossref" href="../persistent/Option.html#hashCode">hashCode</a> it should override the
+equality operator as well to maintain consistency.</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_core/Object.html">Object</a> </div></div>
+<pre class="source">
+int get hashCode =&gt; asNullable.hashCode;
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="isDefined">
+<button class="show-code">Code</button>
+final <a href="http://api.dartlang.org/dart_core/bool.html">bool</a>         <strong>isDefined</strong> <a class="anchor-link"
+            href="#isDefined"
+            title="Permalink to Option&lt;T&gt;.isDefined">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+final bool isDefined
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="value">
+<button class="show-code">Code</button>
+final <a href="../persistent/Option.html">T</a>         <strong>value</strong> <a class="anchor-link"
+            href="#value"
+            title="Permalink to Option&lt;T&gt;.value">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+T get value {
+ if (isDefined) return _value;
+ throw new StateError('Option.none() has no value');
+}
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Operators</h3>
+<div class="method"><h4 id="==">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/bool.html">bool</a> <strong>operator ==</strong>(<a href="../persistent/Option.html">Option</a>&lt;<a href="../persistent/Option.html">T</a>&gt; other) <a class="anchor-link" href="#=="
+              title="Permalink to Option&lt;T&gt;.operator ==">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>The equality operator.</p>
+<p>The default behavior for all <a class="crossref" href="../dart_core/Object.html">Object</a>s is to return true if and
+only if <code>this</code> and 
+<span class="param">other</span> are the same object.</p>
+<p>Override this method to specify a different equality relation on
+a class. The overriding method must still be an equivalence relation.
+That is, it must be:</p><ul><li>
+<p>Total: It must return a boolean for all arguments. It should never throw
+   or return <code>null</code>.</p></li><li>
+<p>Reflexive: For all objects <code>o</code>, <code>o == o</code> must be true.</p></li><li>
+<p>Symmetric: For all objects <code>o1</code> and <code>o2</code>, <code>o1 == o2</code> and <code>o2 == o1</code> must
+   either both be true, or both be false.</p></li><li>
+<p>Transitive: For all objects <code>o1</code>, <code>o2</code>, and <code>o3</code>, if <code>o1 == o2</code> and
+   <code>o2 == o3</code> are true, then <code>o1 == o3</code> must be true.</p></li></ul>
+<p>The method should also be consistent over time, so equality of two objects
+should not change over time, or at least only change if one of the objects
+was modified.</p>
+<p>If a subclass overrides the equality operator it should override
+the <a class="crossref" href="../persistent/Option.html#hashCode">hashCode</a> method as well to maintain consistency.</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_core/Object.html">Object</a> </div></div>
+<pre class="source">
+bool operator ==(Option&lt;T&gt; other) =&gt;
+   (isDefined &amp;&amp; other.isDefined &amp;&amp; _value == other._value)
+|| (!isDefined &amp;&amp; !other.isDefined);
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Methods</h3>
+<div class="method"><h4 id="expand">
+<button class="show-code">Code</button>
+<a href="../persistent/Option.html">Option</a> <strong>expand</strong>(<a href="../persistent/Option.html">Option</a> f(<a href="../persistent/Option.html">T</a> value)) <a class="anchor-link" href="#expand"
+              title="Permalink to Option&lt;T&gt;.expand">#</a></h4>
+<div class="doc">
+<p><code>forall U, Option&lt;U&gt; map(Option&lt;U&gt; f(T value))</code></p>
+<pre class="source">
+Option expand(Option f(T value)) =&gt;
+   isDefined ? f(_value) : this;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="map">
+<button class="show-code">Code</button>
+<a href="../persistent/Option.html">Option</a> <strong>map</strong>(f(<a href="../persistent/Option.html">T</a> value)) <a class="anchor-link" href="#map"
+              title="Permalink to Option&lt;T&gt;.map">#</a></h4>
+<div class="doc">
+<p><code>forall U, Option&lt;U&gt; map(U f(T value))</code></p>
+<pre class="source">
+Option map(f(T value)) =&gt;
+   isDefined ? new Option.some(f(_value)) : this;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="orElse">
+<button class="show-code">Code</button>
+<a href="../persistent/Option.html">T</a> <strong>orElse</strong>(<a href="../persistent/Option.html">T</a> defaultValue) <a class="anchor-link" href="#orElse"
+              title="Permalink to Option&lt;T&gt;.orElse">#</a></h4>
+<div class="doc">
+<pre class="source">
+T orElse(T defaultValue) =&gt; isDefined ? _value : defaultValue;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="orElseCompute">
+<button class="show-code">Code</button>
+<a href="../persistent/Option.html">T</a> <strong>orElseCompute</strong>(<a href="../persistent/Option.html">T</a> defaultValue()) <a class="anchor-link" href="#orElseCompute"
+              title="Permalink to Option&lt;T&gt;.orElseCompute">#</a></h4>
+<div class="doc">
+<pre class="source">
+T orElseCompute(T defaultValue()) =&gt; isDefined ? _value : defaultValue();
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="toString">
+<button class="show-code">Code</button>
+<a href="http://api.dartlang.org/dart_core/String.html">String</a> <strong>toString</strong>() <a class="anchor-link" href="#toString"
+              title="Permalink to Option&lt;T&gt;.toString">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>Returns a string representation of this object.</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_core/Object.html">Object</a> </div></div>
+<pre class="source">
+String toString() =&gt;
+   isDefined ? "Option.some($_value)" : "Option.none()";
+</pre>
+</div>
+</div>
+</div>
+        </div>
+        <div class="clear"></div>
+        </div>
+        <div class="footer">
+          <div>This page was generated at 2013-10-03 00:45:51.381</div>
+        </div>
+        <script async src="../client-live-nav.js"></script>
+        </body></html>
+        

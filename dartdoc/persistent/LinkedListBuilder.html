@@ -1,0 +1,111 @@
+        <!DOCTYPE html>
+        <html>
+        <head>
+                <meta charset="utf-8">
+        <title>LinkedListBuilder&lt;E&gt; class / persistent Library / Dart Documentation</title>
+        <link rel="stylesheet" type="text/css"
+            href="../styles.css">
+        <link href="//fonts.googleapis.com/css?family=Open+Sans:400,600,700,800" rel="stylesheet" type="text/css">
+        <link rel="shortcut icon" href="../favicon.ico">
+        
+        </head>
+        <body data-library="persistent" data-type="LinkedListBuilder&amp;lt;E&amp;gt;">
+        <div class="page">
+        <div class="header">
+          <a href="../index.html"><div class="logo"></div></a>
+          <a href="../index.html">Dart Documentation</a>
+         &rsaquo; <a href="../persistent.html">persistent</a> &rsaquo; <a href="../persistent/LinkedListBuilder.html">LinkedListBuilder&lt;E&gt;</a>        <div id="search-box">
+          <input type="search" name="q" id="q" autocomplete="off"
+              class="search-input" placeholder="Search API">
+        </div>
+        
+      </div>
+      <div class="drop-down" id="drop-down"></div>
+      
+        <div class="nav">
+        
+</div>
+<div class="content">
+        <h2><strong>LinkedListBuilder&lt;E&gt;</strong>
+          class
+        </h2>
+        
+<button id="show-inherited" class="show-inherited">Hide inherited</button>
+<div class="doc">
+<pre class="source">
+class LinkedListBuilder&lt;E&gt; {
+ LinkedList&lt;E&gt; _first = null;
+ Cons&lt;E&gt; _last = null;
+
+ void add(E x) {
+   Cons&lt;E&gt; cons = new Cons&lt;E&gt;(x, null);
+   if (_first == null) {
+     _first = cons;
+   } else {
+     _last.tail = cons;
+   }
+   _last = cons;
+ }
+
+ LinkedList&lt;E&gt; build([tail = null]) {
+   if (tail == null)
+     tail = new Nil&lt;E&gt;();
+   if (_first == null) {
+     return tail;
+   } else {
+     _last.tail = tail;
+     return _first;
+   }
+ }
+}
+</pre>
+</div>
+<div>
+<h3>Methods</h3>
+<div class="method"><h4 id="add">
+<button class="show-code">Code</button>
+void <strong>add</strong>(<a href="../persistent/LinkedListBuilder.html">E</a> x) <a class="anchor-link" href="#add"
+              title="Permalink to LinkedListBuilder&lt;E&gt;.add">#</a></h4>
+<div class="doc">
+<pre class="source">
+void add(E x) {
+ Cons&lt;E&gt; cons = new Cons&lt;E&gt;(x, null);
+ if (_first == null) {
+   _first = cons;
+ } else {
+   _last.tail = cons;
+ }
+ _last = cons;
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="build">
+<button class="show-code">Code</button>
+<a href="../persistent/LinkedList.html">LinkedList</a>&lt;<a href="../persistent/LinkedListBuilder.html">E</a>&gt; <strong>build</strong>([tail = null]) <a class="anchor-link" href="#build"
+              title="Permalink to LinkedListBuilder&lt;E&gt;.build">#</a></h4>
+<div class="doc">
+<pre class="source">
+LinkedList&lt;E&gt; build([tail = null]) {
+ if (tail == null)
+   tail = new Nil&lt;E&gt;();
+ if (_first == null) {
+   return tail;
+ } else {
+   _last.tail = tail;
+   return _first;
+ }
+}
+</pre>
+</div>
+</div>
+</div>
+        </div>
+        <div class="clear"></div>
+        </div>
+        <div class="footer">
+          <div>This page was generated at 2013-10-03 00:45:51.532</div>
+        </div>
+        <script async src="../client-live-nav.js"></script>
+        </body></html>
+        

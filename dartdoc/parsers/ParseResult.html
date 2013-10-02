@@ -1,0 +1,259 @@
+        <!DOCTYPE html>
+        <html>
+        <head>
+                <meta charset="utf-8">
+        <title>ParseResult&lt;A&gt; class / parsers Library / Dart Documentation</title>
+        <link rel="stylesheet" type="text/css"
+            href="../styles.css">
+        <link href="//fonts.googleapis.com/css?family=Open+Sans:400,600,700,800" rel="stylesheet" type="text/css">
+        <link rel="shortcut icon" href="../favicon.ico">
+        
+        </head>
+        <body data-library="parsers" data-type="ParseResult&amp;lt;A&amp;gt;">
+        <div class="page">
+        <div class="header">
+          <a href="../index.html"><div class="logo"></div></a>
+          <a href="../index.html">Dart Documentation</a>
+         &rsaquo; <a href="../parsers.html">parsers</a> &rsaquo; <a href="../parsers/ParseResult.html">ParseResult&lt;A&gt;</a>        <div id="search-box">
+          <input type="search" name="q" id="q" autocomplete="off"
+              class="search-input" placeholder="Search API">
+        </div>
+        
+      </div>
+      <div class="drop-down" id="drop-down"></div>
+      
+        <div class="nav">
+        
+</div>
+<div class="content">
+        <h2><strong>ParseResult&lt;A&gt;</strong>
+          class
+        </h2>
+        
+<button id="show-inherited" class="show-inherited">Hide inherited</button>
+<div class="doc">
+<pre class="source">
+class ParseResult&lt;A&gt; {
+ final bool isSuccess;
+ final bool isCommitted;
+ /// [:null:] if [:!isSuccess:]
+ final A value;
+ final String text;
+ final Position position;
+ final Expectations expectations;
+
+ String get errorMessage {
+   final pos = expectations.position;
+   final maxSeenChar = (pos.offset &lt; text.length)
+       ? "'${text[pos.offset]}'"
+       : 'eof';
+   final prelude =
+       'line ${pos.line}, character ${pos.character}:';
+   final expected = expectations.expected;
+   if (expected.isEmpty) {
+     return '$prelude unexpected $maxSeenChar.';
+   } else {
+     final or = _humanOr(new List.from(expected));
+     return "$prelude expected $or, got $maxSeenChar.";
+   }
+ }
+
+ ParseResult(this.text, this.expectations, this.position, this.isSuccess,
+             this.isCommitted, this.value);
+
+ ParseResult copy({String text, Expectations expectations, int position,
+                   bool isSuccess, bool isCommitted,
+                   Object value: const Undefined()}) {
+   return new ParseResult(
+       (text != null)               ? text         : this.text,
+       (expectations != null)       ? expectations : this.expectations,
+       (position != null)           ? position     : this.position,
+       (isSuccess != null)          ? isSuccess    : this.isSuccess,
+       (isCommitted != null)        ? isCommitted  : this.isCommitted,
+       (value != const Undefined()) ? value        : this.value);
+ }
+
+ String get _rest =&gt; text.substring(position.offset);
+ get _shortRest =&gt; _rest.length &lt; 10 ? _rest : '${_rest.substring(0, 10)}...';
+
+ toString() {
+   final c = isCommitted ? '*' : '';
+   return isSuccess
+       ? 'success$c: {value: $value, rest: "$_shortRest"}'
+       : 'failure$c: {message: $errorMessage, rest: "$_shortRest"}';
+ }
+}
+</pre>
+</div>
+<div>
+<h3>Constructors</h3>
+<div class="method"><h4 id="">
+<button class="show-code">Code</button>
+new <strong>ParseResult</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> text, <a href="../parsers/Expectations.html">Expectations</a> expectations, <a href="../parsers/Position.html">Position</a> position, <a href="http://api.dartlang.org/dart_core/bool.html">bool</a> isSuccess, <a href="http://api.dartlang.org/dart_core/bool.html">bool</a> isCommitted, <a href="../parsers/ParseResult.html">A</a> value) <a class="anchor-link" href="#"
+              title="Permalink to ParseResult&lt;A&gt;.ParseResult">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>Creates a new <a class="crossref" href="../dart_core/Object.html">Object</a> instance.</p>
+<p><a class="crossref" href="../dart_core/Object.html">Object</a> instances have no meaningful state, and are only useful
+through their identity. An <a class="crossref" href="../dart_core/Object.html">Object</a> instance is equal to itself
+only.</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_core/Object.html">Object</a> </div></div>
+<pre class="source">
+ParseResult(this.text, this.expectations, this.position, this.isSuccess,
+           this.isCommitted, this.value);
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Properties</h3>
+<div class="field"><h4 id="errorMessage">
+<button class="show-code">Code</button>
+final <a href="http://api.dartlang.org/dart_core/String.html">String</a>         <strong>errorMessage</strong> <a class="anchor-link"
+            href="#errorMessage"
+            title="Permalink to ParseResult&lt;A&gt;.errorMessage">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+String get errorMessage {
+ final pos = expectations.position;
+ final maxSeenChar = (pos.offset &lt; text.length)
+     ? "'${text[pos.offset]}'"
+     : 'eof';
+ final prelude =
+     'line ${pos.line}, character ${pos.character}:';
+ final expected = expectations.expected;
+ if (expected.isEmpty) {
+   return '$prelude unexpected $maxSeenChar.';
+ } else {
+   final or = _humanOr(new List.from(expected));
+   return "$prelude expected $or, got $maxSeenChar.";
+ }
+}
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="expectations">
+<button class="show-code">Code</button>
+final <a href="../parsers/Expectations.html">Expectations</a>         <strong>expectations</strong> <a class="anchor-link"
+            href="#expectations"
+            title="Permalink to ParseResult&lt;A&gt;.expectations">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+final Expectations expectations
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="isCommitted">
+<button class="show-code">Code</button>
+final <a href="http://api.dartlang.org/dart_core/bool.html">bool</a>         <strong>isCommitted</strong> <a class="anchor-link"
+            href="#isCommitted"
+            title="Permalink to ParseResult&lt;A&gt;.isCommitted">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+final bool isCommitted
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="isSuccess">
+<button class="show-code">Code</button>
+final <a href="http://api.dartlang.org/dart_core/bool.html">bool</a>         <strong>isSuccess</strong> <a class="anchor-link"
+            href="#isSuccess"
+            title="Permalink to ParseResult&lt;A&gt;.isSuccess">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+final bool isSuccess
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="position">
+<button class="show-code">Code</button>
+final <a href="../parsers/Position.html">Position</a>         <strong>position</strong> <a class="anchor-link"
+            href="#position"
+            title="Permalink to ParseResult&lt;A&gt;.position">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+final Position position
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="text">
+<button class="show-code">Code</button>
+final <a href="http://api.dartlang.org/dart_core/String.html">String</a>         <strong>text</strong> <a class="anchor-link"
+            href="#text"
+            title="Permalink to ParseResult&lt;A&gt;.text">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+final String text
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="value">
+<button class="show-code">Code</button>
+final <a href="../parsers/ParseResult.html">A</a>         <strong>value</strong> <a class="anchor-link"
+            href="#value"
+            title="Permalink to ParseResult&lt;A&gt;.value">#</a>
+        </h4>
+        <div class="doc">
+<p><code>null</code> if <code>!isSuccess</code></p>
+<pre class="source">
+final A value
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Methods</h3>
+<div class="method"><h4 id="copy">
+<button class="show-code">Code</button>
+<a href="../parsers/ParseResult.html">ParseResult</a> <strong>copy</strong>({<a href="http://api.dartlang.org/dart_core/String.html">String</a> text, <a href="../parsers/Expectations.html">Expectations</a> expectations, <a href="http://api.dartlang.org/dart_core/int.html">int</a> position, <a href="http://api.dartlang.org/dart_core/bool.html">bool</a> isSuccess, <a href="http://api.dartlang.org/dart_core/bool.html">bool</a> isCommitted, <a href="http://api.dartlang.org/dart_core/Object.html">Object</a> value: const Undefined()}) <a class="anchor-link" href="#copy"
+              title="Permalink to ParseResult&lt;A&gt;.copy">#</a></h4>
+<div class="doc">
+<pre class="source">
+ParseResult copy({String text, Expectations expectations, int position,
+                 bool isSuccess, bool isCommitted,
+                 Object value: const Undefined()}) {
+ return new ParseResult(
+     (text != null)               ? text         : this.text,
+     (expectations != null)       ? expectations : this.expectations,
+     (position != null)           ? position     : this.position,
+     (isSuccess != null)          ? isSuccess    : this.isSuccess,
+     (isCommitted != null)        ? isCommitted  : this.isCommitted,
+     (value != const Undefined()) ? value        : this.value);
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="toString">
+<button class="show-code">Code</button>
+dynamic <strong>toString</strong>() <a class="anchor-link" href="#toString"
+              title="Permalink to ParseResult&lt;A&gt;.toString">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>Returns a string representation of this object.</p>
+<div class="docs-inherited-from">docs inherited from <a href="http://api.dartlang.org/dart_core/Object.html">Object</a> </div></div>
+<pre class="source">
+toString() {
+ final c = isCommitted ? '*' : '';
+ return isSuccess
+     ? 'success$c: {value: $value, rest: "$_shortRest"}'
+     : 'failure$c: {message: $errorMessage, rest: "$_shortRest"}';
+}
+</pre>
+</div>
+</div>
+</div>
+        </div>
+        <div class="clear"></div>
+        </div>
+        <div class="footer">
+          <div>This page was generated at 2013-10-03 00:45:51.312</div>
+        </div>
+        <script async src="../client-live-nav.js"></script>
+        </body></html>
+        

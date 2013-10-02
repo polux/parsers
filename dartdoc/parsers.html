@@ -1,0 +1,502 @@
+        <!DOCTYPE html>
+        <html>
+        <head>
+                <meta charset="utf-8">
+        <title>parsers Library / Dart Documentation</title>
+        <link rel="stylesheet" type="text/css"
+            href="styles.css">
+        <link href="//fonts.googleapis.com/css?family=Open+Sans:400,600,700,800" rel="stylesheet" type="text/css">
+        <link rel="shortcut icon" href="favicon.ico">
+        
+        </head>
+        <body data-library="parsers">
+        <div class="page">
+        <div class="header">
+          <a href="index.html"><div class="logo"></div></a>
+          <a href="index.html">Dart Documentation</a>
+         &rsaquo; <a href="parsers.html">parsers</a>        <div id="search-box">
+          <input type="search" name="q" id="q" autocomplete="off"
+              class="search-input" placeholder="Search API">
+        </div>
+        
+      </div>
+      <div class="drop-down" id="drop-down"></div>
+      
+        <div class="nav">
+        
+</div>
+<div class="content">
+<h2><strong>parsers</strong> library</h2>
+<div>
+<h3>Properties</h3>
+<div class="field"><h4 id="alphanum">
+<button class="show-code">Code</button>
+final <a href="parsers/Parser.html">Parser</a>&lt;<a href="http://api.dartlang.org/dart_core/String.html">String</a>&gt;         <strong>alphanum</strong> <a class="anchor-link"
+            href="#alphanum"
+            title="Permalink to alphanum">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+final Parser&lt;String&gt; alphanum = oneOf(_alphanum)
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="anyChar">
+<button class="show-code">Code</button>
+final <a href="parsers/Parser.html">Parser</a>&lt;<a href="http://api.dartlang.org/dart_core/String.html">String</a>&gt;         <strong>anyChar</strong> <a class="anchor-link"
+            href="#anyChar"
+            title="Permalink to anyChar">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+final Parser&lt;String&gt; anyChar = pred((c) =&gt; true) % 'any character'
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="digit">
+<button class="show-code">Code</button>
+final <a href="parsers/Parser.html">Parser</a>&lt;<a href="http://api.dartlang.org/dart_core/String.html">String</a>&gt;         <strong>digit</strong> <a class="anchor-link"
+            href="#digit"
+            title="Permalink to digit">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+final Parser&lt;String&gt; digit = oneOf(_digit) % 'digit'
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="eof">
+<button class="show-code">Code</button>
+final <a href="parsers/Parser.html">Parser</a>         <strong>eof</strong> <a class="anchor-link"
+            href="#eof"
+            title="Permalink to eof">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+final Parser eof = new Parser((s, pos) =&gt;
+   pos.offset &gt;= s.length
+       ? _success(null, s, pos)
+       : _failure(s, pos, _singleExpectation("eof", pos)))
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="fail">
+<button class="show-code">Code</button>
+final <a href="parsers/Parser.html">Parser</a>         <strong>fail</strong> <a class="anchor-link"
+            href="#fail"
+            title="Permalink to fail">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+final Parser fail = new Parser((s, pos) =&gt; _failure(s, pos))
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="letter">
+<button class="show-code">Code</button>
+final <a href="parsers/Parser.html">Parser</a>&lt;<a href="http://api.dartlang.org/dart_core/String.html">String</a>&gt;         <strong>letter</strong> <a class="anchor-link"
+            href="#letter"
+            title="Permalink to letter">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+final Parser&lt;String&gt; letter = oneOf(_alpha) % 'letter'
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="lower">
+<button class="show-code">Code</button>
+final <a href="parsers/Parser.html">Parser</a>&lt;<a href="http://api.dartlang.org/dart_core/String.html">String</a>&gt;         <strong>lower</strong> <a class="anchor-link"
+            href="#lower"
+            title="Permalink to lower">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+final Parser&lt;String&gt; lower = oneOf(_lower) % 'lowercase letter'
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="newline">
+<button class="show-code">Code</button>
+final <a href="parsers/Parser.html">Parser</a>&lt;<a href="http://api.dartlang.org/dart_core/String.html">String</a>&gt;         <strong>newline</strong> <a class="anchor-link"
+            href="#newline"
+            title="Permalink to newline">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+final Parser&lt;String&gt; newline = char('\n') % 'newline'
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="position">
+<button class="show-code">Code</button>
+final <a href="parsers/Parser.html">Parser</a>&lt;<a href="parsers/Position.html">Position</a>&gt;         <strong>position</strong> <a class="anchor-link"
+            href="#position"
+            title="Permalink to position">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+final Parser&lt;Position&gt; position =
+   new Parser((s, pos) =&gt; _success(pos, s, pos))
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="space">
+<button class="show-code">Code</button>
+final <a href="parsers/Parser.html">Parser</a>&lt;<a href="http://api.dartlang.org/dart_core/String.html">String</a>&gt;         <strong>space</strong> <a class="anchor-link"
+            href="#space"
+            title="Permalink to space">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+final Parser&lt;String&gt; space = oneOf(_spaces) % 'space'
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="spaces">
+<button class="show-code">Code</button>
+final <a href="parsers/Parser.html">Parser</a>         <strong>spaces</strong> <a class="anchor-link"
+            href="#spaces"
+            title="Permalink to spaces">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+final Parser spaces = (space.many &gt; success(null)) % 'spaces'
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="tab">
+<button class="show-code">Code</button>
+final <a href="parsers/Parser.html">Parser</a>&lt;<a href="http://api.dartlang.org/dart_core/String.html">String</a>&gt;         <strong>tab</strong> <a class="anchor-link"
+            href="#tab"
+            title="Permalink to tab">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+final Parser&lt;String&gt; tab = char('\t') % 'tab'
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="upper">
+<button class="show-code">Code</button>
+final <a href="parsers/Parser.html">Parser</a>&lt;<a href="http://api.dartlang.org/dart_core/String.html">String</a>&gt;         <strong>upper</strong> <a class="anchor-link"
+            href="#upper"
+            title="Permalink to upper">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+final Parser&lt;String&gt; upper = oneOf(_upper) % 'uppercase letter'
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Functions</h3>
+<div class="method"><h4 id="noneOf">
+<button class="show-code">Code</button>
+<a href="parsers/Parser.html">Parser</a>&lt;<a href="http://api.dartlang.org/dart_core/String.html">String</a>&gt; <strong>noneOf</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> chars) <a class="anchor-link" href="#noneOf"
+              title="Permalink to noneOf">#</a></h4>
+<div class="doc">
+<pre class="source">
+Parser&lt;String&gt; noneOf(String chars) =&gt;
+   pred((c) =&gt; !chars.contains(c)).expecting("none of '$chars'");
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="oneOf">
+<button class="show-code">Code</button>
+<a href="parsers/Parser.html">Parser</a>&lt;<a href="http://api.dartlang.org/dart_core/String.html">String</a>&gt; <strong>oneOf</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> chars) <a class="anchor-link" href="#oneOf"
+              title="Permalink to oneOf">#</a></h4>
+<div class="doc">
+<pre class="source">
+Parser&lt;String&gt; oneOf(String chars) =&gt;
+   pred((c) =&gt; chars.contains(c)).expecting("one of '$chars'");
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="choice">
+<button class="show-code">Code</button>
+<a href="parsers/Parser.html">Parser</a> <strong>choice</strong>(<a href="http://api.dartlang.org/dart_core/List.html">List</a>&lt;<a href="parsers/Parser.html">Parser</a>&gt; ps) <a class="anchor-link" href="#choice"
+              title="Permalink to choice">#</a></h4>
+<div class="doc">
+<pre class="source">
+Parser choice(List&lt;Parser&gt; ps) {
+ // Imperative version for efficiency
+ return new Parser((s, pos) {
+   var exps = _emptyExpectation(pos);
+   for (final p in ps) {
+     final res = p._run(s, pos);
+     exps = exps.best(res.expectations);
+     if (res.isSuccess) {
+       return res.copy(expectations: exps);
+     } else if (res.isCommitted) {
+       return res;
+     }
+   }
+   return _failure(s, pos, exps);
+ });
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="rec">
+<button class="show-code">Code</button>
+<a href="parsers/Parser.html">Parser</a> <strong>rec</strong>(<a href="parsers/Parser.html">Parser</a> f()) <a class="anchor-link" href="#rec"
+              title="Permalink to rec">#</a></h4>
+<div class="doc">
+<pre class="source">
+Parser rec(Parser f()) =&gt; new Parser((s, pos) =&gt; f()._run(s, pos));
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="string">
+<button class="show-code">Code</button>
+<a href="parsers/Parser.html">Parser</a> <strong>string</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> str) <a class="anchor-link" href="#string"
+              title="Permalink to string">#</a></h4>
+<div class="doc">
+<pre class="source">
+Parser string(String str) {
+ // Primitive version for efficiency
+ return new Parser((s, pos) {
+   final int offset = pos.offset;
+   final int max = offset + str.length;
+
+   int newline = pos.line;
+   int newchar = pos.character;
+   // This replicates Position#addChar for efficiency purposes.
+   void update(c) {
+     final isNewLine = c == '\n';
+     newline = newline + (isNewLine ? 1 : 0);
+     newchar = isNewLine ? 1 : newchar + 1;
+   }
+
+   bool match = s.length &gt;= max;
+   for (int i = 0; i &lt; str.length &amp;&amp; match; i++) {
+     final c = s[offset + i];
+     match = match &amp;&amp; c == str[i];
+     update(c);
+   }
+   if (match) {
+     return _success(str, s, new Position(max, newline, newchar));
+   } else {
+     return _failure(s, pos, _singleExpectation("'$str'", pos));
+   }
+ });
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="char">
+<button class="show-code">Code</button>
+<a href="parsers/Parser.html">Parser</a> <strong>char</strong>(<a href="http://api.dartlang.org/dart_core/String.html">String</a> chr) <a class="anchor-link" href="#char"
+              title="Permalink to char">#</a></h4>
+<div class="doc">
+<pre class="source">
+Parser char(String chr) =&gt; pred((c) =&gt; c == chr) % "'$chr'";
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="pred">
+<button class="show-code">Code</button>
+<a href="parsers/Parser.html">Parser</a> <strong>pred</strong>(<a href="http://api.dartlang.org/dart_core/bool.html">bool</a> p(<a href="http://api.dartlang.org/dart_core/String.html">String</a> char)) <a class="anchor-link" href="#pred"
+              title="Permalink to pred">#</a></h4>
+<div class="doc">
+<pre class="source">
+Parser pred(bool p(String char)) {
+ return new Parser((s, pos) {
+   if (pos.offset &gt;= s.length) return _failure(s, pos);
+   else {
+     String c = s[pos.offset];
+     return p(c) ? _success(c, s, pos.addChar(c))
+                 : _failure(s, pos);
+   }
+ });
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="success">
+<button class="show-code">Code</button>
+<a href="parsers/Parser.html">Parser</a> <strong>success</strong>(value) <a class="anchor-link" href="#success"
+              title="Permalink to success">#</a></h4>
+<div class="doc">
+<pre class="source">
+Parser success(value) =&gt; new Parser((s, pos) =&gt; _success(value, s, pos));
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Classes</h3>
+          <div class="type">
+          <h4>
+            <a href="parsers/Expectations.html"><strong>Expectations</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/LanguageParsers.html"><strong>LanguageParsers</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/Parser.html"><strong>Parser&lt;A&gt;</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/ParserAccumulator10.html"><strong>ParserAccumulator10</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/ParserAccumulator11.html"><strong>ParserAccumulator11</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/ParserAccumulator12.html"><strong>ParserAccumulator12</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/ParserAccumulator13.html"><strong>ParserAccumulator13</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/ParserAccumulator14.html"><strong>ParserAccumulator14</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/ParserAccumulator15.html"><strong>ParserAccumulator15</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/ParserAccumulator16.html"><strong>ParserAccumulator16</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/ParserAccumulator17.html"><strong>ParserAccumulator17</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/ParserAccumulator18.html"><strong>ParserAccumulator18</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/ParserAccumulator19.html"><strong>ParserAccumulator19</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/ParserAccumulator2.html"><strong>ParserAccumulator2</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/ParserAccumulator20.html"><strong>ParserAccumulator20</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/ParserAccumulator3.html"><strong>ParserAccumulator3</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/ParserAccumulator4.html"><strong>ParserAccumulator4</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/ParserAccumulator5.html"><strong>ParserAccumulator5</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/ParserAccumulator6.html"><strong>ParserAccumulator6</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/ParserAccumulator7.html"><strong>ParserAccumulator7</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/ParserAccumulator8.html"><strong>ParserAccumulator8</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/ParserAccumulator9.html"><strong>ParserAccumulator9</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/ParseResult.html"><strong>ParseResult&lt;A&gt;</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/PointedValue.html"><strong>PointedValue&lt;A&gt;</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/Position.html"><strong>Position</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/ReservedNames.html"><strong>ReservedNames</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="parsers/Undefined.html"><strong>Undefined</strong></a>
+          </h4>
+          </div>
+          
+</div>
+        </div>
+        <div class="clear"></div>
+        </div>
+        <div class="footer">
+          <div>This page was generated at 2013-10-03 00:45:50.975</div>
+        </div>
+        <script async src="client-live-nav.js"></script>
+        </body></html>
+        

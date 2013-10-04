@@ -6,7 +6,6 @@
 library simple_arith;
 
 import 'package:parsers/parsers.dart';
-import 'dart:math';
 
 class Arith {
 

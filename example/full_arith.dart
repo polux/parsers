@@ -6,7 +6,6 @@
 library example;
 
 import 'package:parsers/parsers.dart';
-import 'dart:math';
 
 // Same example as example.dart, with the additional use of chainl1 which
 // helps handling infix operators with the same precedence.

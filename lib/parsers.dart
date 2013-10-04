@@ -577,23 +577,25 @@ Parser choice(List<Parser> ps) {
   });
 }
 
-Parser<String> everythingBetween(
+class _EverythingBetween {
+  final Parser left;
+  final Parser right;
+  final bool nested;
+
+  _EverythingBetween(this.left, this.right, this.nested);
+
+  Parser parser() => inside().between(left, right);
+
+  Parser get leftOrRightAhead => (left | right).lookAhead;
+  Parser inside() => nested ? insideMulti() : insideSingle();
+  Parser insideMulti() => anyChar.skipManyUntil(leftOrRightAhead) > nest();
+  Parser nest() => (rec(parser) > rec(insideMulti)).maybe;
+  Parser insideSingle() => anyChar.skipManyUntil(right.lookAhead);
+}
+
+Parser skipEverythingBetween(
     Parser left, Parser right, {bool nested: false}) {
-  Parser _multiLineComment() => _start > _inComment();
-
-  Parser _inComment() =>
-      _nestedComments ? _inCommentMulti() : _inCommentSingle();
-
-  Parser _inCommentMulti() => _notStartNorEnd.skipMany > _recOrEnd();
-
-  Parser _recOrEnd() => (rec(_multiLineComment) > rec(_inCommentMulti))
-                      | (_end > success(null));
-
-  Parser _inCommentSingle() => anyChar.skipManyUntil(_end);
-
-  Parser get _oneLineComment =>
-      string(_commentLine) > (pred((c) => c != '\n').skipMany > success(null));
-
+  return new _EverythingBetween(left, right, nested).parser();
 }
 
 // Derived character parsers
@@ -795,17 +797,8 @@ class LanguageParsers {
   Parser get _end => string(_commentEnd);
   Parser get _notStartNorEnd => (_start | _end).notAhead > anyChar;
 
-  Parser _multiLineComment() => _start > _inComment();
-
-  Parser _inComment() =>
-      _nestedComments ? _inCommentMulti() : _inCommentSingle();
-
-  Parser _inCommentMulti() => _notStartNorEnd.skipMany > _recOrEnd();
-
-  Parser _recOrEnd() => (rec(_multiLineComment) > rec(_inCommentMulti))
-                      | (_end > success(null));
-
-  Parser _inCommentSingle() => anyChar.skipManyUntil(_end);
+  Parser get _multiLineComment =>
+      skipEverythingBetween(_start, _end, nested: _nestedComments);
 
   Parser get _oneLineComment =>
       string(_commentLine) > (pred((c) => c != '\n').skipMany > success(null));
@@ -816,11 +809,11 @@ class LanguageParsers {
     if (_commentLine.isEmpty && _commentStart.isEmpty) {
       return space.skipMany;
     } else if (_commentLine.isEmpty) {
-      return (space | _multiLineComment()).skipMany;
+      return (space | _multiLineComment).skipMany;
     } else if (_commentStart.isEmpty) {
       return (space | _oneLineComment).skipMany;
     } else {
-      return (space | _oneLineComment | _multiLineComment()).skipMany;
+      return (space | _oneLineComment | _multiLineComment).skipMany;
     }
   }
 

@@ -13,7 +13,7 @@ import 'package:parsers/parsers.dart';
 class MiniLang extends LanguageParsers {
   MiniLang() : super(reservedNames: ['var', 'if', 'else', 'true', 'false']);
 
-  get start => spaces > (stmts() < eof);
+  get start => stmts().between(spaces, eof);
 
   stmts() => stmt().endBy(semi);
   stmt() => declStmt()

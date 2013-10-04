@@ -577,6 +577,25 @@ Parser choice(List<Parser> ps) {
   });
 }
 
+Parser<String> everythingBetween(
+    Parser left, Parser right, {bool nested: false}) {
+  Parser _multiLineComment() => _start > _inComment();
+
+  Parser _inComment() =>
+      _nestedComments ? _inCommentMulti() : _inCommentSingle();
+
+  Parser _inCommentMulti() => _notStartNorEnd.skipMany > _recOrEnd();
+
+  Parser _recOrEnd() => (rec(_multiLineComment) > rec(_inCommentMulti))
+                      | (_end > success(null));
+
+  Parser _inCommentSingle() => anyChar.skipManyUntil(_end);
+
+  Parser get _oneLineComment =>
+      string(_commentLine) > (pred((c) => c != '\n').skipMany > success(null));
+
+}
+
 // Derived character parsers
 
 final Parser<String> anyChar = pred((c) => true) % 'any character';

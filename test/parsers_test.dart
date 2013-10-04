@@ -527,6 +527,44 @@ main() {
       expect(choice([char('a'), char('b'), char('c')]).run('d'),
              isFailure('d')));
 
+  test('skipEverythingBetween 1', () =>
+      expect(skipEverythingBetween(string('ab'), string('ac'))
+                 .run('ab aaa ab aaa ac aaa ac foo'),
+             isSuccess(null, ' aaa ac foo')));
+
+  test('skipEverythingBetween 2', () =>
+      expect(skipEverythingBetween(string('ab'), string('ac'), nested: true)
+                 .run('ab aaa ab aaa ac aaa ac foo'),
+             isSuccess(null, ' foo')));
+
+  test('skipEverythingBetween 3', () =>
+      expect(skipEverythingBetween(string('ab'), string('ac')).run("abaaaaa"),
+             isFailure('')));
+
+  test('skipEverythingBetween 4', () =>
+      expect(skipEverythingBetween(string('ab'), string('ac'), nested: true)
+                 .run("abaaaaa"),
+             isFailure('')));
+
+  test('everythingBetween 1', () =>
+      expect(everythingBetween(string('ab'), string('ac'))
+                 .run('ab aaa ab aaa ac aaa ac foo'),
+             isSuccess(' aaa ab aaa ', ' aaa ac foo')));
+
+  test('everythingBetween 2', () =>
+      expect(everythingBetween(string('ab'), string('ac'), nested: true)
+                 .run('ab aaa ab aaa ac aaa ac foo'),
+             isSuccess(' aaa ab aaa ac aaa ', ' foo')));
+
+  test('everythingBetween 3', () =>
+      expect(everythingBetween(string('ab'), string('ac')).run("abaaaaa"),
+             isFailure('')));
+
+  test('everythingBetween 4', () =>
+      expect(everythingBetween(string('ab'), string('ac'), nested: true)
+                 .run("abaaaaa"),
+             isFailure('')));
+
   test('record 1', () =>
       expect(char('a').many.record.run('aaaabb'),
              isSuccess('aaaa', 'bb')));

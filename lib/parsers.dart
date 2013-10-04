@@ -577,25 +577,32 @@ Parser choice(List<Parser> ps) {
   });
 }
 
-class _EverythingBetween {
+class _SkipInBetween {
   final Parser left;
   final Parser right;
   final bool nested;
 
-  _EverythingBetween(this.left, this.right, this.nested);
+  _SkipInBetween(this.left, this.right, this.nested);
 
-  Parser parser() => inside().between(left, right);
+  Parser parser() => nested ? insideMulti() : insideSingle();
 
+  Parser inside() => rec(parser).between(left, right);
   Parser get leftOrRightAhead => (left | right).lookAhead;
-  Parser inside() => nested ? insideMulti() : insideSingle();
   Parser insideMulti() => anyChar.skipManyUntil(leftOrRightAhead) > nest();
-  Parser nest() => (rec(parser) > rec(insideMulti)).maybe;
+  Parser nest() => (rec(inside) > rec(insideMulti)).maybe;
   Parser insideSingle() => anyChar.skipManyUntil(right.lookAhead);
 }
 
 Parser skipEverythingBetween(
     Parser left, Parser right, {bool nested: false}) {
-  return new _EverythingBetween(left, right, nested).parser();
+  final inBetween = new _SkipInBetween(left, right, nested).parser();
+  return inBetween.between(left, right) > success(null);
+}
+
+Parser everythingBetween(
+    Parser left, Parser right, {bool nested: false}) {
+  final inBetween = new _SkipInBetween(left, right, nested).parser();
+  return inBetween.record.between(left, right);
 }
 
 // Derived character parsers

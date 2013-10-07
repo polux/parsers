@@ -12,23 +12,26 @@ final reservedNames = ["namespace",
 //                  "int"];
 
 class NamespaceDeclaration {
-  dynamic name;
-  dynamic body;
-  Option doc;
+  final String name;
+  final List body;
+  final Option doc;
+
   NamespaceDeclaration(this.name, this.body, [this.doc]);
 }
 
 class InterfaceDeclaration {
-  dynamic name;
-  dynamic body;
-  Option doc;
+  final String name;
+  final List body;
+  final Option doc;
+
   InterfaceDeclaration(this.name, this.body, [this.doc]);
 }
 
 class DictionaryDeclaration {
-  dynamic name;
-  dynamic body;
-  Option doc;
+  final String name;
+  final List body;
+  final Option doc;
+
   DictionaryDeclaration(this.name, this.body, [this.doc]);
 }
 
@@ -47,106 +50,137 @@ class Parameter {
 }
 
 class MethodDeclaration {
-  dynamic returnType;
-  dynamic name;
-  dynamic parameters;
+  TypeAppl returnType;
+  String name;
+  List parameters;
   Option doc;
-  MethodDeclaration(this.returnType, this.name, this.parameters, [this.doc]) {
-  }
+
+  MethodDeclaration(this.returnType, this.name, this.parameters, [this.doc]);
 }
 
 class FieldDeclaration {
-  dynamic type;
-  dynamic name;
+  TypeAppl type;
+  String name;
   Option doc;
+
   FieldDeclaration(this.type, this.name, [this.doc]);
 }
+
+NamespaceDeclaration namespaceDeclarationMapping(Option doc, _, String name,
+                                                 List body, __) =>
+    new NamespaceDeclaration(name.trim(), body, doc);
+
+InterfaceDeclaration interfaceDeclarationMapping(Option doc, _, String name,
+                                                 List body, __) =>
+    new InterfaceDeclaration(name.trim(), body, doc);
+
+MethodDeclaration methodDeclarationRegularMapping(Option doc,
+                                                  TypeAppl returnType,
+                                                  String name,
+                                                  List parameters, _) =>
+  new MethodDeclaration(returnType, name.trim(), parameters, doc);
+
+MethodDeclaration methodDeclarationReservedMapping(Option doc,
+                                                   String returnType,
+                                                   String name,
+                                                   List parameters, _) =>
+  new MethodDeclaration(new TypeAppl(returnType.trim(), null), name.trim(),
+      parameters, doc);
+
+DictionaryDeclaration dictionaryDeclarationMapping(Option doc, _, String name,
+                                                   List body, __) =>
+    new DictionaryDeclaration(name, body, doc);
+
+FieldDeclaration fieldDeclarationMapping(Option doc, TypeAppl type, String name,
+                                         _) =>
+  new FieldDeclaration(type, name.trim(), doc);
 
 class DataCoreParser extends LanguageParsers {
 
   DataCoreParser() : super(reservedNames: reservedNames);
 
-  get docString => lexeme(_docStringOrSpaces);
+  Parser get docString => lexeme(_docStringOrSpaces);
 
-  get _docStringOrSpaces =>
+  Parser get _docStringOrSpaces =>
       everythingBetween(string('//'), string('\n')).many.maybe
       | everythingBetween(string('/*'), string('*/'), nested: true).many.maybe
       | everythingBetween(string('/**'), string('*/'), nested: true).many.maybe
       | whiteSpace;
 
-  get namespaceDeclaration =>
+  Parser get namespaceDeclaration =>
       docString
       + reserved["namespace"]
       + identifier
       + braces(namespaceBody)
       + semi
-      ^ (d, _, n, nsb, __) => new NamespaceDeclaration(n, nsb, d);
+      ^ namespaceDeclarationMapping;
 
-  get namespaceBody => body.many;
+  Parser get namespaceBody => body.many;
 
-  get body => _body;
+  Parser get body => _body;
 
-  get _body => interfaceDeclaration | dictionaryDeclaration;
+  Parser get _body => interfaceDeclaration | dictionaryDeclaration;
 
-  get interfaceDeclaration =>
+  Parser get interfaceDeclaration =>
       docString
       + reserved["interface"].record
       + identifier.record
       + braces(interfaceBody)
       + semi
-      ^ (d, _, n, nb, __) => new InterfaceDeclaration(n, nb, d);
+      ^ interfaceDeclarationMapping;
 
-  get interfaceBody => method.many;
+  Parser get interfaceBody => method.many;
 
-  get method => _method;
+  Parser get method => _method;
 
-  get _method => regularMethod | voidMethod;
+  Parser get _method => regularMethod | voidMethod;
 
-  typeAppl() =>
+  Parser typeAppl() =>
       identifier
       + angles(rec(typeAppl).sepBy(comma)).orElse([])
       ^ (c, args) => new TypeAppl(c, args);
 
-  get parameter =>
+  Parser get parameter =>
       (typeAppl() % 'type')
       + (identifier % 'parameter')
       ^ (t, p) => new Parameter(t, p);
 
-  get regularMethod =>
+  Parser get regularMethod =>
       docString
-      + typeAppl().record
+      + typeAppl()
       + identifier.record
-      + parens(parameter.sepBy(comma)).record
+      + parens(parameter.sepBy(comma))
       + semi.record
-      ^ (d, t, i, p, _) => new MethodDeclaration(t, i, p, d);
+      ^ methodDeclarationRegularMapping;
 
-  get voidMethod =>
+  Parser get voidMethod =>
       docString
       + reserved['void'].record
       + identifier.record
-      + parens(parameter.sepBy(comma)).record
+      + parens(parameter.sepBy(comma))
       + semi.record
-      ^ (d, t, i, p, _) => new MethodDeclaration(t, i, p, d);
+      ^ methodDeclarationReservedMapping;
 
-  get dictionaryDeclaration =>
+  Parser get dictionaryDeclaration =>
       docString
       + reserved["dictionary"]
       + identifier
       + braces(dictionaryBody)
       + semi
-      ^ (d, _, n, db, __) => new DictionaryDeclaration(n, db, d);
+      ^ dictionaryDeclarationMapping;
 
-  get dictionaryBody => field.many;
+  Parser get dictionaryBody => field.many;
 
-  get field => _field;
+  Parser get field => _field;
 
-  get _field => regularField;
+  Parser get _field => regularField;
 
-  get regularField =>
-      typeAppl().record
+  Parser get regularField =>
+      docString
+      + typeAppl()
       + identifier.record
       + semi
-      ^ (t, i, _) => new FieldDeclaration(t, i);
+      ^ fieldDeclarationMapping;
 }
 
 final test = """
@@ -158,7 +192,7 @@ namespace datacore {
   // Defined interface of the processor
   interface DataProc {
     // Loads data for the processor
-    bool loadData(array data);
+    bool loadData(array data, int size);
 
     // Executes the processor
     void run();

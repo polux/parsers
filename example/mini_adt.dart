@@ -14,25 +14,31 @@ final reservedNames = ["namespace",
 class NamespaceDeclaration {
   final String name;
   final List body;
-  final Option doc;
+  final List<String> doc;
 
   NamespaceDeclaration(this.name, this.body, [this.doc]);
+
+  toString() => "NamespaceDeclaration($name, $body, $doc);";
 }
 
 class InterfaceDeclaration {
   final String name;
   final List body;
-  final Option doc;
+  final List<String> doc;
 
   InterfaceDeclaration(this.name, this.body, [this.doc]);
+
+  toString() => "InterfaceDeclaration($name, $body, $doc);";
 }
 
 class DictionaryDeclaration {
   final String name;
   final List body;
-  final Option doc;
+  final List<String> doc;
 
   DictionaryDeclaration(this.name, this.body, [this.doc]);
+
+  toString() => "DictionaryDeclaration($name, $body, $doc);";
 }
 
 class TypeAppl {
@@ -40,6 +46,8 @@ class TypeAppl {
   final List<TypeAppl> arguments;
 
   TypeAppl(this.name, this.arguments);
+
+  toString() => "TypeAppl($name, $arguments);";
 }
 
 class Parameter {
@@ -47,65 +55,74 @@ class Parameter {
   final TypeAppl type;
 
   Parameter(this.type, this.name);
+
+  toString() => "Parameter($type, $name);";
 }
 
 class MethodDeclaration {
   TypeAppl returnType;
   String name;
   List parameters;
-  Option doc;
+  List<String> doc;
 
   MethodDeclaration(this.returnType, this.name, this.parameters, [this.doc]);
+
+  toString() => "MethodDeclaration($returnType, $name, $parameters, $doc)";
 }
 
 class FieldDeclaration {
   TypeAppl type;
   String name;
-  Option doc;
+  List<String> doc;
 
   FieldDeclaration(this.type, this.name, [this.doc]);
+
+  toString() => "FieldDeclaration($type, $name, $doc)";
 }
 
-NamespaceDeclaration namespaceDeclarationMapping(Option doc, _, String name,
-                                                 List body, __) =>
+NamespaceDeclaration namespaceDeclarationMapping(List<String> doc, _,
+                                                 String name, List body, __) =>
     new NamespaceDeclaration(name.trim(), body, doc);
 
-InterfaceDeclaration interfaceDeclarationMapping(Option doc, _, String name,
-                                                 List body, __) =>
+InterfaceDeclaration interfaceDeclarationMapping(List<String> doc, _,
+                                                 String name, List body, __) =>
     new InterfaceDeclaration(name.trim(), body, doc);
 
-MethodDeclaration methodDeclarationRegularMapping(Option doc,
+MethodDeclaration methodDeclarationRegularMapping(List<String> doc,
                                                   TypeAppl returnType,
                                                   String name,
                                                   List parameters, _) =>
   new MethodDeclaration(returnType, name.trim(), parameters, doc);
 
-MethodDeclaration methodDeclarationReservedMapping(Option doc,
+MethodDeclaration methodDeclarationReservedMapping(List<String> doc,
                                                    String returnType,
                                                    String name,
                                                    List parameters, _) =>
   new MethodDeclaration(new TypeAppl(returnType.trim(), null), name.trim(),
       parameters, doc);
 
-DictionaryDeclaration dictionaryDeclarationMapping(Option doc, _, String name,
+DictionaryDeclaration dictionaryDeclarationMapping(List<String> doc, _,
+                                                   String name,
                                                    List body, __) =>
     new DictionaryDeclaration(name, body, doc);
 
-FieldDeclaration fieldDeclarationMapping(Option doc, TypeAppl type, String name,
-                                         _) =>
+FieldDeclaration fieldDeclarationMapping(List<String> doc, TypeAppl type,
+                                         String name, _) =>
   new FieldDeclaration(type, name.trim(), doc);
 
 class DataCoreParser extends LanguageParsers {
 
-  DataCoreParser() : super(reservedNames: reservedNames);
+  DataCoreParser() : super(reservedNames: reservedNames,
+                           commentStart: "",
+                           commentEnd: "",
+                           commentLine: "");
 
-  Parser get docString => lexeme(_docStringOrSpaces);
+  Parser get docString => lexeme(_docStringOrSpaces.many);
 
   Parser get _docStringOrSpaces =>
-      everythingBetween(string('//'), string('\n')).many.maybe
-      | everythingBetween(string('/*'), string('*/'), nested: true).many.maybe
-      | everythingBetween(string('/**'), string('*/'), nested: true).many.maybe
-      | whiteSpace;
+        everythingBetween(string('//'), string('\n'))
+      | everythingBetween(string('/*'), string('*/'), nested: true)
+      | everythingBetween(string('/**'), string('*/'), nested: true);
 
   Parser get namespaceDeclaration =>
       docString

@@ -17,7 +17,7 @@ class NamespaceDeclaration {
 
   NamespaceDeclaration(this.name, this.body, [this.doc]);
 
-  toString() => "NamespaceDeclaration($name, $body, $doc);";
+  String toString() => "NamespaceDeclaration($name, $body, $doc);";
 }
 
 class InterfaceDeclaration {
@@ -27,7 +27,7 @@ class InterfaceDeclaration {
 
   InterfaceDeclaration(this.name, this.body, [this.doc]);
 
-  toString() => "InterfaceDeclaration($name, $body, $doc);";
+  String toString() => "InterfaceDeclaration($name, $body, $doc);";
 }
 
 class DictionaryDeclaration {
@@ -37,7 +37,7 @@ class DictionaryDeclaration {
 
   DictionaryDeclaration(this.name, this.body, [this.doc]);
 
-  toString() => "DictionaryDeclaration($name, $body, $doc);";
+  String toString() => "DictionaryDeclaration($name, $body, $doc);";
 }
 
 class TypeAppl {
@@ -46,7 +46,7 @@ class TypeAppl {
 
   TypeAppl(this.name, this.arguments);
 
-  toString() => "TypeAppl($name, $arguments);";
+  String toString() => "TypeAppl($name, $arguments);";
 }
 
 class Parameter {
@@ -55,7 +55,7 @@ class Parameter {
 
   Parameter(this.type, this.name);
 
-  toString() => "Parameter($type, $name);";
+  String toString() => "Parameter($type, $name);";
 }
 
 class MethodDeclaration {
@@ -66,7 +66,7 @@ class MethodDeclaration {
 
   MethodDeclaration(this.returnType, this.name, this.parameters, [this.doc]);
 
-  toString() => "MethodDeclaration($returnType, $name, $parameters, $doc)";
+  String toString() => "MethodDeclaration($returnType, $name, $parameters, $doc)";
 }
 
 class FieldDeclaration {
@@ -76,7 +76,7 @@ class FieldDeclaration {
 
   FieldDeclaration(this.type, this.name, [this.doc]);
 
-  toString() => "FieldDeclaration($type, $name, $doc)";
+  String toString() => "FieldDeclaration($type, $name, $doc)";
 }
 
 NamespaceDeclaration namespaceDeclarationMapping(List<String> doc, _,

@@ -3,12 +3,9 @@ library mini_ast;
 import 'package:parsers/parsers.dart';
 
 final reservedNames = ["namespace",
-                  "interface",
-                  "dictionary",
-//                  "bool",
-                  "void"];
-//                  "double",
-//                  "int"];
+                       "interface",
+                       "dictionary",
+                       "void"];
 
 class NamespaceDeclaration {
   final String name;
@@ -66,7 +63,8 @@ class MethodDeclaration {
 
   MethodDeclaration(this.returnType, this.name, this.parameters, [this.doc]);
 
-  String toString() => "MethodDeclaration($returnType, $name, $parameters, $doc)";
+  String toString() =>
+      "MethodDeclaration($returnType, $name, $parameters, $doc)";
 }
 
 class FieldDeclaration {
@@ -236,5 +234,5 @@ void main() {
   DataCoreParser dataCoreParser = new DataCoreParser();
   NamespaceDeclaration namespaceDeclaration =
       dataCoreParser.namespaceDeclaration.between(spaces, eof).parse(test);
-  print("namespaceDeclaration = ${namespaceDeclaration}");
+  print(namespaceDeclaration);
 }

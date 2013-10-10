@@ -1,7 +1,6 @@
-library mini_adt;
+library mini_ast;
 
 import 'package:parsers/parsers.dart';
-import 'package:persistent/persistent.dart';
 
 final reservedNames = ["namespace",
                   "interface",

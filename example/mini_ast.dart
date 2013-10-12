@@ -110,6 +110,7 @@ FieldDeclaration fieldDeclarationMapping(List<String> doc, TypeAppl type,
 class DataCoreParser extends LanguageParsers {
 
   DataCoreParser() : super(reservedNames: reservedNames,
+                           // Dont handle comments
                            commentStart: "",
                            commentEnd: "",
                            commentLine: "");

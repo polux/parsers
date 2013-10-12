@@ -79,23 +79,23 @@ class FieldDeclaration {
 
 NamespaceDeclaration namespaceDeclarationMapping(List<String> doc, _,
                                                  String name, List body, __) =>
-    new NamespaceDeclaration(name.trim(), body, doc);
+    new NamespaceDeclaration(name, body, doc);
 
 InterfaceDeclaration interfaceDeclarationMapping(List<String> doc, _,
                                                  String name, List body, __) =>
-    new InterfaceDeclaration(name.trim(), body, doc);
+    new InterfaceDeclaration(name, body, doc);
 
 MethodDeclaration methodDeclarationRegularMapping(List<String> doc,
                                                   TypeAppl returnType,
                                                   String name,
                                                   List parameters, _) =>
-  new MethodDeclaration(returnType, name.trim(), parameters, doc);
+  new MethodDeclaration(returnType, name, parameters, doc);
 
 MethodDeclaration methodDeclarationReservedMapping(List<String> doc,
                                                    String returnType,
                                                    String name,
                                                    List parameters, _) =>
-  new MethodDeclaration(new TypeAppl(returnType.trim(), null), name.trim(),
+  new MethodDeclaration(new TypeAppl(returnType, null), name,
       parameters, doc);
 
 DictionaryDeclaration dictionaryDeclarationMapping(List<String> doc, _,
@@ -105,7 +105,7 @@ DictionaryDeclaration dictionaryDeclarationMapping(List<String> doc, _,
 
 FieldDeclaration fieldDeclarationMapping(List<String> doc, TypeAppl type,
                                          String name, _) =>
-  new FieldDeclaration(type, name.trim(), doc);
+  new FieldDeclaration(type, name, doc);
 
 class DataCoreParser extends LanguageParsers {
 

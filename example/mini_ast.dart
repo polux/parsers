@@ -14,7 +14,7 @@ class NamespaceDeclaration {
 
   NamespaceDeclaration(this.name, this.body, [this.doc]);
 
-  String toString() => "NamespaceDeclaration($name, $body, $doc);";
+  String toString() => "NamespaceDeclaration($name, $body, $doc)";
 }
 
 class InterfaceDeclaration {
@@ -24,7 +24,7 @@ class InterfaceDeclaration {
 
   InterfaceDeclaration(this.name, this.body, [this.doc]);
 
-  String toString() => "InterfaceDeclaration($name, $body, $doc);";
+  String toString() => "InterfaceDeclaration($name, $body, $doc)";
 }
 
 class DictionaryDeclaration {
@@ -34,7 +34,7 @@ class DictionaryDeclaration {
 
   DictionaryDeclaration(this.name, this.body, [this.doc]);
 
-  String toString() => "DictionaryDeclaration($name, $body, $doc);";
+  String toString() => "DictionaryDeclaration($name, $body, $doc)";
 }
 
 class TypeAppl {
@@ -43,7 +43,7 @@ class TypeAppl {
 
   TypeAppl(this.name, this.arguments);
 
-  String toString() => "TypeAppl($name, $arguments);";
+  String toString() => "TypeAppl($name, $arguments)";
 }
 
 class Parameter {
@@ -52,7 +52,7 @@ class Parameter {
 
   Parameter(this.type, this.name);
 
-  String toString() => "Parameter($type, $name);";
+  String toString() => "Parameter($type, $name)";
 }
 
 class MethodDeclaration {

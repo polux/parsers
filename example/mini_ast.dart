@@ -136,8 +136,8 @@ class DataCoreParser extends LanguageParsers {
 
   Parser get interfaceDeclaration =>
       docString
-      + reserved["interface"].record
-      + identifier.record
+      + reserved["interface"]
+      + identifier
       + braces(interfaceBody)
       + semi
       ^ interfaceDeclarationMapping;
@@ -159,17 +159,17 @@ class DataCoreParser extends LanguageParsers {
   Parser get regularMethod =>
       docString
       + typeAppl()
-      + identifier.record
+      + identifier
       + parens(parameter.sepBy(comma))
-      + semi.record
+      + semi
       ^ methodDeclarationRegularMapping;
 
   Parser get voidMethod =>
       docString
-      + reserved['void'].record
-      + identifier.record
+      + reserved['void']
+      + identifier
       + parens(parameter.sepBy(comma))
-      + semi.record
+      + semi
       ^ methodDeclarationReservedMapping;
 
   Parser get dictionaryDeclaration =>
@@ -187,7 +187,7 @@ class DataCoreParser extends LanguageParsers {
   Parser get regularField =>
       docString
       + typeAppl()
-      + identifier.record
+      + identifier
       + semi
       ^ fieldDeclarationMapping;
 }

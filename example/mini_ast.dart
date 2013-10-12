@@ -132,9 +132,7 @@ class DataCoreParser extends LanguageParsers {
 
   Parser get namespaceBody => body.many;
 
-  Parser get body => _body;
-
-  Parser get _body => interfaceDeclaration | dictionaryDeclaration;
+  Parser get body => interfaceDeclaration | dictionaryDeclaration;
 
   Parser get interfaceDeclaration =>
       docString
@@ -146,9 +144,7 @@ class DataCoreParser extends LanguageParsers {
 
   Parser get interfaceBody => method.many;
 
-  Parser get method => _method;
-
-  Parser get _method => regularMethod | voidMethod;
+  Parser get method => regularMethod | voidMethod;
 
   Parser typeAppl() =>
       identifier
@@ -186,9 +182,7 @@ class DataCoreParser extends LanguageParsers {
 
   Parser get dictionaryBody => field.many;
 
-  Parser get field => _field;
-
-  Parser get _field => regularField;
+  Parser get field => regularField;
 
   Parser get regularField =>
       docString

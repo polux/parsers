@@ -1,11 +1,15 @@
+// Copyright (c) 2012, Google Inc. All rights reserved. Use of this source code
+// is governed by a BSD-style license that can be found in the LICENSE file.
+
+// Authors:
+//  Adam Singer (financecoding@gmail.com)
+//  Paul Brauner (polux@google.com)
+
 library mini_ast;
 
 import 'package:parsers/parsers.dart';
 
-final reservedNames = ["namespace",
-                       "interface",
-                       "dictionary",
-                       "void"];
+final reservedNames = ["namespace", "interface", "dictionary", "void"];
 
 class NamespaceDeclaration {
   final String name;
@@ -77,50 +81,44 @@ class FieldDeclaration {
   String toString() => "FieldDeclaration($type, $name, $doc)";
 }
 
-NamespaceDeclaration namespaceDeclarationMapping(List<String> doc, _,
-                                                 String name, List body, __) =>
-    new NamespaceDeclaration(name, body, doc);
+NamespaceDeclaration namespaceDeclarationMapping(
+    List<String> doc, _, String name, List body, __) =>
+  new NamespaceDeclaration(name, body, doc);
 
-InterfaceDeclaration interfaceDeclarationMapping(List<String> doc, _,
-                                                 String name, List body, __) =>
-    new InterfaceDeclaration(name, body, doc);
+InterfaceDeclaration interfaceDeclarationMapping(
+    List<String> doc, _, String name, List body, __) =>
+  new InterfaceDeclaration(name, body, doc);
 
-MethodDeclaration methodDeclarationRegularMapping(List<String> doc,
-                                                  TypeAppl returnType,
-                                                  String name,
-                                                  List parameters, _) =>
+MethodDeclaration methodDeclarationRegularMapping(
+    List<String> doc, TypeAppl returnType, String name, List parameters, _) =>
   new MethodDeclaration(returnType, name, parameters, doc);
 
-MethodDeclaration methodDeclarationReservedMapping(List<String> doc,
-                                                   String returnType,
-                                                   String name,
-                                                   List parameters, _) =>
-  new MethodDeclaration(new TypeAppl(returnType, null), name,
-      parameters, doc);
+MethodDeclaration methodDeclarationReservedMapping(
+    List<String> doc, String returnType, String name, List parameters, _) =>
+  new MethodDeclaration(new TypeAppl(returnType, null), name, parameters, doc);
 
-DictionaryDeclaration dictionaryDeclarationMapping(List<String> doc, _,
-                                                   String name,
-                                                   List body, __) =>
-    new DictionaryDeclaration(name, body, doc);
+DictionaryDeclaration dictionaryDeclarationMapping(
+    List<String> doc, _, String name, List body, __) =>
+  new DictionaryDeclaration(name, body, doc);
 
-FieldDeclaration fieldDeclarationMapping(List<String> doc, TypeAppl type,
-                                         String name, _) =>
+FieldDeclaration fieldDeclarationMapping(
+    List<String> doc, TypeAppl type, String name, _) =>
   new FieldDeclaration(type, name, doc);
 
 class DataCoreParser extends LanguageParsers {
 
   DataCoreParser() : super(reservedNames: reservedNames,
-                           // Dont handle comments
+                           // tells LanguageParsers to not handle comments
                            commentStart: "",
                            commentEnd: "",
                            commentLine: "");
 
-  Parser get docString => lexeme(_docStringOrSpaces.many);
+  Parser get docString => lexeme(_docString.many);
 
-  Parser get _docStringOrSpaces =>
+  Parser get _docString =>
         everythingBetween(string('//'), string('\n'))
-      | everythingBetween(string('/*'), string('*/'), nested: true)
-      | everythingBetween(string('/**'), string('*/'), nested: true);
+      | everythingBetween(string('/*'), string('*/'))
+      | everythingBetween(string('/**'), string('*/'));
 
   Parser get namespaceDeclaration =>
       docString
@@ -182,9 +180,7 @@ class DataCoreParser extends LanguageParsers {
 
   Parser get dictionaryBody => field.many;
 
-  Parser get field => regularField;
-
-  Parser get regularField =>
+  Parser get field =>
       docString
       + typeAppl()
       + identifier
@@ -193,7 +189,6 @@ class DataCoreParser extends LanguageParsers {
 }
 
 final test = """
-
 // Data core processor package
 // Second comment line
 

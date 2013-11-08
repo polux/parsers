@@ -113,7 +113,7 @@ class DataCoreParser extends LanguageParsers {
                            commentEnd: "",
                            commentLine: "");
 
-  Parser get docString => lexeme(_docString.many);
+  Parser get docString => lexeme(_docString).many;
 
   Parser get _docString =>
         everythingBetween(string('//'), string('\n'))
@@ -195,7 +195,8 @@ final test = """
 namespace datacore {
   // Defined interface of the processor
   interface DataProc {
-    // Loads data for the processor
+    // Loads data for the processor,
+    // pass the size of the loaded data
     bool loadData(array data, int size);
 
     // Executes the processor

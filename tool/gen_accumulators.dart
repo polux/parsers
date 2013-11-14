@@ -5,10 +5,8 @@
 
 // Author: Paul Brauner (polux@google.com)
 
-import 'dart:io';
-
-main() {
-  final n = int.parse(new Options().arguments[0]);
+main(List<String> arguments) {
+  final n = int.parse(arguments[0]);
   for (int i = 2; i <= n; i++) {
     final plist = [];
     final xlist = [];

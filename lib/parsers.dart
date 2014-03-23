@@ -796,8 +796,14 @@ class LanguageParsers {
       (oneOf("oO") > _number(8, oneOf("01234567")))
       % 'octal number';
 
+  /**
+   * [lexeme] parser for [symb] symbol.
+   */
   Parser<String> symbol(String symb) => lexeme(string(symb));
 
+  /**
+   * Parser combinator which skips whitespaces from the right side.
+   */
   Parser lexeme(Parser p) => p < whiteSpace;
 
   Parser get _start => string(_commentStart);

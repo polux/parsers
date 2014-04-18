@@ -11,28 +11,6 @@ import 'dart:math';
 part 'src/accumulators.dart';
 
 class Undefined { const Undefined(); }  // simulates the old ? operator
-_consStr(c) => (String cs) => "$c$cs";
-String _strHead(String s) => s[0];
-String _strTail(String s) => s.substring(1);
-_some(x) => new Option.some(x);
-final _none = new Option.none();
-_humanOr(List es) {
-  assert(es.length > 0);
-  if (es.length == 1) {
-    return es[0];
-  } else {
-    StringBuffer result = new StringBuffer();
-    for (int i = 0; i < es.length - 2; i++) {
-      result.write('${es[i]}, ');
-    }
-    result.write('${es[es.length - 2]} or ${es[es.length - 1]}');
-    return result;
-  }
-}
-_singleExpectation(String str, Position pos) =>
-    new Expectations(new Set()..add(str), pos);
-_emptyExpectation(Position pos) =>
-    new Expectations(new Set(), pos);
 
 class Position {
   final int line;
@@ -51,6 +29,7 @@ class Position {
   }
 
   bool operator <(Position p) => offset < p.offset;
+
   bool operator >(Position p) => offset > p.offset;
 
   String toString() => '(line $line, char $character, offset $offset)';
@@ -63,14 +42,23 @@ class Position {
 class PointedValue<A> {
   final A value;
   final Position position;
+
   PointedValue(this.value, this.position);
+
   String toString() => '$value @ $position';
 }
 
 class Expectations {
   final Set<String> expected;
   final Position position;
+
   Expectations(this.expected, this.position);
+
+  factory Expectations.empty(Position pos) =>
+      new Expectations(new Set(), pos);
+
+  factory Expectations.single(String str, Position pos) =>
+      new Expectations(new Set()..add(str), pos);
 
   Expectations best(Expectations other) {
     if (position < other.position) return other;
@@ -89,22 +77,6 @@ class ParseResult<A> {
   final Position position;
   final Expectations expectations;
 
-  String get errorMessage {
-    final pos = expectations.position;
-    final maxSeenChar = (pos.offset < text.length)
-        ? "'${text[pos.offset]}'"
-        : 'eof';
-    final prelude =
-        'line ${pos.line}, character ${pos.character}:';
-    final expected = expectations.expected;
-    if (expected.isEmpty) {
-      return '$prelude unexpected $maxSeenChar.';
-    } else {
-      final or = _humanOr(new List.from(expected));
-      return "$prelude expected $or, got $maxSeenChar.";
-    }
-  }
-
   ParseResult(this.text, this.expectations, this.position, this.isSuccess,
               this.isCommitted, this.value);
 
@@ -120,7 +92,24 @@ class ParseResult<A> {
         (value != const Undefined()) ? value        : this.value);
   }
 
+  String get errorMessage {
+    final pos = expectations.position;
+    final maxSeenChar = (pos.offset < text.length)
+    ? "'${text[pos.offset]}'"
+    : 'eof';
+    final prelude =
+    'line ${pos.line}, character ${pos.character}:';
+    final expected = expectations.expected;
+    if (expected.isEmpty) {
+      return '$prelude unexpected $maxSeenChar.';
+    } else {
+      final or = _humanOr(new List.from(expected));
+      return "$prelude expected $or, got $maxSeenChar.";
+    }
+  }
+
   String get _rest => text.substring(position.offset);
+
   get _shortRest => _rest.length < 10 ? _rest : '${_rest.substring(0, 10)}...';
 
   toString() {
@@ -129,19 +118,33 @@ class ParseResult<A> {
         ? 'success$c: {value: $value, rest: "$_shortRest"}'
         : 'failure$c: {message: $errorMessage, rest: "$_shortRest"}';
   }
+
+  static StringBuffer _humanOr(List es) {
+    assert(es.length > 0);
+    if (es.length == 1) {
+      return es[0];
+    } else {
+      StringBuffer result = new StringBuffer();
+      for (int i = 0; i < es.length - 2; i++) {
+        result.write('${es[i]}, ');
+      }
+      result.write('${es[es.length - 2]} or ${es[es.length - 1]}');
+      return result;
+    }
+  }
 }
 
 ParseResult _success(value, String text, Position position,
                      [Expectations expectations, bool committed = false]) {
   final exps = (expectations != null)
-      ? expectations : _emptyExpectation(position);
+      ? expectations : new Expectations.empty(position);
   return new ParseResult(text, exps, position, true, committed, value);
 }
 
 ParseResult _failure(String text, Position position,
                      [Expectations expectations, bool committed = false]) {
   final exps = (expectations != null)
-      ? expectations : _emptyExpectation(position);
+      ? expectations : new Expectations.empty(position);
   return new ParseResult(text, exps, position, false, committed, null);
 }
 
@@ -179,7 +182,7 @@ class Parser<A> {
   Parser expecting(String expected) {
     return new Parser((s, pos) {
       final res = _run(s, pos);
-      return res.copy(expectations: _singleExpectation(expected, pos));
+      return res.copy(expectations: new Expectations.single(expected, pos));
     });
   }
 
@@ -288,7 +291,7 @@ class Parser<A> {
     return new Parser((s, pos) {
       List res = [];
       Position index = pos;
-      var exps = _emptyExpectation(pos);
+      var exps = new Expectations.empty(pos);
       bool committed = false;
       while(true) {
         final endRes = end._run(s, index);
@@ -323,7 +326,7 @@ class Parser<A> {
     // Imperative version to avoid stack overflows.
     return new Parser((s, pos) {
       Position index = pos;
-      var exps = _emptyExpectation(pos);
+      var exps = new Expectations.empty(pos);
       var commit = false;
       while(true) {
         final endRes = end._run(s, index);
@@ -352,13 +355,14 @@ class Parser<A> {
 
   Parser<A> orElse(A value) => this | success(value);
 
-  Parser<Option<A>> get maybe => this.map(_some).orElse(_none);
+  Parser<Option<A>> get maybe =>
+      this.map((x) => new Option.some(x)).orElse(new Option.none());
 
   // Imperative version to avoid stack overflows.
   Parser<List<A>> _many(List<A> acc()) {
     return new Parser((s, pos) {
       final res = acc();
-      var exps = _emptyExpectation(pos);
+      var exps = new Expectations.empty(pos);
       Position index = pos;
       bool committed = false;
       while(true) {
@@ -390,7 +394,7 @@ class Parser<A> {
     // Imperative version to avoid stack overflows.
     return new Parser((s, pos) {
       Position index = pos;
-      var exps = _emptyExpectation(pos);
+      var exps = new Expectations.empty(pos);
       bool committed = false;
       while(true) {
         ParseResult<A> o = this._run(s, index);
@@ -442,7 +446,7 @@ class Parser<A> {
     rest(acc) {
       return new Parser((s, pos) {
         Position index = pos;
-        var exps = _emptyExpectation(pos);
+        var exps = new Expectations.empty(pos);
         var commit = false;
         while(true) {
           combine(f) => (x) => f(acc, x);
@@ -509,7 +513,7 @@ Parser success(value) => new Parser((s, pos) => _success(value, s, pos));
 final Parser eof = new Parser((s, pos) =>
     pos.offset >= s.length
         ? _success(null, s, pos)
-        : _failure(s, pos, _singleExpectation("eof", pos)));
+        : _failure(s, pos, new Expectations.single("eof", pos)));
 
 Parser pred(bool p(String char)) {
   return new Parser((s, pos) {
@@ -548,7 +552,7 @@ Parser string(String str) {
     if (match) {
       return _success(str, s, new Position(max, newline, newchar));
     } else {
-      return _failure(s, pos, _singleExpectation("'$str'", pos));
+      return _failure(s, pos, new Expectations.single("'$str'", pos));
     }
   });
 }
@@ -563,7 +567,7 @@ final Parser<Position> position =
 Parser choice(List<Parser> ps) {
   // Imperative version for efficiency
   return new Parser((s, pos) {
-    var exps = _emptyExpectation(pos);
+    var exps = new Expectations.empty(pos);
     for (final p in ps) {
       final res = p._run(s, pos);
       exps = exps.best(res.expectations);
@@ -584,13 +588,13 @@ class _SkipInBetween {
 
   _SkipInBetween(this.left, this.right, this.nested);
 
-  Parser parser() => nested ? insideMulti() : insideSingle();
+  Parser parser() => nested ? _insideMulti() : _insideSingle();
 
-  Parser inside() => rec(parser).between(left, right);
-  Parser get leftOrRightAhead => (left | right).lookAhead;
-  Parser insideMulti() => anyChar.skipManyUntil(leftOrRightAhead) > nest();
-  Parser nest() => (rec(inside) > rec(insideMulti)).maybe;
-  Parser insideSingle() => anyChar.skipManyUntil(right.lookAhead);
+  Parser _inside() => rec(parser).between(left, right);
+  Parser get _leftOrRightAhead => (left | right).lookAhead;
+  Parser _insideMulti() => anyChar.skipManyUntil(_leftOrRightAhead) > _nest();
+  Parser _nest() => (rec(_inside) > rec(_insideMulti)).maybe;
+  Parser _insideSingle() => anyChar.skipManyUntil(right.lookAhead);
 }
 
 Parser skipEverythingBetween(
@@ -690,7 +694,7 @@ class LanguageParsers {
   Parser<String> get dot   => symbol('.') % 'dot';
 
   Parser<String> get _ident =>
-      success((c) => (cs) => _consStr(c)(cs.join()))
+      success((c) => (cs) => "$c${cs.join()}")
       * _identStart
       * _identLetter.many;
 

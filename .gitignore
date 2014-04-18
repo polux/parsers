@@ -6,3 +6,5 @@ test/src/packages
 tool/packages
 doc/out
 doc/gen
+doc/tutorial/bin/packages
+.idea/

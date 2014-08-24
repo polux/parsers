@@ -232,6 +232,19 @@ class Parser<A> {
   }
 
   /**
+   * The parser p.probe behaves like parser p, except that it pretends that it hasn't consumed any input when an error
+   * occurs.
+   */
+  Parser<A> get probe {
+    return new Parser((s, pos) {
+      ParseResult res = _run(s, pos);
+      return res.isSuccess
+        ? res
+        : _success(null, s, pos);
+    });
+  }
+
+  /**
    * Parses without consuming any input.
    *
    * Used for defining followedBy, which is probably what you're looking for.

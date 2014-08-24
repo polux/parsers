@@ -123,6 +123,12 @@ main() {
   test('notFollowedBy 2', () =>
       expect(let.run('letaa'), isFailure('aa')));
 
+  test('probe 1', () =>
+      expect((char('a').probe + char('b') ^ (a, b) => [a, b]).run('abc'), isSuccess(['a', 'b'], 'c')));
+
+  test('probe 2', () =>
+      expect((char('a').probe + char('b') ^ (a, b) => [a, b]).run('bca'), isSuccess([null, 'b'], 'ca')));
+
   many1Prop(f) => expect(f(char('a')).run(''), isSuccess([], ''));
 
   test('many 1 model', () => many1Prop(manyModel));

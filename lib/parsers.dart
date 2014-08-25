@@ -119,7 +119,7 @@ class ParseResult<A> {
         : 'failure$c: {message: $errorMessage, rest: "$_shortRest"}';
   }
 
-  static StringBuffer _humanOr(List es) {
+  static String _humanOr(List es) {
     assert(es.length > 0);
     if (es.length == 1) {
       return es[0];
@@ -129,7 +129,7 @@ class ParseResult<A> {
         result.write('${es[i]}, ');
       }
       result.write('${es[es.length - 2]} or ${es[es.length - 1]}');
-      return result;
+      return result.toString();
     }
   }
 }

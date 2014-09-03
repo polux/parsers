@@ -80,7 +80,7 @@ class ParseResult<A> {
   ParseResult(this.text, this.expectations, this.position, this.isSuccess,
               this.isCommitted, this.value);
 
-  ParseResult copy({String text, Expectations expectations, int position,
+  ParseResult copy({String text, Expectations expectations, Position position,
                     bool isSuccess, bool isCommitted,
                     Object value: const Undefined()}) {
     return new ParseResult(

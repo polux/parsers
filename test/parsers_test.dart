@@ -281,6 +281,30 @@ main() {
       nestedComments: true,
       reservedNames: ['for', 'in']);
 
+  test('semi 1', () =>
+      expect(lang.semi.run(';rest'), isSuccess(';', 'rest')));
+
+  test('semi 2', () =>
+      expect(lang.semi.run('a'), isFailure('a')));
+
+  test('comma 1', () =>
+      expect(lang.comma.run(',rest'), isSuccess(',', 'rest')));
+
+  test('comma 2', () =>
+      expect(lang.comma.run('a'), isFailure('a')));
+
+  test('colon 1', () =>
+      expect(lang.colon.run(':rest'), isSuccess(':', 'rest')));
+
+  test('colon 2', () =>
+      expect(lang.colon.run('a'), isFailure('a')));
+
+  test('dot 1', () =>
+      expect(lang.dot.run('.rest'), isSuccess('.', 'rest')));
+
+  test('dot 2', () =>
+      expect(lang.dot.run('a'), isFailure('a')));
+
   test('identifier 1', () =>
       expect(lang.identifier.run('BarFoo toto'),
              isSuccess('BarFoo', 'toto')));

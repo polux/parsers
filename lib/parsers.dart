@@ -663,7 +663,6 @@ class LanguageParsers {
   Parser<String> _identStart;
   Parser<String> _identLetter;
   Set<String> _reservedNames;
-  bool _caseSensitive;
 
   ReservedNames _reserved;
 
@@ -812,7 +811,6 @@ class LanguageParsers {
 
   Parser get _start => string(_commentStart);
   Parser get _end => string(_commentEnd);
-  Parser get _notStartNorEnd => (_start | _end).notAhead > anyChar;
 
   Parser get _multiLineComment =>
       skipEverythingBetween(_start, _end, nested: _nestedComments);

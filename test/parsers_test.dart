@@ -1080,7 +1080,6 @@ main() {
   test('commit 57 impl', () => commit57Prop(chainl1Impl));
 
   commit58Prop(f) {
-    t2(x) => (y) => '$x$y';
     plus(x, y) => '$x$y';
     final p = f(char('x') > char('a').committed, success(plus)) > string('b')
             | string('xaxac');
@@ -1091,7 +1090,6 @@ main() {
   test('commit 58 impl', () => commit58Prop(chainl1Impl));
 
   commit59Prop(f) {
-    t2(x) => (y) => '$x$y';
     plus(x, y) => '$x$y';
     final p = f(char('x') > char('a'), success(plus).committed) > string('b')
             | string('xaxac');

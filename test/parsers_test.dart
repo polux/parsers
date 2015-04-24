@@ -440,6 +440,46 @@ main() {
   test('float 3', () =>
       expect(lang.floatLiteral.run('3.14e-5'), isSuccess(0.0000314, '')));
 
+  test('parens 1', () =>
+      expect(lang.parens(string('abc')).run('(abc)rest'),
+             isSuccess('abc', 'rest')));
+
+  test('parens 2', () =>
+      expect(lang.parens(string('abc')).run('abc)'), isFailure('abc)')));
+
+  test('parens 3', () =>
+      expect(lang.parens(string('abc')).run('(abc'), isFailure('')));
+
+  test('braces 1', () =>
+      expect(lang.braces(string('abc')).run('{abc}rest'),
+             isSuccess('abc', 'rest')));
+
+  test('braces 2', () =>
+      expect(lang.braces(string('abc')).run('abc}'), isFailure('abc}')));
+
+  test('braces 3', () =>
+      expect(lang.braces(string('abc')).run('{abc'), isFailure('')));
+
+  test('angles 1', () =>
+      expect(lang.angles(string('abc')).run('<abc>rest'),
+             isSuccess('abc', 'rest')));
+
+  test('angles 2', () =>
+      expect(lang.angles(string('abc')).run('abc>'), isFailure('abc>')));
+
+  test('angles 3', () =>
+      expect(lang.angles(string('abc')).run('<abc'), isFailure('')));
+
+  test('brackets 1', () =>
+      expect(lang.brackets(string('abc')).run('[abc]rest'),
+             isSuccess('abc', 'rest')));
+
+  test('brackets 2', () =>
+      expect(lang.brackets(string('abc')).run('abc]'), isFailure('abc]')));
+
+  test('brackets 3', () =>
+      expect(lang.brackets(string('abc')).run('[abc'), isFailure('')));
+
   test('chainl 1', () =>
       expect(lang.natural.chainl(success((x, y) => x + y), 42).run('1 2 3'),
              isSuccess(6, '')));

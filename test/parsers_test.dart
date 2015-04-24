@@ -17,11 +17,14 @@ _rest(parseResult) => parseResult.text.substring(parseResult.position.offset);
 
 class FailureMatcher extends Matcher {
   String rest;
+
   FailureMatcher(this.rest);
+
   bool matches(ParseResult parseResult, Map matchState) {
     return !parseResult.isSuccess
         && _rest(parseResult) == rest;
   }
+
   Description describe(Description description) =>
     description.add('a parse failure with rest "$rest"');
 }
@@ -29,32 +32,15 @@ class FailureMatcher extends Matcher {
 class SuccessMatcher extends Matcher {
   final Object res;
   final String rest;
-  SuccessMatcher(this.res, this.rest);
 
-  bool _equals(value) {
-    if (res is List) {
-      List list = res;
-      if (value is! List) return false;
-      if (value.length != list.length) return false;
-      bool same = true;
-      for (int i = 0; i < list.length && same; i++) {
-        same = same && list[i] == value[i];
-      }
-      return same;
-    } else if (res is double) {
-      if (value is! double) return false;
-      double d = res;
-      return (d - value).abs() < 0.00001;
-    } else {
-      return res == value;
-    }
-  }
+  SuccessMatcher(this.res, this.rest);
 
   bool matches(ParseResult parseResult, Map matchState) {
     return parseResult.isSuccess
-        && _equals(parseResult.value)
+        && equals(parseResult.value).matches(res, null)
         && parseResult.text.substring(parseResult.position.offset) == rest;
   }
+
   Description describe(Description description) =>
     description.add('a parse success with value $res and rest "$rest"');
 }
@@ -462,7 +448,7 @@ main() {
       expect(lang.floatLiteral.run('3.14e5'), isSuccess(314000.0, '')));
 
   test('float 3', () =>
-      expect(lang.floatLiteral.run('3.14e-5'), isSuccess(0.0000314, '')));
+      expect(lang.floatLiteral.run('3.14e-5'), isSuccess(3.14e-5, '')));
 
   test('parens 1', () =>
       expect(lang.parens(string('abc')).run('(abc)rest'),

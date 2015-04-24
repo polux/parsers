@@ -740,64 +740,69 @@ class LanguageParsers {
       .map((cs) => cs.join())
       % 'string literal';
 
-  Map<String, int> _digitToInt = {
-    '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8,
-    '9': 9, 'a': 10, 'b': 11, 'c': 12, 'd': 13, 'e': 14, 'f': 15, 'A': 10,
-    'B': 11, 'C': 12, 'D': 13, 'E': 14, 'F': 15
-  };
+  final Parser<String> _hexDigit = oneOf("0123456789abcdefABCDEF");
 
-  Parser<int> _number(int base, Parser baseDigit) => baseDigit.many1 >> (ds) {
-    int res = 0;
-    for (final d in ds) { res = base * res + _digitToInt[d]; }
-    return success(res);
-  };
+  final Parser<String> _octalDigit = oneOf("01234567");
 
-  Parser<int> get _zeroNumber =>
-      char('0') > (hexaDecimal | octal | decimal | success(0));
+  Parser<String> get _maybeSign => (char('-') | char('+')).orElse('');
 
-  Parser<int> get _nat => _zeroNumber | decimal;
+  Parser<String> _concat(Parser<List<String>> parsers) =>
+      parsers.map((list) => list.join());
 
-  Parser<int> get _int => lexeme(_sign) * _nat;
+  Parser<String> _concatSum(accum) => _concat(accum.list);
 
-  Parser<Function> get _sign => (char('-') > success((n) => -n))
-                              | (char('+') > success((n) => n))
-                              | success((n) => n);
+  Parser<String> get _decimal => _concat(digit.many1);
 
-  Parser<int> get natural => lexeme(_nat) % 'natural number';
+  Parser<String> get _hexaDecimal =>
+      _concatSum(oneOf("xX") + _concat(_hexDigit.many1));
 
-  Parser<int> get intLiteral => lexeme(_int) % 'integer';
+  Parser<String> get _octal =>
+      _concatSum(oneOf("oO") + _concat(_octalDigit.many1));
 
-  num _power(num e) => e < 0 ? 1.0 / _power(-e) : pow(10, e);
+  Parser<String> get _zeroNumber => _concat(
+      (char('0') + (_hexaDecimal | _octal | _decimal).orElse('')).list);
 
-  Parser<double> get _exponent =>
-      oneOf('eE') > success((f) => (e) => _power(f(e))) * _sign * decimal;
+  Parser<String> get _nat => _zeroNumber | _decimal;
 
-  Parser<double> get _fraction => char('.') > digit.many1 >> (ds) {
-    double res = 0.0;
-    for (int i = ds.length - 1; i >= 0; i--) {
-      res = (res + _digitToInt[ds[i]]) / 10.0;
+  Parser<String> get _int => _concatSum(lexeme(_maybeSign) + _nat);
+
+  Parser<String> get _exponent =>
+      _concatSum(oneOf('eE') + _maybeSign + _concat(digit.many1));
+
+  Parser<String> get _fraction =>
+      _concatSum(char('.') + _concat(digit.many1));
+
+  Parser<String> get _fractExponent =>
+      _concatSum(_fraction + _exponent.orElse('')) | _exponent;
+
+  Parser<String> get _float => _concatSum(decimal + _fractExponent);
+
+  final RegExp _octalPrefix = new RegExp('0[Oo]');
+
+  int parseInt(String str) {
+    if (_octalPrefix.hasMatch(str)) {
+      return int.parse(str.replaceFirst(_octalPrefix, ''), radix: 8);
     }
-    return success(res);
-  };
+    return int.parse(str);
+  }
 
-  Parser<double> _fractExponent(int n) =>
-      (success((fract) => (expo) => (n + fract) * expo)
-          * _fraction
-          * _exponent.orElse(1.0))
-      | _exponent.map((expo) => n * expo);
+  Parser<int> get natural =>
+      lexeme(_nat).map(parseInt) % 'natural number';
+
+  Parser<int> get intLiteral =>
+      lexeme(_int).map(parseInt) % 'integer';
 
   Parser<double> get floatLiteral =>
-      lexeme(decimal >> _fractExponent) % 'float';
+      lexeme(_float).map(double.parse) % 'float';
 
-  Parser<int> get decimal => _number(10, digit) % 'decimal number';
+  Parser<int> get decimal =>
+      lexeme(_decimal).map(int.parse) % 'decimal number';
 
   Parser<int> get hexaDecimal =>
-      (oneOf("xX") > _number(16, oneOf("0123456789abcdefABCDEF")))
-      % 'hexadecimal number';
+      lexeme(_hexaDecimal).map(int.parse) % 'hexadecimal number';
 
   Parser<int> get octal =>
-      (oneOf("oO") > _number(8, oneOf("01234567")))
-      % 'octal number';
+      lexeme(_octal).map(parseInt) % 'octal number';
 
   /**
    * [lexeme] parser for [symb] symbol.

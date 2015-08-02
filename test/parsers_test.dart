@@ -62,6 +62,17 @@ checkList(res, list, rest) {
 }
 
 main() {
+  test('position 1', () =>
+      expect(new Position(1, 1, 1, tabStop: 4).addChar("\t").character, equals(5)));
+  test('position 2', () =>
+      expect(new Position(1, 1, 2, tabStop: 4).addChar("\t").character, equals(5)));
+  test('position 3', () =>
+      expect(new Position(1, 1, 4, tabStop: 4).addChar("\t").character, equals(5)));
+  test('position 4', () =>
+      expect(new Position(1, 1, 5, tabStop: 4).addChar("\t").character, equals(9)));
+  test('position 5', () =>
+      expect(new Position(1, 1, 3).addChar("\t").character, equals(4)));
+
   test('char 1', () =>
       expect(char('a').run('abc'), isSuccess('a', 'bc')));
 

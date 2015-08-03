@@ -1,5 +1,5 @@
 name: parsers
-version: 0.14.3
+version: 0.14.4
 author: Paul Brauner <polux@google.com>
 description: Parser combinators for Dart
 homepage: https://github.com/polux/parsers

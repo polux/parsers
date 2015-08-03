@@ -6,7 +6,6 @@
 library parsers;
 
 import 'package:persistent/persistent.dart';
-import 'dart:math';
 
 part 'src/accumulators.dart';
 
@@ -16,17 +15,29 @@ class Position {
   final int line;
   final int character;
   final int offset;
+  final int tabStop;
 
-  const Position(this.offset, this.line, this.character);
+  const Position(this.offset, this.line, this.character, {this.tabStop: 1});
 
   Position addChar(String c) {
     assert(c.length == 1);
-    final isNewLine = c == '\n';
-    return new Position(
-        offset + 1,
-        line + (isNewLine ? 1 : 0),
-        isNewLine ? 1 : character + 1);
+    if (c == '\n') {
+      return new Position(offset + 1, line + 1, 1, tabStop: tabStop);
+    }
+    if (c == '\t') {
+      int used = (character - 1) % tabStop;
+      return new Position(offset + 1, line, character + (tabStop - used), tabStop: tabStop);
+    }
+    return new Position(offset + 1, line, character + 1, tabStop: tabStop);
   }
+
+  Position copy({int offset, int line, int character, int tabStop}) =>
+    new Position(
+      offset == null ? this.offset : offset,
+      line == null ? this.line : line,
+      character == null ? this.character : character,
+      tabStop: tabStop == null ? this.tabStop : tabStop
+    );
 
   bool operator <(Position p) => offset < p.offset;
 
@@ -158,8 +169,8 @@ class Parser<A> {
   ParseResult run(String s, [Position pos = const Position(0, 1, 1)]) =>
       _run(s, pos);
 
-  A parse(String s) {
-    ParseResult<A> result = run(s);
+  A parse(String s, {int tabStop: 1}) {
+    ParseResult<A> result = run(s, new Position(0, 1, 1, tabStop: tabStop));
     if (result.isSuccess) return result.value;
     else throw result.errorMessage;
   }
@@ -550,7 +561,7 @@ Parser string(String str) {
       update(c);
     }
     if (match) {
-      return _success(str, s, new Position(max, newline, newchar));
+      return _success(str, s, pos.copy(offset: max, line: newline, character: newchar));
     } else {
       return _failure(s, pos, new Expectations.single("'$str'", pos));
     }

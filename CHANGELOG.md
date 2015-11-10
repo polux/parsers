@@ -1,5 +1,9 @@
 # Parsers Changelog
 
+## 0.14.5
+
+- Lazy computation of the error messages (PR #18).
+
 ## 0.14.4
 
 - Support setting the value of a tabstop in position calculation (PR #16).

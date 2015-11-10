@@ -8,3 +8,4 @@ doc/out
 doc/gen
 doc/tutorial/bin/packages
 .idea/
+.packages

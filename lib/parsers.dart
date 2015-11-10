@@ -59,24 +59,49 @@ class PointedValue<A> {
   String toString() => '$value @ $position';
 }
 
-class Expectations {
-  final Set<String> expected;
-  final Position position;
+abstract class Expectations {
+  const Expectations();
 
-  Expectations(this.expected, this.position);
+  factory Expectations.empty(position) => new EmptyExpectation(position);
+  factory Expectations.single(str, position) => new SingleExpectation(str, position);
 
-  factory Expectations.empty(Position pos) =>
-      new Expectations(new Set(), pos);
+  CombinedExpectation best(Expectations other) => new CombinedExpectation(this, other);
 
-  factory Expectations.single(String str, Position pos) =>
-      new Expectations(new Set()..add(str), pos);
+  Position get position;
+  Set<String> get expected;
+}
 
-  Expectations best(Expectations other) {
-    if (position < other.position) return other;
-    if (position > other.position) return this;
-    Set<String> newSet = expected..addAll(other.expected);
-    return new Expectations(newSet, position);
+class EmptyExpectation extends Expectations {
+  final Position _position;
+
+  const EmptyExpectation(this._position);
+
+  Position get position => _position;
+  Set<String> get expected => new Set<String>();
+}
+
+class SingleExpectation extends Expectations {
+  final String _expected;
+  final Position _position;
+
+  SingleExpectation(this._expected, this._position);
+
+  Position get position => _position;
+  Set<String> get expected => new Set<String>.from([_expected]);
+}
+
+class CombinedExpectation extends Expectations {
+  final Expectations first;
+  final Expectations second;
+
+  CombinedExpectation(this.first, this.second);
+
+  Position get position {
+    if (first.position < second.position) return second.position;
+    return first.position;
   }
+
+  Set<String> get expected => first.expected..addAll(second.expected);
 }
 
 class ParseResult<A> {
@@ -114,7 +139,7 @@ class ParseResult<A> {
     if (expected.isEmpty) {
       return '$prelude unexpected $maxSeenChar.';
     } else {
-      final or = _humanOr(new List.from(expected));
+      final or = _humanOr(expected.toList());
       return "$prelude expected $or, got $maxSeenChar.";
     }
   }

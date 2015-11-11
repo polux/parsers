@@ -62,8 +62,10 @@ class PointedValue<A> {
 abstract class Expectations {
   const Expectations();
 
-  factory Expectations.empty(position) => new EmptyExpectation(position);
-  factory Expectations.single(str, position) => new SingleExpectation(str, position);
+  factory Expectations.empty(Position position) =>
+      new EmptyExpectation(position);
+  factory Expectations.single(String str, Position position) =>
+      new SingleExpectation(str, position);
 
   CombinedExpectation best(Expectations other) => new CombinedExpectation(this, other);
 
@@ -115,6 +117,21 @@ class ParseResult<A> {
 
   ParseResult(this.text, this.expectations, this.position, this.isSuccess,
               this.isCommitted, this.value);
+
+  factory ParseResult.success(A value, String text, Position position,
+      [Expectations expectations, bool committed = false]) {
+    final Expectations exps = (expectations != null)
+        ? expectations : new Expectations.empty(position);
+    return new ParseResult(text, exps, position, true, committed, value);
+  }
+
+  factory ParseResult.failure(String text, Position position,
+      [Expectations expectations, bool committed = false]) {
+    final Expectations exps = (expectations != null)
+        ? expectations : new Expectations.empty(position);
+    return new ParseResult(text, exps, position, false, committed, null);
+  }
+
 
   ParseResult copy({String text, Expectations expectations, Position position,
                     bool isSuccess, bool isCommitted,
@@ -168,20 +185,6 @@ class ParseResult<A> {
       return result.toString();
     }
   }
-}
-
-ParseResult _success(value, String text, Position position,
-                     [Expectations expectations, bool committed = false]) {
-  final exps = (expectations != null)
-      ? expectations : new Expectations.empty(position);
-  return new ParseResult(text, exps, position, true, committed, value);
-}
-
-ParseResult _failure(String text, Position position,
-                     [Expectations expectations, bool committed = false]) {
-  final exps = (expectations != null)
-      ? expectations : new Expectations.empty(position);
-  return new ParseResult(text, exps, position, false, committed, null);
 }
 
 typedef ParseResult _ParseFunction(String s, Position pos);
@@ -276,7 +279,7 @@ class Parser<A> {
     return new Parser((s, pos) {
       ParseResult res = _run(s, pos);
       return res.isSuccess
-          ? _success(res.value, s, pos)
+          ? new ParseResult.success(res.value, s, pos)
           : res;
     });
   }
@@ -298,8 +301,8 @@ class Parser<A> {
     return new Parser((s, pos) {
       ParseResult res = _run(s, pos);
       return res.isSuccess
-          ? _failure(s, pos)
-          : _success(null, s, pos);
+          ? new ParseResult.failure(s, pos)
+          : new ParseResult.success(null, s, pos);
     });
   }
 
@@ -411,7 +414,7 @@ class Parser<A> {
         } else if (o.isCommitted) {
           return o.copy(expectations: exps);
         } else {
-          return _success(res, s, index, exps, committed);
+          return new ParseResult.success(res, s, index, exps, committed);
         }
       }
     });
@@ -441,7 +444,7 @@ class Parser<A> {
         } else if (o.isCommitted) {
           return o.copy(expectations: exps);
         } else {
-          return _success(null, s, index, exps, committed);
+          return new ParseResult.success(null, s, index, exps, committed);
         }
       }
     });
@@ -495,7 +498,7 @@ class Parser<A> {
           } else if (res.isCommitted) {
             return res.copy(expectations: exps);
           } else {
-            return _success(acc, s, index, exps, commit);
+            return new ParseResult.success(acc, s, index, exps, commit);
           }
         }
       });
@@ -542,22 +545,23 @@ class Parser<A> {
 
 // Primitive parsers
 
-final Parser fail = new Parser((s, pos) => _failure(s, pos));
+final Parser fail = new Parser((s, pos) => new ParseResult.failure(s, pos));
 
-Parser success(value) => new Parser((s, pos) => _success(value, s, pos));
+Parser success(value) =>
+    new Parser((s, pos) => new ParseResult.success(value, s, pos));
 
 final Parser eof = new Parser((s, pos) =>
     pos.offset >= s.length
-        ? _success(null, s, pos)
-        : _failure(s, pos, new Expectations.single("eof", pos)));
+        ? new ParseResult.success(null, s, pos)
+        : new ParseResult.failure(s, pos, new Expectations.single("eof", pos)));
 
 Parser pred(bool p(String char)) {
   return new Parser((s, pos) {
-    if (pos.offset >= s.length) return _failure(s, pos);
+    if (pos.offset >= s.length) return new ParseResult.failure(s, pos);
     else {
       String c = s[pos.offset];
-      return p(c) ? _success(c, s, pos.addChar(c))
-                  : _failure(s, pos);
+      return p(c) ? new ParseResult.success(c, s, pos.addChar(c))
+                  : new ParseResult.failure(s, pos);
     }
   });
 }
@@ -586,9 +590,9 @@ Parser string(String str) {
       update(c);
     }
     if (match) {
-      return _success(str, s, pos.copy(offset: max, line: newline, character: newchar));
+      return new ParseResult.success(str, s, pos.copy(offset: max, line: newline, character: newchar));
     } else {
-      return _failure(s, pos, new Expectations.single("'$str'", pos));
+      return new ParseResult.failure(s, pos, new Expectations.single("'$str'", pos));
     }
   });
 }
@@ -596,7 +600,7 @@ Parser string(String str) {
 Parser rec(Parser f()) => new Parser((s, pos) => f()._run(s, pos));
 
 final Parser<Position> position =
-    new Parser((s, pos) => _success(pos, s, pos));
+    new Parser((s, pos) => new ParseResult.success(pos, s, pos));
 
 // Derived combinators
 
@@ -613,7 +617,7 @@ Parser choice(List<Parser> ps) {
         return res;
       }
     }
-    return _failure(s, pos, exps);
+    return new ParseResult.failure(s, pos, exps);
   });
 }
 

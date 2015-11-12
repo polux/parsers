@@ -4,6 +4,7 @@
 // Authors:
 //   Paul Brauner (polux@google.com)
 //   Adam Singer (financecoding@gmail.com)
+//   Maxim Dikun (me@dikmax.name)
 
 library parsers_test;
 

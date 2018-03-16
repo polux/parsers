@@ -11,7 +11,9 @@ import 'package:persistent/persistent.dart';
 
 part 'src/accumulators.dart';
 
-class Undefined { const Undefined(); }  // simulates the old ? operator
+class Undefined {
+  const Undefined();
+} // simulates the old ? operator
 
 class Position {
   final int line;
@@ -28,18 +30,18 @@ class Position {
     }
     if (c == '\t') {
       int used = (character - 1) % tabStop;
-      return new Position(offset + 1, line, character + (tabStop - used), tabStop: tabStop);
+      return new Position(offset + 1, line, character + (tabStop - used),
+          tabStop: tabStop);
     }
     return new Position(offset + 1, line, character + 1, tabStop: tabStop);
   }
 
   Position copy({int offset, int line, int character, int tabStop}) =>
-    new Position(
-      offset == null ? this.offset : offset,
-      line == null ? this.line : line,
-      character == null ? this.character : character,
-      tabStop: tabStop == null ? this.tabStop : tabStop
-    );
+      new Position(
+          offset == null ? this.offset : offset,
+          line == null ? this.line : line,
+          character == null ? this.character : character,
+          tabStop: tabStop == null ? this.tabStop : tabStop);
 
   bool operator <(Position p) => offset < p.offset;
 
@@ -69,7 +71,8 @@ abstract class Expectations {
   factory Expectations.single(String str, Position position) =>
       new SingleExpectation(str, position);
 
-  CombinedExpectation best(Expectations other) => new CombinedExpectation(this, other);
+  CombinedExpectation best(Expectations other) =>
+      new CombinedExpectation(this, other);
 
   Position get position;
   Set<String> get expected;
@@ -111,6 +114,7 @@ class CombinedExpectation extends Expectations {
 class ParseResult<A> {
   final bool isSuccess;
   final bool isCommitted;
+
   /// [:null:] if [:!isSuccess:]
   final A value;
   final String text;
@@ -118,19 +122,21 @@ class ParseResult<A> {
   final Expectations expectations;
 
   ParseResult(this.text, this.expectations, this.position, this.isSuccess,
-              this.isCommitted, this.value);
+      this.isCommitted, this.value);
 
   factory ParseResult.success(A value, String text, Position position,
       [Expectations expectations, bool committed = false]) {
     final Expectations exps = (expectations != null)
-        ? expectations : new Expectations.empty(position);
+        ? expectations
+        : new Expectations.empty(position);
     return new ParseResult(text, exps, position, true, committed, value);
   }
 
   factory ParseResult.failure(String text, Position position,
       [Expectations expectations, bool committed = false]) {
     final Expectations exps = (expectations != null)
-        ? expectations : new Expectations.empty(position);
+        ? expectations
+        : new Expectations.empty(position);
     return new ParseResult(text, exps, position, false, committed, null);
   }
 
@@ -138,25 +144,27 @@ class ParseResult<A> {
     return copy(value: f(value));
   }
 
-  ParseResult<B> copy<B>({
-      String text, Expectations expectations, Position position,
-      bool isSuccess, bool isCommitted, Object value: const Undefined()}) {
+  ParseResult<B> copy<B>(
+      {String text,
+      Expectations expectations,
+      Position position,
+      bool isSuccess,
+      bool isCommitted,
+      Object value: const Undefined()}) {
     return new ParseResult(
-        (text != null)               ? text         : this.text,
-        (expectations != null)       ? expectations : this.expectations,
-        (position != null)           ? position     : this.position,
-        (isSuccess != null)          ? isSuccess    : this.isSuccess,
-        (isCommitted != null)        ? isCommitted  : this.isCommitted,
-        (value != const Undefined()) ? value        : this.value);
+        (text != null) ? text : this.text,
+        (expectations != null) ? expectations : this.expectations,
+        (position != null) ? position : this.position,
+        (isSuccess != null) ? isSuccess : this.isSuccess,
+        (isCommitted != null) ? isCommitted : this.isCommitted,
+        (value != const Undefined()) ? value : this.value);
   }
 
   String get errorMessage {
     final pos = expectations.position;
-    final maxSeenChar = (pos.offset < text.length)
-        ? "'${text[pos.offset]}'"
-        : 'eof';
-    final prelude =
-        'line ${pos.line}, character ${pos.character}:';
+    final maxSeenChar =
+        (pos.offset < text.length) ? "'${text[pos.offset]}'" : 'eof';
+    final prelude = 'line ${pos.line}, character ${pos.character}:';
     final expected = expectations.expected;
     if (expected.isEmpty) {
       return '$prelude unexpected $maxSeenChar.';
@@ -204,8 +212,10 @@ class Parser<A> {
 
   A parse(String s, {int tabStop: 1}) {
     ParseResult<A> result = run(s, new Position(0, 1, 1, tabStop: tabStop));
-    if (result.isSuccess) return result.value;
-    else throw result.errorMessage;
+    if (result.isSuccess)
+      return result.value;
+    else
+      throw result.errorMessage;
   }
 
   Parser<B> then<B>(Parser<B> g(A value)) {
@@ -244,10 +254,8 @@ class Parser<A> {
 
   // Assumes that [this] parses a function (i.e., A = B -> C) and applies it
   // to the result of [p].
-  Parser<C> apply<B,C>(Parser<B> p) =>
-      then((f) =>
-          p.then((x) =>
-              success((f as Function)(x))));
+  Parser<C> apply<B, C>(Parser<B> p) =>
+      then((f) => p.then((x) => success((f as Function)(x))));
 
   /// Alias for [apply].
   Parser operator *(Parser p) => apply(p);
@@ -303,9 +311,7 @@ class Parser<A> {
   Parser<A> get lookAhead {
     return new Parser((s, pos) {
       ParseResult res = _run(s, pos);
-      return res.isSuccess
-          ? new ParseResult.success(res.value, s, pos)
-          : res;
+      return res.isSuccess ? new ParseResult.success(res.value, s, pos) : res;
     });
   }
 
@@ -357,12 +363,12 @@ class Parser<A> {
       Position index = pos;
       var exps = new Expectations.empty(pos);
       bool committed = false;
-      while(true) {
+      while (true) {
         final endRes = end._run(s, index);
         exps = exps.best(endRes.expectations);
         if (endRes.isSuccess) {
-          return endRes.copy(value: res, expectations: exps,
-                             isCommitted: committed);
+          return endRes.copy(
+              value: res, expectations: exps, isCommitted: committed);
         } else if (!endRes.isCommitted) {
           final xRes = this._run(s, index);
           exps = exps.best(xRes.expectations);
@@ -392,13 +398,13 @@ class Parser<A> {
       Position index = pos;
       var exps = new Expectations.empty(pos);
       var commit = false;
-      while(true) {
+      while (true) {
         final endRes = end._run(s, index);
         exps = exps.best(endRes.expectations);
         commit = commit || endRes.isCommitted;
         if (endRes.isSuccess) {
-          return endRes.copy(value: null, expectations: exps,
-                             isCommitted: commit);
+          return endRes.copy(
+              value: null, expectations: exps, isCommitted: commit);
         } else if (!endRes.isCommitted) {
           final xRes = this._run(s, index);
           exps = exps.best(xRes.expectations);
@@ -429,7 +435,7 @@ class Parser<A> {
       var exps = new Expectations.empty(pos);
       Position index = pos;
       bool committed = false;
-      while(true) {
+      while (true) {
         ParseResult<A> o = this._run(s, index);
         exps = exps.best(o.expectations);
         committed = committed || o.isCommitted;
@@ -460,7 +466,7 @@ class Parser<A> {
       Position index = pos;
       var exps = new Expectations.empty(pos);
       bool committed = false;
-      while(true) {
+      while (true) {
         ParseResult<A> o = this._run(s, index);
         exps = exps.best(o.expectations);
         committed = committed || o.isCommitted;
@@ -513,7 +519,7 @@ class Parser<A> {
         Position index = pos;
         var exps = new Expectations.empty(pos);
         var commit = false;
-        while(true) {
+        while (true) {
           combine(Function f) => (A x) => f(acc, x);
           final res = success(combine).apply(sep).apply(this)._run(s, index);
           exps = exps.best(res.expectations);
@@ -529,6 +535,7 @@ class Parser<A> {
         }
       });
     }
+
     return then(rest);
   }
 
@@ -538,10 +545,9 @@ class Parser<A> {
 
   /// Warning: may lead to stack overflows.
   Parser<A> chainr1(Parser<Function> sep) {
-    Parser<A> rest(A x) =>
-        success((Function f) => (A y) => f(x, y))
-            .apply(sep)
-            .apply(chainr1(sep))
+    Parser<A> rest(A x) => success((Function f) => (A y) => f(x, y))
+        .apply(sep)
+        .apply(chainr1(sep))
         .or(success(x));
     return then(rest);
   }
@@ -552,13 +558,13 @@ class Parser<A> {
   /// Returns the substring consumed by [this].
   Parser<String> get record {
     return new Parser<String>((s, pos) {
-        final result = run(s, pos);
-        if (result.isSuccess) {
-          return result.copy(
-              value: s.substring(pos.offset, result.position.offset));
-        } else {
-          return result.map((_) => null);
-        }
+      final result = run(s, pos);
+      if (result.isSuccess) {
+        return result.copy(
+            value: s.substring(pos.offset, result.position.offset));
+      } else {
+        return result.map((_) => null);
+      }
     });
   }
 
@@ -580,18 +586,19 @@ final Parser fail = new Parser((s, pos) => new ParseResult.failure(s, pos));
 Parser<A> success<A>(A value) =>
     new Parser((s, pos) => new ParseResult.success(value, s, pos));
 
-final Parser<Null> eof = new Parser<Null>((s, pos) =>
-    pos.offset >= s.length
-        ? new ParseResult.success(null, s, pos)
-        : new ParseResult.failure(s, pos, new Expectations.single("eof", pos)));
+final Parser<Null> eof = new Parser<Null>((s, pos) => pos.offset >= s.length
+    ? new ParseResult.success(null, s, pos)
+    : new ParseResult.failure(s, pos, new Expectations.single("eof", pos)));
 
 Parser<String> pred(bool p(String char)) {
   return new Parser<String>((s, pos) {
-    if (pos.offset >= s.length) return new ParseResult.failure(s, pos);
+    if (pos.offset >= s.length)
+      return new ParseResult.failure(s, pos);
     else {
       String c = s[pos.offset];
-      return p(c) ? new ParseResult.success(c, s, pos.addChar(c))
-                  : new ParseResult.failure(s, pos);
+      return p(c)
+          ? new ParseResult.success(c, s, pos.addChar(c))
+          : new ParseResult.failure(s, pos);
     }
   });
 }
@@ -620,9 +627,11 @@ Parser<String> string(String str) {
       update(c);
     }
     if (match) {
-      return new ParseResult.success(str, s, pos.copy(offset: max, line: newline, character: newchar));
+      return new ParseResult.success(
+          str, s, pos.copy(offset: max, line: newline, character: newchar));
     } else {
-      return new ParseResult.failure(s, pos, new Expectations.single("'$str'", pos));
+      return new ParseResult.failure(
+          s, pos, new Expectations.single("'$str'", pos));
     }
   });
 }
@@ -667,14 +676,14 @@ class _SkipInBetween {
   Parser _insideSingle() => anyChar.skipManyUntil(right.lookAhead);
 }
 
-Parser<Null> skipEverythingBetween(
-    Parser left, Parser right, {bool nested: false}) {
+Parser<Null> skipEverythingBetween(Parser left, Parser right,
+    {bool nested: false}) {
   final inBetween = new _SkipInBetween(left, right, nested).parser();
   return inBetween.between(left, right) > success(null);
 }
 
-Parser<String> everythingBetween(
-    Parser left, Parser right, {bool nested: false}) {
+Parser<String> everythingBetween(Parser left, Parser right,
+    {bool nested: false}) {
   final inBetween = new _SkipInBetween(left, right, nested).parser();
   return inBetween.record.between(left, right);
 }
@@ -717,10 +726,12 @@ final Parser<String> digit = oneOf(_digit) % 'digit';
 class ReservedNames {
   Map<String, Parser<String>> _map;
   ReservedNames._(this._map);
-  Parser<String> operator[](String key) {
+  Parser<String> operator [](String key) {
     final res = _map[key];
-    if (res == null) throw "$key is not a reserved name";
-    else return res;
+    if (res == null)
+      throw "$key is not a reserved name";
+    else
+      return res;
   }
 }
 
@@ -736,15 +747,14 @@ class LanguageParsers {
 
   ReservedNames _reserved;
 
-  LanguageParsers({
-    String         commentStart   : '/*',
-    String         commentEnd     : '*/',
-    String         commentLine    : '//',
-    bool           nestedComments : false,
-    Parser<String> identStart     : null, // letter | char('_')
-    Parser<String> identLetter    : null, // alphanum | char('_')
-    List<String>   reservedNames  : const []
-  }) {
+  LanguageParsers(
+      {String commentStart: '/*',
+      String commentEnd: '*/',
+      String commentLine: '//',
+      bool nestedComments: false,
+      Parser<String> identStart: null, // letter | char('_')
+      Parser<String> identLetter: null, // alphanum | char('_')
+      List<String> reservedNames: const []}) {
     final identStartDefault = letter | char('_');
     final identLetterDefault = alphanum | char('_');
 
@@ -757,21 +767,20 @@ class LanguageParsers {
     _reservedNames = new Set<String>.from(reservedNames);
   }
 
-  Parser<String> get semi  => symbol(';') % 'semicolon';
+  Parser<String> get semi => symbol(';') % 'semicolon';
   Parser<String> get comma => symbol(',') % 'comma';
   Parser<String> get colon => symbol(':') % 'colon';
-  Parser<String> get dot   => symbol('.') % 'dot';
+  Parser<String> get dot => symbol('.') % 'dot';
 
   Parser<String> get _ident =>
       success((String c) => (List<String> cs) => "$c${cs.join()}")
-      .apply(_identStart)
-      .apply(_identLetter.many);
+          .apply(_identStart)
+          .apply(_identLetter.many);
 
   Parser<String> get identifier =>
-      lexeme(
-          _ident.then((name) =>
-             _reservedNames.contains(name) ? fail : success(name)))
-      % 'identifier';
+      lexeme(_ident.then(
+          (name) => _reservedNames.contains(name) ? fail : success(name))) %
+      'identifier';
 
   ReservedNames get reserved {
     if (_reserved == null) {
@@ -784,32 +793,30 @@ class LanguageParsers {
     return _reserved;
   }
 
-  final Parser<String> _escapeCode =
-      (char('a')  > success('\a'))
-    | (char('b')  > success('\b'))
-    | (char('f')  > success('\f'))
-    | (char('n')  > success('\n'))
-    | (char('r')  > success('\r'))
-    | (char('t')  > success('\t'))
-    | (char('v')  > success('\v'))
-    | (char('\\') > success('\\'))
-    | (char('"')  > success('"'))
-    | (char("'")  > success("'"));
+  final Parser<String> _escapeCode = (char('a') > success('\a')) |
+      (char('b') > success('\b')) |
+      (char('f') > success('\f')) |
+      (char('n') > success('\n')) |
+      (char('r') > success('\r')) |
+      (char('t') > success('\t')) |
+      (char('v') > success('\v')) |
+      (char('\\') > success('\\')) |
+      (char('"') > success('"')) |
+      (char("'") > success("'"));
 
-  Parser<String> get _charChar => (char('\\') > _escapeCode)
-                                | pred((c) => c != "'");
+  Parser<String> get _charChar =>
+      (char('\\') > _escapeCode) | pred((c) => c != "'");
 
   Parser<String> get charLiteral =>
-      lexeme(_charChar.between(char("'"), char("'")))
-      % 'character literal';
+      lexeme(_charChar.between(char("'"), char("'"))) % 'character literal';
 
-  Parser<String> get _stringChar => (char('\\') > _escapeCode)
-                                  | pred((c) => c != '"');
+  Parser<String> get _stringChar =>
+      (char('\\') > _escapeCode) | pred((c) => c != '"');
 
   Parser<String> get stringLiteral =>
       lexeme(_stringChar.many.between(char('"'), char('"')))
-      .map((cs) => cs.join())
-      % 'string literal';
+          .map((cs) => cs.join()) %
+      'string literal';
 
   final Parser<String> _hexDigit = oneOf("0123456789abcdefABCDEF");
 
@@ -830,8 +837,8 @@ class LanguageParsers {
   Parser<String> get _octal =>
       _concatSum(oneOf("oO") + _concat(_octalDigit.many1));
 
-  Parser<String> get _zeroNumber => _concat(
-      (char('0') + (_hexaDecimal | _octal | _decimal).orElse('')).list);
+  Parser<String> get _zeroNumber =>
+      _concat((char('0') + (_hexaDecimal | _octal | _decimal).orElse('')).list);
 
   Parser<String> get _nat => _zeroNumber | _decimal;
 
@@ -840,8 +847,7 @@ class LanguageParsers {
   Parser<String> get _exponent =>
       _concatSum(oneOf('eE') + _maybeSign + _concat(digit.many1));
 
-  Parser<String> get _fraction =>
-      _concatSum(char('.') + _concat(digit.many1));
+  Parser<String> get _fraction => _concatSum(char('.') + _concat(digit.many1));
 
   Parser<String> get _fractExponent =>
       _concatSum(_fraction + _exponent.orElse('')) | _exponent;
@@ -857,23 +863,18 @@ class LanguageParsers {
     return int.parse(str);
   }
 
-  Parser<int> get natural =>
-      lexeme(_nat).map(_parseInt) % 'natural number';
+  Parser<int> get natural => lexeme(_nat).map(_parseInt) % 'natural number';
 
-  Parser<int> get intLiteral =>
-      lexeme(_int).map(_parseInt) % 'integer';
+  Parser<int> get intLiteral => lexeme(_int).map(_parseInt) % 'integer';
 
-  Parser<double> get floatLiteral =>
-      lexeme(_float).map(double.parse) % 'float';
+  Parser<double> get floatLiteral => lexeme(_float).map(double.parse) % 'float';
 
-  Parser<int> get decimal =>
-      lexeme(_decimal).map(int.parse) % 'decimal number';
+  Parser<int> get decimal => lexeme(_decimal).map(int.parse) % 'decimal number';
 
   Parser<int> get hexaDecimal =>
       lexeme(_hexaDecimal).map(int.parse) % 'hexadecimal number';
 
-  Parser<int> get octal =>
-      lexeme(_octal).map(_parseInt) % 'octal number';
+  Parser<int> get octal => lexeme(_octal).map(_parseInt) % 'octal number';
 
   /**
    * [lexeme] parser for [symb] symbol.

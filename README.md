@@ -1,7 +1,5 @@
 # Parser Combinators for Dart
 
-[![Build Status](https://drone.io/github.com/polux/parsers/status.png)](https://drone.io/github.com/polux/parsers/latest)
-
 Check out the [user guide](http://polux.github.io/parsers/) 
 (work in progress) and the [API reference](http://polux.github.io/parsers/dartdoc/parsers.html).
 

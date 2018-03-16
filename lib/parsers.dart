@@ -134,10 +134,13 @@ class ParseResult<A> {
     return new ParseResult(text, exps, position, false, committed, null);
   }
 
+  ParseResult<B> map<B>(B f(A value)) {
+    return copy(value: f(value));
+  }
 
-  ParseResult copy({String text, Expectations expectations, Position position,
-                    bool isSuccess, bool isCommitted,
-                    Object value: const Undefined()}) {
+  ParseResult<B> copy<B>({
+      String text, Expectations expectations, Position position,
+      bool isSuccess, bool isCommitted, Object value: const Undefined()}) {
     return new ParseResult(
         (text != null)               ? text         : this.text,
         (expectations != null)       ? expectations : this.expectations,
@@ -150,10 +153,10 @@ class ParseResult<A> {
   String get errorMessage {
     final pos = expectations.position;
     final maxSeenChar = (pos.offset < text.length)
-    ? "'${text[pos.offset]}'"
-    : 'eof';
+        ? "'${text[pos.offset]}'"
+        : 'eof';
     final prelude =
-    'line ${pos.line}, character ${pos.character}:';
+        'line ${pos.line}, character ${pos.character}:';
     final expected = expectations.expected;
     if (expected.isEmpty) {
       return '$prelude unexpected $maxSeenChar.';
@@ -196,7 +199,7 @@ class Parser<A> {
 
   Parser(ParseResult<A> f(String s, Position pos)) : this._run = f;
 
-  ParseResult run(String s, [Position pos = const Position(0, 1, 1)]) =>
+  ParseResult<A> run(String s, [Position pos = const Position(0, 1, 1)]) =>
       _run(s, pos);
 
   A parse(String s, {int tabStop: 1}) {
@@ -205,8 +208,7 @@ class Parser<A> {
     else throw result.errorMessage;
   }
 
-  /// Monadic bind.
-  Parser operator >>(Parser g(A x)) {
+  Parser<B> then<B>(Parser<B> g(A value)) {
     return new Parser((text, pos) {
       ParseResult res = _run(text, pos);
       if (res.isSuccess) {
@@ -220,48 +222,66 @@ class Parser<A> {
     });
   }
 
-  Parser expecting(String expected) {
+  /// Alias for [then].
+  Parser operator >>(Parser g(A x)) => then(g);
+
+  Parser<A> expecting(String expected) {
     return new Parser((s, pos) {
       final res = _run(s, pos);
       return res.copy(expectations: new Expectations.single(expected, pos));
     });
   }
 
-  Parser get committed {
+  /// Alias for [expecting].
+  Parser<A> operator %(String expected) => this.expecting(expected);
+
+  Parser<A> get committed {
     return new Parser((s, pos) {
       final res = _run(s, pos);
       return res.copy(isCommitted: true);
     });
   }
 
-  /// Alias for [:expecting:].
-  Parser<A> operator %(String expected) => this.expecting(expected);
+  // Assumes that [this] parses a function (i.e., A = B -> C) and applies it
+  // to the result of [p].
+  Parser<C> apply<B,C>(Parser<B> p) =>
+      then((f) =>
+          p.then((x) =>
+              success((f as Function)(x))));
 
-  /// Applicative <*>
-  Parser operator *(Parser p) => this >> (f) => p >> (x) {
-    Function ff = f;
-    return success(ff(x));
-  };
+  /// Alias for [apply].
+  Parser operator *(Parser p) => apply(p);
 
-  /// Applicative *>
-  Parser operator >(Parser p) => this >> (_) => p;
+  /// Parses [this] then [p] and returns the result of [p].
+  Parser<B> thenKeep<B>(Parser<B> p) => then((_) => p);
 
-  /// Applicative <*
-  Parser<A> operator <(Parser p) => this >> ((x) => p > success(x));
+  /// Alias for [thenKeep].
+  Parser operator >(Parser p) => thenKeep(p);
 
-  /// Functor map
-  Parser map(Object f(A x)) => success(f) * this;
+  /// Parses [this] then [p] and returns the result of [this].
+  Parser<A> thenDrop<B>(Parser<B> p) =>
+      this.then((x) => p.thenKeep(success(x)));
 
-  /// Infix syntax for map
+  /// Alias for [thenDrop];
+  Parser<A> operator <(Parser p) => thenDrop(p);
+
+  /// Maps [f] over the result of [this].
+  Parser<B> map<B>(B f(A x)) => success(f) * this;
+
+  /// Alias for [map].
   Parser operator ^(Object f(A x)) => map(f);
 
   /// Parser sequencing: creates a parser accumulator.
+  ParserAccumulator2<A, B> and<B>(Parser<B> p) =>
+      new ParserAccumulator2(this, p);
+
+  /// Alias for [and].
   ParserAccumulator2 operator +(Parser p) => new ParserAccumulator2(this, p);
 
-  /// Alternative
-  Parser operator |(Parser p) {
-    return new Parser((s, pos) {
-      ParseResult<A> res = _run(s, pos);
+  /// Alternative.
+  Parser<B> or<B extends A>(Parser<B> p) {
+    return new Parser<B>((s, pos) {
+      ParseResult<B> res = _run(s, pos);
       if (res.isSuccess || res.isCommitted) {
         return res;
       } else {
@@ -271,6 +291,9 @@ class Parser<A> {
       }
     });
   }
+
+  /// Alias for [or].
+  Parser operator |(Parser p) => or(p);
 
   /**
    * Parses without consuming any input.
@@ -288,18 +311,18 @@ class Parser<A> {
 
   /**
    * Succeeds if and only if [this] succeeds and [p] succeeds on what remains to
-   * parse without cosuming it.
+   * parse without consuming it.
    *
    *     string("let").followedBy(space)
    */
-  Parser<A> followedBy(Parser p) => this < p.lookAhead;
+  Parser<A> followedBy(Parser p) => thenDrop(p.lookAhead);
 
   /**
    * Fails if and only if [this] succeeds on what's ahead.
    *
    * Used for defining notFollowedBy, which is probably what you're looking for.
    */
-  Parser get notAhead {
+  Parser<A> get notAhead {
     return new Parser((s, pos) {
       ParseResult res = _run(s, pos);
       return res.isSuccess
@@ -314,7 +337,7 @@ class Parser<A> {
    *
    *     string("let").notFollowedBy(alphanum)
    */
-  Parser<A> notFollowedBy(Parser p) => this < p.notAhead;
+  Parser<A> notFollowedBy(Parser p) => thenDrop(p.notAhead);
 
   /**
    * Parses [this] 0 or more times until [end] succeeds.
@@ -360,12 +383,12 @@ class Parser<A> {
   /**
    * Parses [this] 0 or more times until [end] succeeds and discards the result.
    *
-   * Equivalent to [:this.manyUntil(end) > success(null):] but faster. The input
+   * Equivalent to [this.manyUntil(end) > success(null)] but faster. The input
    * parsed by [end] is consumed. Use [:end.lookAhead:] if you don't want this.
    */
-  Parser skipManyUntil(Parser end) {
+  Parser<Null> skipManyUntil(Parser end) {
     // Imperative version to avoid stack overflows.
-    return new Parser((s, pos) {
+    return new Parser<Null>((s, pos) {
       Position index = pos;
       var exps = new Expectations.empty(pos);
       var commit = false;
@@ -394,7 +417,7 @@ class Parser<A> {
 
   // Derived combinators, defined here for infix notation
 
-  Parser<A> orElse(A value) => this | success(value);
+  Parser<A> orElse(A value) => or(success(value));
 
   Parser<Option<A>> get maybe =>
       this.map((x) => new Option.some(x)).orElse(new Option.none());
@@ -424,16 +447,16 @@ class Parser<A> {
 
   Parser<List<A>> get many => _many(() => []);
 
-  Parser<List<A>> get many1 => this >> (x) => _many(() => [x]);
+  Parser<List<A>> get many1 => then((A x) => _many(() => [x]));
 
   /**
    * Parses [this] zero or more time, skipping its result.
    *
-   * Equivalent to [:this.many > success(null):] but more efficient.
+   * Equivalent to [this.many > success(null)] but more efficient.
    */
-  Parser get skipMany {
+  Parser<Null> get skipMany {
     // Imperative version to avoid stack overflows.
-    return new Parser((s, pos) {
+    return new Parser<Null>((s, pos) {
       Position index = pos;
       var exps = new Expectations.empty(pos);
       bool committed = false;
@@ -455,43 +478,44 @@ class Parser<A> {
   /**
    * Parses [this] one or more time, skipping its result.
    *
-   * Equivalent to [:this.many1 > success(null):] but more efficient.
+   * Equivalent to [this.many1 > success(null)] but more efficient.
    */
-  Parser get skipMany1 => this > this.skipMany;
+  Parser get skipMany1 => thenKeep(this.skipMany);
 
-  Parser<List<A>> sepBy(Parser sep) => sepBy1(sep).orElse([]);
+  Parser<List<A>> sepBy<B>(Parser<B> sep) => sepBy1(sep).orElse([]);
 
-  Parser<List<A>> sepBy1(Parser sep) =>
-      this >> (x) => (sep > this)._many(() => [x]);
+  Parser<List<A>> sepBy1<B>(Parser<B> sep) =>
+      then((x) => (sep.thenKeep(this))._many(() => [x]));
 
-  Parser<List<A>> endBy(Parser sep) => (this < sep).many;
+  Parser<List<A>> endBy<B>(Parser<B> sep) => thenDrop(sep).many;
 
-  Parser<List<A>> endBy1(Parser sep) => (this < sep).many1;
+  Parser<List<A>> endBy1<B>(Parser<B> sep) => thenDrop(sep).many1;
 
   /**
    * Parses zero or more occurences of [this] separated and optionally ended
    * by [sep].
    */
-  Parser<List<A>> sepEndBy(Parser sep) => sepEndBy1(sep).orElse([]);
+  Parser<List<A>> sepEndBy<B>(Parser<B> sep) => sepEndBy1(sep).orElse([]);
 
   /**
    * Parses one or more occurences of [this] separated and optionally ended
    * by [sep].
    */
-  Parser<List<A>> sepEndBy1(Parser sep) => sepBy1(sep) < sep.maybe;
+  Parser<List<A>> sepEndBy1<B>(Parser<B> sep) =>
+      sepBy1(sep).thenDrop(sep.maybe);
 
-  Parser chainl(Parser sep, defaultValue) =>
-      chainl1(sep) | success(defaultValue);
+  Parser<A> chainl(Parser<Function> sep, A defaultValue) =>
+      chainl1(sep).or(success(defaultValue));
 
-  Parser chainl1(Parser sep) {
-    rest(acc) {
-      return new Parser((s, pos) {
+  Parser<A> chainl1(Parser<Function> sep) {
+    Parser<A> rest(A acc) {
+      return new Parser<A>((s, pos) {
         Position index = pos;
         var exps = new Expectations.empty(pos);
         var commit = false;
         while(true) {
-          combine(f) => (x) => f(acc, x);
-          final res = (success(combine) * sep * this)._run(s, index);
+          combine(Function f) => (A x) => f(acc, x);
+          final res = success(combine).apply(sep).apply(this)._run(s, index);
           exps = exps.best(res.expectations);
           commit = commit || res.isCommitted;
           if (res.isSuccess) {
@@ -505,31 +529,35 @@ class Parser<A> {
         }
       });
     }
-    return this >> rest;
+    return then(rest);
   }
 
   /// Warning: may lead to stack overflows.
-  Parser chainr(Parser sep, defaultValue) =>
-      chainr1(sep) | success(defaultValue);
+  Parser<A> chainr(Parser<Function> sep, A defaultValue) =>
+      chainr1(sep).or(success(defaultValue));
 
   /// Warning: may lead to stack overflows.
-  Parser chainr1(Parser sep) {
-    rest(x) => success((f) => (y) => f(x, y)) * sep * chainr1(sep)
-             | success(x);
-    return this >> rest;
+  Parser<A> chainr1(Parser<Function> sep) {
+    Parser<A> rest(A x) =>
+        success((Function f) => (A y) => f(x, y))
+            .apply(sep)
+            .apply(chainr1(sep))
+        .or(success(x));
+    return then(rest);
   }
 
-  Parser<A> between(Parser left, Parser right) => left > (this < right);
+  Parser<A> between(Parser left, Parser right) =>
+      left.thenKeep(this.thenDrop(right));
 
   /// Returns the substring consumed by [this].
   Parser<String> get record {
-    return new Parser((s, pos) {
+    return new Parser<String>((s, pos) {
         final result = run(s, pos);
         if (result.isSuccess) {
           return result.copy(
               value: s.substring(pos.offset, result.position.offset));
         } else {
-          return result;
+          return result.map((_) => null);
         }
     });
   }
@@ -549,16 +577,16 @@ class Parser<A> {
 
 final Parser fail = new Parser((s, pos) => new ParseResult.failure(s, pos));
 
-Parser success(value) =>
+Parser<A> success<A>(A value) =>
     new Parser((s, pos) => new ParseResult.success(value, s, pos));
 
-final Parser eof = new Parser((s, pos) =>
+final Parser<Null> eof = new Parser<Null>((s, pos) =>
     pos.offset >= s.length
         ? new ParseResult.success(null, s, pos)
         : new ParseResult.failure(s, pos, new Expectations.single("eof", pos)));
 
-Parser pred(bool p(String char)) {
-  return new Parser((s, pos) {
+Parser<String> pred(bool p(String char)) {
+  return new Parser<String>((s, pos) {
     if (pos.offset >= s.length) return new ParseResult.failure(s, pos);
     else {
       String c = s[pos.offset];
@@ -568,11 +596,11 @@ Parser pred(bool p(String char)) {
   });
 }
 
-Parser char(String chr) => pred((c) => c == chr) % "'$chr'";
+Parser<String> char(String chr) => pred((String c) => c == chr) % "'$chr'";
 
-Parser string(String str) {
+Parser<String> string(String str) {
   // Primitive version for efficiency
-  return new Parser((s, pos) {
+  return new Parser<String>((s, pos) {
     final int offset = pos.offset;
     final int max = offset + str.length;
 
@@ -599,14 +627,14 @@ Parser string(String str) {
   });
 }
 
-Parser rec(Parser f()) => new Parser((s, pos) => f()._run(s, pos));
+Parser<A> rec<A>(Parser<A> f()) => new Parser<A>((s, pos) => f()._run(s, pos));
 
 final Parser<Position> position =
     new Parser((s, pos) => new ParseResult.success(pos, s, pos));
 
 // Derived combinators
 
-Parser choice(List<Parser> ps) {
+Parser<A> choice<A>(List<Parser<A>> ps) {
   // Imperative version for efficiency
   return new Parser((s, pos) {
     var exps = new Expectations.empty(pos);
@@ -639,13 +667,13 @@ class _SkipInBetween {
   Parser _insideSingle() => anyChar.skipManyUntil(right.lookAhead);
 }
 
-Parser skipEverythingBetween(
+Parser<Null> skipEverythingBetween(
     Parser left, Parser right, {bool nested: false}) {
   final inBetween = new _SkipInBetween(left, right, nested).parser();
   return inBetween.between(left, right) > success(null);
 }
 
-Parser everythingBetween(
+Parser<String> everythingBetween(
     Parser left, Parser right, {bool nested: false}) {
   final inBetween = new _SkipInBetween(left, right, nested).parser();
   return inBetween.record.between(left, right);
@@ -735,13 +763,14 @@ class LanguageParsers {
   Parser<String> get dot   => symbol('.') % 'dot';
 
   Parser<String> get _ident =>
-      success((c) => (cs) => "$c${cs.join()}")
-      * _identStart
-      * _identLetter.many;
+      success((String c) => (List<String> cs) => "$c${cs.join()}")
+      .apply(_identStart)
+      .apply(_identLetter.many);
 
   Parser<String> get identifier =>
-      lexeme(_ident >> (name) =>
-             _reservedNames.contains(name) ? fail : success(name))
+      lexeme(
+          _ident.then((name) =>
+             _reservedNames.contains(name) ? fail : success(name)))
       % 'identifier';
 
   ReservedNames get reserved {
@@ -821,7 +850,7 @@ class LanguageParsers {
 
   final RegExp _octalPrefix = new RegExp('0[Oo]');
 
-  int parseInt(String str) {
+  int _parseInt(String str) {
     if (_octalPrefix.hasMatch(str)) {
       return int.parse(str.replaceFirst(_octalPrefix, ''), radix: 8);
     }
@@ -829,10 +858,10 @@ class LanguageParsers {
   }
 
   Parser<int> get natural =>
-      lexeme(_nat).map(parseInt) % 'natural number';
+      lexeme(_nat).map(_parseInt) % 'natural number';
 
   Parser<int> get intLiteral =>
-      lexeme(_int).map(parseInt) % 'integer';
+      lexeme(_int).map(_parseInt) % 'integer';
 
   Parser<double> get floatLiteral =>
       lexeme(_float).map(double.parse) % 'float';
@@ -844,7 +873,7 @@ class LanguageParsers {
       lexeme(_hexaDecimal).map(int.parse) % 'hexadecimal number';
 
   Parser<int> get octal =>
-      lexeme(_octal).map(parseInt) % 'octal number';
+      lexeme(_octal).map(_parseInt) % 'octal number';
 
   /**
    * [lexeme] parser for [symb] symbol.
@@ -854,10 +883,10 @@ class LanguageParsers {
   /**
    * Parser combinator which skips whitespaces from the right side.
    */
-  Parser lexeme(Parser p) => p < whiteSpace;
+  Parser<A> lexeme<A>(Parser<A> p) => p < whiteSpace;
 
-  Parser get _start => string(_commentStart);
-  Parser get _end => string(_commentEnd);
+  Parser<String> get _start => string(_commentStart);
+  Parser<String> get _end => string(_commentEnd);
 
   Parser get _multiLineComment =>
       skipEverythingBetween(_start, _end, nested: _nestedComments);
@@ -879,11 +908,11 @@ class LanguageParsers {
     }
   }
 
-  Parser parens(Parser p) => p.between(symbol('('), symbol(')'));
+  Parser<A> parens<A>(Parser<A> p) => p.between(symbol('('), symbol(')'));
 
-  Parser braces(Parser p) => p.between(symbol('{'), symbol('}'));
+  Parser<A> braces<A>(Parser<A> p) => p.between(symbol('{'), symbol('}'));
 
-  Parser angles(Parser p) => p.between(symbol('<'), symbol('>'));
+  Parser<A> angles<A>(Parser<A> p) => p.between(symbol('<'), symbol('>'));
 
-  Parser brackets(Parser p) => p.between(symbol('['), symbol(']'));
+  Parser<A> brackets<A>(Parser<A> p) => p.between(symbol('['), symbol(']'));
 }

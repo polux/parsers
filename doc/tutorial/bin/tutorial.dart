@@ -30,7 +30,7 @@ mapping1() {
 }
 
 mapping2() {
-  Parser<int> p = (string('1') | string('2') | string('3')) ^ int.parse;
+  Parser<int> p = string('1').or(string('2')).or(string('3')) ^ int.parse;
   assert(p.parse('1') == 1);
   assert(p.parse('2') == 2);
   assert(p.parse('3') == 3);

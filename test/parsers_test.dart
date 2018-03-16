@@ -21,8 +21,9 @@ class FailureMatcher extends Matcher {
 
   FailureMatcher(this.rest);
 
-  bool matches(ParseResult parseResult, Map matchState) {
-    return !parseResult.isSuccess
+  bool matches(parseResult, Map matchState) {
+    return parseResult is ParseResult
+        && !parseResult.isSuccess
         && _rest(parseResult) == rest;
   }
 
@@ -36,8 +37,9 @@ class SuccessMatcher extends Matcher {
 
   SuccessMatcher(this.res, this.rest);
 
-  bool matches(ParseResult parseResult, Map matchState) {
-    return parseResult.isSuccess
+  bool matches(parseResult, Map matchState) {
+    return parseResult is ParseResult
+        && parseResult.isSuccess
         && equals(parseResult.value).matches(res, null)
         && parseResult.text.substring(parseResult.position.offset) == rest;
   }

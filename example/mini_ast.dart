@@ -81,28 +81,25 @@ class FieldDeclaration {
   String toString() => "FieldDeclaration($type, $name, $doc)";
 }
 
-NamespaceDeclaration namespaceDeclarationMapping(
-    List<String> doc, _, String name, List body, __) =>
+NamespaceDeclaration namespaceDeclarationMapping(doc, _, name, body, __) =>
   new NamespaceDeclaration(name, body, doc);
 
-InterfaceDeclaration interfaceDeclarationMapping(
-    List<String> doc, _, String name, List body, __) =>
+InterfaceDeclaration interfaceDeclarationMapping(doc, _, name, body, __) =>
   new InterfaceDeclaration(name, body, doc);
 
 MethodDeclaration methodDeclarationRegularMapping(
-    List<String> doc, TypeAppl returnType, String name, List parameters, _) =>
+    doc, returnType, name, parameters, _) =>
   new MethodDeclaration(returnType, name, parameters, doc);
 
 MethodDeclaration methodDeclarationReservedMapping(
-    List<String> doc, String returnType, String name, List parameters, _) =>
+    doc, returnType, name, parameters, _) =>
   new MethodDeclaration(new TypeAppl(returnType, null), name, parameters, doc);
 
 DictionaryDeclaration dictionaryDeclarationMapping(
-    List<String> doc, _, String name, List body, __) =>
+    doc, _, name, body, __) =>
   new DictionaryDeclaration(name, body, doc);
 
-FieldDeclaration fieldDeclarationMapping(
-    List<String> doc, TypeAppl type, String name, _) =>
+FieldDeclaration fieldDeclarationMapping(doc, type, name, _) =>
   new FieldDeclaration(type, name, doc);
 
 class DataCoreParser extends LanguageParsers {

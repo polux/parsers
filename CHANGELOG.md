@@ -1,5 +1,10 @@
 # Parsers Changelog
 
+## 1.0.0
+
+- Make strong mode and dart 2 compatible.
+- Introduce non-infix generic methods for all the infix operators.
+
 ## 0.14.5
 
 - Lazy computation of the error messages (PR #18).

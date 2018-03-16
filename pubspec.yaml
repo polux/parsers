@@ -1,7 +1,9 @@
 name: parsers
 version: 1.0.0
 author: Paul Brauner <polux@google.com>
-description: Parser combinators for Dart
+description: >
+  Parser combinators for Dart. Parser combinators let you write complex parsers
+   by combining smaller, less complex parsers.
 homepage: https://github.com/polux/parsers
 documentation: http://goo.gl/ZNqdEH
 environment:

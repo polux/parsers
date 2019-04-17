@@ -7,9 +7,55 @@
 
 library parsers;
 
-import 'package:persistent/persistent.dart';
-
 part 'src/accumulators.dart';
+
+class Option<T> {
+  final T _value;
+  final bool isDefined;
+
+  const Option._internal(this.isDefined, this._value);
+
+  factory Option.none() => const Option._internal(false, null);
+
+  factory Option.some(T value) => new Option._internal(true, value);
+
+  factory Option.fromNullable(T nullableValue) => nullableValue == null
+      ? new Option.none()
+      : new Option.some(nullableValue);
+
+  T get value {
+    if (isDefined) return _value;
+    throw new StateError('Option.none() has no value');
+  }
+
+  T get asNullable => isDefined ? _value : null;
+
+  T orElse(T defaultValue) => isDefined ? _value : defaultValue;
+
+  T orElseCompute(T defaultValue()) => isDefined ? _value : defaultValue();
+
+  /// [:forall U, Option<U> map(U f(T value)):]
+  Option map(f(T value)) => isDefined ? new Option.some(f(_value)) : this;
+
+  /// [:forall U, Option<U> map(Option<U> f(T value)):]
+  Option expand(Option f(T value)) => isDefined ? f(_value) : this;
+
+  /// Precondition: [:this is Option<Option>:]
+  Option get flattened {
+    // enforces the precondition in checked mode
+    final self = this as Option<Option>;
+    return self.orElse(new Option.none());
+  }
+
+  bool operator ==(Object other) =>
+      other is Option<T> &&
+      ((isDefined && other.isDefined && _value == other._value) ||
+          (!isDefined && !other.isDefined));
+
+  int get hashCode => asNullable.hashCode;
+
+  String toString() => isDefined ? "Option.some($_value)" : "Option.none()";
+}
 
 class Undefined {
   const Undefined();
@@ -157,7 +203,7 @@ class ParseResult<A> {
         (position != null) ? position : this.position,
         (isSuccess != null) ? isSuccess : this.isSuccess,
         (isCommitted != null) ? isCommitted : this.isCommitted,
-        (value != const Undefined()) ? value : this.value);
+        ((value != const Undefined()) ? value : this.value) as B);
   }
 
   String get errorMessage {
@@ -188,7 +234,7 @@ class ParseResult<A> {
   static String _humanOr(List es) {
     assert(es.length > 0);
     if (es.length == 1) {
-      return es[0];
+      return es[0] as String;
     } else {
       StringBuffer result = new StringBuffer();
       for (int i = 0; i < es.length - 2; i++) {
@@ -208,7 +254,7 @@ class Parser<A> {
   Parser(ParseResult<A> f(String s, Position pos)) : this._run = f;
 
   ParseResult<A> run(String s, [Position pos = const Position(0, 1, 1)]) =>
-      _run(s, pos);
+      _run(s, pos) as ParseResult<A>;
 
   A parse(String s, {int tabStop: 1}) {
     ParseResult<A> result = run(s, new Position(0, 1, 1, tabStop: tabStop));
@@ -222,12 +268,12 @@ class Parser<A> {
     return new Parser((text, pos) {
       ParseResult res = _run(text, pos);
       if (res.isSuccess) {
-        final res2 = g(res.value)._run(text, res.position);
+        final res2 = g(res.value as A)._run(text, res.position);
         return res2.copy(
             expectations: res.expectations.best(res2.expectations),
             isCommitted: res.isCommitted || res2.isCommitted);
       } else {
-        return res;
+        return res as ParseResult<B>;
       }
     });
   }
@@ -255,7 +301,7 @@ class Parser<A> {
   // Assumes that [this] parses a function (i.e., A = B -> C) and applies it
   // to the result of [p].
   Parser<C> apply<B, C>(Parser<B> p) =>
-      then((f) => p.then((x) => success((f as Function)(x))));
+      then((f) => p.then((x) => success((f as Function)(x) as C)));
 
   /// Alias for [apply].
   Parser operator *(Parser p) => apply(p);
@@ -274,7 +320,7 @@ class Parser<A> {
   Parser<A> operator <(Parser p) => thenDrop(p);
 
   /// Maps [f] over the result of [this].
-  Parser<B> map<B>(B f(A x)) => success(f) * this;
+  Parser<B> map<B>(B f(A x)) => (success(f) * this) as Parser<B>;
 
   /// Alias for [map].
   Parser operator ^(Object f(A x)) => map(f);
@@ -289,7 +335,7 @@ class Parser<A> {
   /// Alternative.
   Parser<B> or<B extends A>(Parser<B> p) {
     return new Parser<B>((s, pos) {
-      ParseResult<B> res = _run(s, pos);
+      ParseResult<B> res = _run(s, pos) as ParseResult<B>;
       if (res.isSuccess || res.isCommitted) {
         return res;
       } else {
@@ -301,7 +347,7 @@ class Parser<A> {
   }
 
   /// Alias for [or].
-  Parser operator |(Parser p) => or(p);
+  Parser<A> operator |(Parser p) => or(p as Parser<A>);
 
   /**
    * Parses without consuming any input.
@@ -311,7 +357,8 @@ class Parser<A> {
   Parser<A> get lookAhead {
     return new Parser((s, pos) {
       ParseResult res = _run(s, pos);
-      return res.isSuccess ? new ParseResult.success(res.value, s, pos) : res;
+      return (res.isSuccess ? new ParseResult.success(res.value, s, pos) : res)
+          as ParseResult<A>;
     });
   }
 
@@ -436,7 +483,7 @@ class Parser<A> {
       Position index = pos;
       bool committed = false;
       while (true) {
-        ParseResult<A> o = this._run(s, index);
+        ParseResult<A> o = this._run(s, index) as ParseResult<A>;
         exps = exps.best(o.expectations);
         committed = committed || o.isCommitted;
         if (o.isSuccess) {
@@ -467,7 +514,7 @@ class Parser<A> {
       var exps = new Expectations.empty(pos);
       bool committed = false;
       while (true) {
-        ParseResult<A> o = this._run(s, index);
+        ParseResult<A> o = this._run(s, index) as ParseResult<A>;
         exps = exps.best(o.expectations);
         committed = committed || o.isCommitted;
         if (o.isSuccess) {
@@ -525,7 +572,7 @@ class Parser<A> {
           exps = exps.best(res.expectations);
           commit = commit || res.isCommitted;
           if (res.isSuccess) {
-            acc = res.value;
+            acc = res.value as A;
             index = res.position;
           } else if (res.isCommitted) {
             return res.copy(expectations: exps);
@@ -574,7 +621,8 @@ class Parser<A> {
    */
   Parser<PointedValue<A>> get withPosition {
     return new Parser((s, pos) {
-      return this.map((v) => new PointedValue(v, pos))._run(s, pos);
+      return (this.map((v) => new PointedValue(v, pos))._run(s, pos))
+          as ParseResult<PointedValue<A>>;
     });
   }
 }
@@ -636,7 +684,8 @@ Parser<String> string(String str) {
   });
 }
 
-Parser<A> rec<A>(Parser<A> f()) => new Parser<A>((s, pos) => f()._run(s, pos));
+Parser<A> rec<A>(Parser<A> f()) =>
+    new Parser<A>((s, pos) => f()._run(s, pos) as ParseResult<A>);
 
 final Parser<Position> position =
     new Parser((s, pos) => new ParseResult.success(pos, s, pos));
@@ -653,7 +702,7 @@ Parser<A> choice<A>(List<Parser<A>> ps) {
       if (res.isSuccess) {
         return res.copy(expectations: exps);
       } else if (res.isCommitted) {
-        return res;
+        return res as ParseResult<A>;
       }
     }
     return new ParseResult.failure(s, pos, exps);
@@ -679,7 +728,7 @@ class _SkipInBetween {
 Parser<Null> skipEverythingBetween(Parser left, Parser right,
     {bool nested: false}) {
   final inBetween = new _SkipInBetween(left, right, nested).parser();
-  return inBetween.between(left, right) > success(null);
+  return (inBetween.between(left, right) > success(null)) as Parser<Null>;
 }
 
 Parser<String> everythingBetween(Parser left, Parser right,
@@ -762,8 +811,10 @@ class LanguageParsers {
     _commentEnd = commentEnd;
     _commentLine = commentLine;
     _nestedComments = nestedComments;
-    _identStart = (identStart == null) ? identStartDefault : identStart;
-    _identLetter = (identLetter == null) ? identLetterDefault : identLetter;
+    _identStart = ((identStart == null) ? identStartDefault : identStart)
+        as Parser<String>;
+    _identLetter = ((identLetter == null) ? identLetterDefault : identLetter)
+        as Parser<String>;
     _reservedNames = new Set<String>.from(reservedNames);
   }
 
@@ -778,8 +829,11 @@ class LanguageParsers {
           .apply(_identLetter.many);
 
   Parser<String> get identifier =>
-      lexeme(_ident.then(
-          (name) => _reservedNames.contains(name) ? fail : success(name))) %
+      (lexeme(
+        _ident.then(
+          (name) => _reservedNames.contains(name) ? fail : success(name),
+        ),
+      ) as Parser<String>) %
       'identifier';
 
   ReservedNames get reserved {
@@ -793,7 +847,7 @@ class LanguageParsers {
     return _reserved;
   }
 
-  final Parser<String> _escapeCode = (char('a') > success('\a')) |
+  final Parser<String> _escapeCode = ((char('a') > success('\a')) |
       (char('b') > success('\b')) |
       (char('f') > success('\f')) |
       (char('n') > success('\n')) |
@@ -802,16 +856,16 @@ class LanguageParsers {
       (char('v') > success('\v')) |
       (char('\\') > success('\\')) |
       (char('"') > success('"')) |
-      (char("'") > success("'"));
+      (char("'") > success("'"))) as Parser<String>;
 
   Parser<String> get _charChar =>
-      (char('\\') > _escapeCode) | pred((c) => c != "'");
+      (char('\\') > _escapeCode) | pred((c) => c != "'") as Parser<String>;
 
   Parser<String> get charLiteral =>
       lexeme(_charChar.between(char("'"), char("'"))) % 'character literal';
 
   Parser<String> get _stringChar =>
-      (char('\\') > _escapeCode) | pred((c) => c != '"');
+      (char('\\') > _escapeCode) | pred((c) => c != '"') as Parser<String>;
 
   Parser<String> get stringLiteral =>
       lexeme(_stringChar.many.between(char('"'), char('"')))
@@ -822,12 +876,14 @@ class LanguageParsers {
 
   final Parser<String> _octalDigit = oneOf("01234567");
 
-  Parser<String> get _maybeSign => (char('-') | char('+')).orElse('');
+  Parser<String> get _maybeSign =>
+      (char('-') | char('+')).orElse('') as Parser<String>;
 
   Parser<String> _concat(Parser<List<String>> parsers) =>
       parsers.map((list) => list.join());
 
-  Parser<String> _concatSum(accum) => _concat(accum.list);
+  Parser<String> _concatSum(accum) =>
+      _concat(accum.list as Parser<List<String>>);
 
   Parser<String> get _decimal => _concat(digit.many1);
 
@@ -838,9 +894,10 @@ class LanguageParsers {
       _concatSum(oneOf("oO") + _concat(_octalDigit.many1));
 
   Parser<String> get _zeroNumber =>
-      _concat((char('0') + (_hexaDecimal | _octal | _decimal).orElse('')).list);
+      _concat((char('0') + (_hexaDecimal | _octal | _decimal).orElse('')).list
+          as Parser<List<String>>);
 
-  Parser<String> get _nat => _zeroNumber | _decimal;
+  Parser<String> get _nat => (_zeroNumber | _decimal) as Parser<String>;
 
   Parser<String> get _int => _concatSum(lexeme(_maybeSign) + _nat);
 
@@ -850,7 +907,8 @@ class LanguageParsers {
   Parser<String> get _fraction => _concatSum(char('.') + _concat(digit.many1));
 
   Parser<String> get _fractExponent =>
-      _concatSum(_fraction + _exponent.orElse('')) | _exponent;
+      (_concatSum(_fraction + _exponent.orElse('')) | _exponent)
+          as Parser<String>;
 
   Parser<String> get _float => _concatSum(decimal + _fractExponent);
 

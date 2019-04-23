@@ -962,8 +962,11 @@ main() {
 
   commit45Prop(f) {
     t3(x) => (y) => (z) => '$x$y$z';
-    final p = (success(t3) * char('a') * char('b').committed * char('c')) |
-        (success(t3) * char('d') * char('e') * char('f'));
+    final p = (success(t3)
+            .apply(char('a'))
+            .apply(char('b').committed)
+            .apply(char('c'))) |
+        (success(t3).apply(char('d')).apply(char('e')).apply(char('f')));
     return expect(f(p).run('abcabczz'), isSuccess(['abc', 'abc'], 'zz'));
   }
 
@@ -972,8 +975,11 @@ main() {
 
   commit46Prop(f) {
     t3(x) => (y) => (z) => '$x$y$z';
-    final p = (success(t3) * char('a') * char('b').committed * char('c')) |
-        (success(t3) * char('d') * char('e') * char('f'));
+    final p = (success(t3)
+            .apply(char('a'))
+            .apply(char('b').committed)
+            .apply(char('c'))) |
+        (success(t3).apply(char('d')).apply(char('e')).apply(char('f')));
     return expect(
         f(p).run('abcdefabczz'), isSuccess(['abc', 'def', 'abc'], 'zz'));
   }
@@ -983,8 +989,11 @@ main() {
 
   commit47Prop(f) {
     t3(x) => (y) => (z) => '$x$y$z';
-    final p = (success(t3) * char('a') * char('b').committed * char('c')) |
-        (success(t3) * char('a') * char('e') * char('f'));
+    final p = (success(t3)
+            .apply(char('a'))
+            .apply(char('b').committed)
+            .apply(char('c'))) |
+        (success(t3).apply(char('a')).apply(char('e')).apply(char('f')));
     return expect(f(p).run('abcaefzz'), isFailure('efzz'));
   }
 
@@ -1029,8 +1038,11 @@ main() {
 
   commit51Prop(f) {
     t3(x) => (y) => (z) => '$x$y$z';
-    final p = (success(t3) * char('a') * char('b').committed * char('c')) |
-        (success(t3) * char('a') * char('e') * char('f'));
+    final p = (success(t3)
+            .apply(char('a'))
+            .apply(char('b').committed)
+            .apply(char('c'))) |
+        (success(t3).apply(char('a')).apply(char('e')).apply(char('f')));
     return expect(
         f(p, char('z')).run('abcabczz'), isSuccess(['abc', 'abc'], 'z'));
   }
@@ -1050,8 +1062,11 @@ main() {
 
   commit52Prop(f) {
     t3(x) => (y) => (z) => '$x$y$z';
-    final p = (success(t3) * char('a') * char('b').committed * char('c')) |
-        (success(t3) * char('d') * char('e') * char('f'));
+    final p = (success(t3)
+            .apply(char('a'))
+            .apply(char('b').committed)
+            .apply(char('c'))) |
+        (success(t3).apply(char('d')).apply(char('e')).apply(char('f')));
     return expect(f(p, char('z')).run('abcdefabczz'),
         isSuccess(['abc', 'def', 'abc'], 'z'));
   }
@@ -1061,8 +1076,11 @@ main() {
 
   commit53Prop(f) {
     t3(x) => (y) => (z) => '$x$y$z';
-    final p = (success(t3) * char('a') * char('b').committed * char('c')) |
-        (success(t3) * char('a') * char('e') * char('f'));
+    final p = (success(t3)
+            .apply(char('a'))
+            .apply(char('b').committed)
+            .apply(char('c'))) |
+        (success(t3).apply(char('a')).apply(char('e')).apply(char('f')));
     return expect(f(p, char('z')).run('abcaefzz'), isFailure('efzz'));
   }
 
@@ -1094,8 +1112,11 @@ main() {
         int.parse(y as String) +
         int.parse(z as String);
     plus(x, y) => x + y;
-    final p = (success(t3) * char('1') * char('2').committed * char('3')) |
-        (success(t3) * char('4') * char('5') * char('6'));
+    final p = (success(t3)
+            .apply(char('1'))
+            .apply(char('2').committed)
+            .apply(char('3'))) |
+        (success(t3).apply(char('4')).apply(char('5')).apply(char('6')));
     return expect(f(p, success(plus)).run('123456123zz'), isSuccess(27, 'zz'));
   }
 
@@ -1108,8 +1129,11 @@ main() {
         int.parse(y as String) +
         int.parse(z as String);
     plus(x, y) => x + y;
-    final p = (success(t3) * char('1') * char('2').committed * char('3')) |
-        (success(t3) * char('1') * char('5') * char('6'));
+    final p = (success(t3)
+            .apply(char('1'))
+            .apply(char('2').committed)
+            .apply(char('3'))) |
+        (success(t3).apply(char('1')).apply(char('5')).apply(char('6')));
     return expect(f(p, success(plus)).run('123156zz'), isFailure('56zz'));
   }
 

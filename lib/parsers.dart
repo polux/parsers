@@ -493,7 +493,8 @@ class Parser<A> {
         var exps = Expectations.empty(pos);
         var commit = false;
         while (true) {
-          combine(Function(A, A) f) => (x) => f(acc, x);
+          // ignore: avoid_types_on_closure_parameters
+          combine(Function(A, A) f) => (A x) => f(acc, x);
           final res = success(combine).apply(sep).apply(this).run(s, index)
               as ParseResult<A>;
           exps = exps.best(res.expectations);
@@ -745,10 +746,9 @@ class LanguageParsers {
   Parser<String> get colon => symbol(':') % 'colon';
   Parser<String> get dot => symbol('.') % 'dot';
 
-  Parser<String> get _ident =>
-      success((c) => (cs) => '$c${cs.join()}')
-          .apply(_identStart)
-          .apply(_identLetter.many);
+  Parser<String> get _ident => success((c) => (cs) => '$c${cs.join()}')
+      .apply(_identStart)
+      .apply(_identLetter.many);
 
   Parser<String> get identifier =>
       (lexeme(

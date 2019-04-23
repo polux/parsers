@@ -266,7 +266,7 @@ class Parser<A> {
   Parser<A> operator <(Parser p) => thenDrop(p);
 
   /// Maps [f] over the result of [this].
-  Parser<B> map<B>(B Function(A x) f) => (success(f) * this) as Parser<B>;
+  Parser<B> map<B>(B Function(A x) f) => (success(f).apply<A, B>(this));
 
   /// Alias for [map].
   Parser operator ^(Object Function(A x) f) => map(f);

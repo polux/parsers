@@ -25,7 +25,7 @@ class Position {
       return Position(offset + 1, line + 1, 1, tabStop: tabStop);
     }
     if (c == '\t') {
-      int used = (character - 1) % tabStop;
+      final used = (character - 1) % tabStop;
       return Position(offset + 1, line, character + (tabStop - used),
           tabStop: tabStop);
     }
@@ -182,7 +182,7 @@ class ParseResult<A> {
     if (es.length == 1) {
       return es[0] as String;
     } else {
-      StringBuffer result = StringBuffer();
+      final result = StringBuffer();
       for (int i = 0; i < es.length - 2; i++) {
         result.write('${es[i]}, ');
       }
@@ -203,7 +203,7 @@ class Parser<A> {
       _run(s, pos);
 
   A parse(String s, {int tabStop = 1}) {
-    ParseResult<A> result = run(s, Position(0, 1, 1, tabStop: tabStop));
+    final result = run(s, Position(0, 1, 1, tabStop: tabStop));
     if (result.isSuccess)
       return result.value;
     else
@@ -342,7 +342,7 @@ class Parser<A> {
   Parser<List<A>> manyUntil(Parser end) {
     // Imperative version to avoid stack overflows.
     return Parser((s, pos) {
-      List<A> res = [];
+      final List<A> res = [];
       Position index = pos;
       var exps = Expectations.empty(pos);
       bool committed = false;
@@ -567,7 +567,7 @@ Parser<String> pred(bool p(String char)) {
     if (pos.offset >= s.length)
       return ParseResult.failure(s, pos);
     else {
-      String c = s[pos.offset];
+      final c = s[pos.offset];
       return p(c)
           ? ParseResult.success(c, s, pos.addChar(c))
           : ParseResult.failure(s, pos);

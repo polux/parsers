@@ -23,18 +23,18 @@ class Option<T> {
   T orElseCompute(T Function() defaultValue) =>
       isDefined ? _value : defaultValue();
 
-  /// [:forall U, Option<U> map(U f(T value)):]
-  Option map(Function(T value) f) => isDefined ? Option.some(f(_value)) : this;
+  // /// [:forall U, Option<U> map(U f(T value)):]
+  // Option map(Function(T value) f) => isDefined ? Option.some(f(_value)) : this;
 
   /// [:forall U, Option<U> map(Option<U> f(T value)):]
   Option expand(Option Function(T value) f) => isDefined ? f(_value) : this;
 
   /// Precondition: [:this is Option<Option>:]
-  Option get flattened {
-    // enforces the precondition in checked mode
-    final self = this as Option<Option>;
-    return self.orElse(Option.none());
-  }
+  // Option get flattened {
+  //   // enforces the precondition in checked mode
+  //   final self = this as Option<Option>;
+  //   return self.orElse(Option.none());
+  // }
 
   bool operator ==(Object other) =>
       other is Option<T> &&

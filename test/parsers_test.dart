@@ -1174,11 +1174,13 @@ main() {
 
   test(
       'sequence list 1',
-      () => expect(
-          (char('a') + char('b')).list.run('abc'), isSuccess(['a', 'b'], 'c')));
+      () => expect((char('a').and(char('b'))).list.run('abc'),
+          isSuccess(['a', 'b'], 'c')));
 
-  test('sequence list 2',
-      () => expect((char('a') + char('b')).list.run('acb'), isFailure('cb')));
+  test(
+      'sequence list 2',
+      () =>
+          expect((char('a').and(char('b'))).list.run('acb'), isFailure('cb')));
 
   var big = 'a';
   for (int i = 0; i < 15; i++) {

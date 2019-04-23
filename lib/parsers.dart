@@ -669,11 +669,11 @@ Parser<String> oneOf(String chars) =>
 Parser<String> noneOf(String chars) =>
     pred((c) => !chars.contains(c)).expecting("none of '$chars'");
 
-final _spaces = ' \t\n\r\v\f';
-final _lower = 'abcdefghijklmnopqrstuvwxyz';
+const _spaces = ' \t\n\r\v\f';
+const _lower = 'abcdefghijklmnopqrstuvwxyz';
 final _upper = _lower.toUpperCase();
 final _alpha = '$_lower$_upper';
-final _digit = '1234567890';
+const _digit = '1234567890';
 final _alphanum = '$_alpha$_digit';
 
 final Parser<String> tab = char('\t') % 'tab';

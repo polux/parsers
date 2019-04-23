@@ -11,14 +11,14 @@ class ParserAccumulator2<T1, T2> {
       ParserAccumulator3(p1, p2, p);
 
   /// Alias for [and]
-  ParserAccumulator3 operator +(Parser p) => and(p);
+  // ParserAccumulator3 operator +(Parser p) => and(p);
 
   /// Action application
   Parser<R> map<R>(R Function(T1 x1, T2 x2) f) =>
       success((T1 x1) => (T2 x2) => f(x1, x2)).apply(p1).apply(p2);
 
   /// Alias for map
-  Parser operator ^(Object Function(T1 x1, T2 x2) f) => map(f);
+  // Parser operator ^(Object Function(T1 x1, T2 x2) f) => map(f);
 
   /// Creates a [:Parser<List>:] from [this].
   Parser<List> get list =>
@@ -36,7 +36,7 @@ class ParserAccumulator3<T1, T2, T3> {
       ParserAccumulator4(p1, p2, p3, p);
 
   /// Alias for [and]
-  ParserAccumulator4 operator +(Parser p) => and(p);
+  // ParserAccumulator4 operator +(Parser p) => and(p);
 
   /// Action application
   Parser<R> map<R>(R Function(T1 x1, T2 x2, T3 x3) f) =>
@@ -46,7 +46,7 @@ class ParserAccumulator3<T1, T2, T3> {
           .apply(p3);
 
   /// Alias for map
-  Parser operator ^(Object Function(T1 x1, T2 x2, T3 x3) f) => map(f);
+  // Parser operator ^(Object Function(T1 x1, T2 x2, T3 x3) f) => map(f);
 
   /// Creates a [:Parser<List>:] from [this].
   Parser<List> get list =>
@@ -68,7 +68,7 @@ class ParserAccumulator4<T1, T2, T3, T4> {
       ParserAccumulator5(p1, p2, p3, p4, p);
 
   /// Alias for [and]
-  ParserAccumulator5 operator +(Parser p) => and(p);
+  // ParserAccumulator5 operator +(Parser p) => and(p);
 
   /// Action application
   Parser<R> map<R>(R Function(T1 x1, T2 x2, T3 x3, T4 x4) f) =>
@@ -79,7 +79,7 @@ class ParserAccumulator4<T1, T2, T3, T4> {
           .apply(p4);
 
   /// Alias for map
-  Parser operator ^(Object Function(T1 x1, T2 x2, T3 x3, T4 x4) f) => map(f);
+  // Parser operator ^(Object Function(T1 x1, T2 x2, T3 x3, T4 x4) f) => map(f);
 
   /// Creates a [:Parser<List>:] from [this].
   Parser<List> get list =>
@@ -103,7 +103,7 @@ class ParserAccumulator5<T1, T2, T3, T4, T5> {
       ParserAccumulator6(p1, p2, p3, p4, p5, p);
 
   /// Alias for [and]
-  ParserAccumulator6 operator +(Parser p) => and(p);
+  // ParserAccumulator6 operator +(Parser p) => and(p);
 
   /// Action application
   Parser<R> map<R>(R Function(T1 x1, T2 x2, T3 x3, T4 x4, T5 x5) f) => success((T1 x1) =>
@@ -115,7 +115,7 @@ class ParserAccumulator5<T1, T2, T3, T4, T5> {
       .apply(p5);
 
   /// Alias for map
-  Parser operator ^(Object Function(T1 x1, T2 x2, T3 x3, T4 x4, T5 x5) f) => map(f);
+  // Parser operator ^(Object Function(T1 x1, T2 x2, T3 x3, T4 x4, T5 x5) f) => map(f);
 
   /// Creates a [:Parser<List>:] from [this].
   Parser<List> get list => success((T1 x1) =>
@@ -141,7 +141,7 @@ class ParserAccumulator6<T1, T2, T3, T4, T5, T6> {
       ParserAccumulator7(p1, p2, p3, p4, p5, p6, p);
 
   /// Alias for [and]
-  ParserAccumulator7 operator +(Parser p) => and(p);
+  // ParserAccumulator7 operator +(Parser p) => and(p);
 
   /// Action application
   Parser<R> map<R>(R Function(T1 x1, T2 x2, T3 x3, T4 x4, T5 x5, T6 x6) f) =>
@@ -155,8 +155,8 @@ class ParserAccumulator6<T1, T2, T3, T4, T5, T6> {
           .apply(p6);
 
   /// Alias for map
-  Parser operator ^(Object Function(T1 x1, T2 x2, T3 x3, T4 x4, T5 x5, T6 x6) f) =>
-      map(f);
+  // Parser operator ^(Object Function(T1 x1, T2 x2, T3 x3, T4 x4, T5 x5, T6 x6) f) =>
+      // map(f);
 
   /// Creates a [:Parser<List>:] from [this].
   Parser<List> get list => success((T1 x1) => (T2 x2) =>
@@ -185,7 +185,7 @@ class ParserAccumulator7<T1, T2, T3, T4, T5, T6, T7> {
       ParserAccumulator8(p1, p2, p3, p4, p5, p6, p7, p);
 
   /// Alias for [and]
-  ParserAccumulator8 operator +(Parser p) => and(p);
+  // ParserAccumulator8 operator +(Parser p) => and(p);
 
   /// Action application
   Parser<R> map<R>(R Function(T1 x1, T2 x2, T3 x3, T4 x4, T5 x5, T6 x6, T7 x7) f) =>
@@ -200,9 +200,9 @@ class ParserAccumulator7<T1, T2, T3, T4, T5, T6, T7> {
           .apply(p7);
 
   /// Alias for map
-  Parser operator ^(
-          Object Function(T1 x1, T2 x2, T3 x3, T4 x4, T5 x5, T6 x6, T7 x7) f) =>
-      map(f);
+  // Parser operator ^(
+      //     Object Function(T1 x1, T2 x2, T3 x3, T4 x4, T5 x5, T6 x6, T7 x7) f) =>
+      // map(f);
 
   /// Creates a [:Parser<List>:] from [this].
   Parser<List> get list => success((T1 x1) => (T2 x2) => (T3 x3) => (T4 x4) =>
@@ -234,7 +234,7 @@ class ParserAccumulator8<T1, T2, T3, T4, T5, T6, T7, T8> {
       ParserAccumulator9(p1, p2, p3, p4, p5, p6, p7, p8, p);
 
   /// Alias for [and]
-  ParserAccumulator9 operator +(Parser p) => and(p);
+  // ParserAccumulator9 operator +(Parser p) => and(p);
 
   /// Action application
   Parser<R> map<R>(
@@ -251,9 +251,9 @@ class ParserAccumulator8<T1, T2, T3, T4, T5, T6, T7, T8> {
           .apply(p8);
 
   /// Alias for map
-  Parser operator ^(
-          Object Function(T1 x1, T2 x2, T3 x3, T4 x4, T5 x5, T6 x6, T7 x7, T8 x8) f) =>
-      map(f);
+  // Parser operator ^(
+      //     Object Function(T1 x1, T2 x2, T3 x3, T4 x4, T5 x5, T6 x6, T7 x7, T8 x8) f) =>
+      // map(f);
 
   /// Creates a [:Parser<List>:] from [this].
   Parser<List> get list =>
@@ -288,7 +288,7 @@ class ParserAccumulator9<T1, T2, T3, T4, T5, T6, T7, T8, T9> {
       ParserAccumulator10(p1, p2, p3, p4, p5, p6, p7, p8, p9, p);
 
   /// Alias for [and]
-  ParserAccumulator10 operator +(Parser p) => and(p);
+  // ParserAccumulator10 operator +(Parser p) => and(p);
 
   /// Action application
   Parser<R> map<R>(
@@ -307,10 +307,10 @@ class ParserAccumulator9<T1, T2, T3, T4, T5, T6, T7, T8, T9> {
           .apply(p9);
 
   /// Alias for map
-  Parser operator ^(
-          Object Function(
-              T1 x1, T2 x2, T3 x3, T4 x4, T5 x5, T6 x6, T7 x7, T8 x8, T9 x9) f) =>
-      map(f);
+  // Parser operator ^(
+      //     Object Function(
+      //         T1 x1, T2 x2, T3 x3, T4 x4, T5 x5, T6 x6, T7 x7, T8 x8, T9 x9) f) =>
+      // map(f);
 
   /// Creates a [:Parser<List>:] from [this].
   Parser<List> get list => success((T1 x1) => (T2 x2) => (T3 x3) => (T4 x4) =>
@@ -360,10 +360,10 @@ class ParserAccumulator10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> {
           .apply(p10);
 
   /// Alias for map
-  Parser operator ^(
-          Object Function(T1 x1, T2 x2, T3 x3, T4 x4, T5 x5, T6 x6, T7 x7, T8 x8,
-              T9 x9, T10 x10) f) =>
-      map(f);
+  // Parser operator ^(
+      //     Object Function(T1 x1, T2 x2, T3 x3, T4 x4, T5 x5, T6 x6, T7 x7, T8 x8,
+      //         T9 x9, T10 x10) f) =>
+      // map(f);
 
   /// Creates a [:Parser<List>:] from [this].
   Parser<List> get list => success((T1 x1) => (T2 x2) => (T3 x3) => (T4 x4) =>

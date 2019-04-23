@@ -225,7 +225,7 @@ class Parser<A> {
   }
 
   /// Alias for [then].
-  Parser operator >>(Parser Function(A x) g) => then(g);
+  // Parser operator >>(Parser Function(A x) g) => then(g);
 
   Parser<A> expecting(String expected) {
     return Parser((s, pos) {

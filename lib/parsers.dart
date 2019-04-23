@@ -357,18 +357,18 @@ class Parser<A> {
   Parser<List<A>> manyUntil(Parser end) {
     // Imperative version to avoid stack overflows.
     return new Parser((s, pos) {
-      List res = [];
+      List<A> res = [];
       Position index = pos;
       var exps = new Expectations.empty(pos);
       bool committed = false;
       while (true) {
-        final endRes = end._run(s, index);
+        final endRes = end.run(s, index);
         exps = exps.best(endRes.expectations);
         if (endRes.isSuccess) {
           return endRes.copy(
               value: res, expectations: exps, isCommitted: committed);
         } else if (!endRes.isCommitted) {
-          final xRes = this._run(s, index);
+          final xRes = this.run(s, index);
           exps = exps.best(xRes.expectations);
           committed = committed || xRes.isCommitted;
           if (xRes.isSuccess) {

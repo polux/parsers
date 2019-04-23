@@ -8,7 +8,7 @@ _cons(x) => (xs) => []
   ..addAll(xs as Iterable);
 
 Parser<List> manyModel(Parser p) {
-  Parser go() => success(_cons) * p * rec(go) | success([]);
+  Parser go() => success(_cons) * p * rec(go).or(success([]));
   return go() as Parser<List>;
 }
 
@@ -19,7 +19,7 @@ Parser skipManyModel(Parser p) => manyModel(p) > success(null);
 Parser skipManyImpl(Parser p) => p.skipMany;
 
 Parser<List> manyUntilModel(Parser p, Parser end) {
-  Parser go() => (end > success([])) | success(_cons) * p * rec(go);
+  Parser go() => (end > success([])).or(success(_cons)) * p * rec(go);
   return go() as Parser<List>;
 }
 
@@ -34,7 +34,7 @@ Parser skipManyUntilImpl(Parser p, Parser end) => p.skipManyUntil(end);
 Parser chainl1Model(Parser p, Parser sep) {
   Parser rest(acc) {
     combine(f) => (x) => f(acc, x);
-    return (success(combine) * sep * p) >> rest | success(acc);
+    return (success(combine) * sep * p) >> rest.or(success(acc));
   }
 
   return p >> rest;

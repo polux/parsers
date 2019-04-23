@@ -20,13 +20,14 @@ class Option<T> {
 
   T orElse(T defaultValue) => isDefined ? _value : defaultValue;
 
-  T orElseCompute(T defaultValue()) => isDefined ? _value : defaultValue();
+  T orElseCompute(T Function() defaultValue) =>
+      isDefined ? _value : defaultValue();
 
   /// [:forall U, Option<U> map(U f(T value)):]
-  Option map(f(T value)) => isDefined ? Option.some(f(_value)) : this;
+  Option map(Function(T value) f) => isDefined ? Option.some(f(_value)) : this;
 
   /// [:forall U, Option<U> map(Option<U> f(T value)):]
-  Option expand(Option f(T value)) => isDefined ? f(_value) : this;
+  Option expand(Option Function(T value) f) => isDefined ? f(_value) : this;
 
   /// Precondition: [:this is Option<Option>:]
   Option get flattened {

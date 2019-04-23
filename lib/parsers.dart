@@ -130,7 +130,7 @@ class ParseResult<A> {
     return ParseResult(text, exps, position, false, committed, null);
   }
 
-  ParseResult<B> map<B>(B f(A value)) {
+  ParseResult<B> map<B>(B Function(A value) f) {
     return copy(value: f(value));
   }
 
@@ -210,7 +210,7 @@ class Parser<A> {
       throw result.errorMessage;
   }
 
-  Parser<B> then<B>(Parser<B> g(A value)) {
+  Parser<B> then<B>(Parser<B> Function(A value) g) {
     return Parser((text, pos) {
       final res = run(text, pos);
       if (res.isSuccess) {
@@ -225,7 +225,7 @@ class Parser<A> {
   }
 
   /// Alias for [then].
-  Parser operator >>(Parser g(A x)) => then(g);
+  Parser operator >>(Parser Function(A x) g) => then(g);
 
   Parser<A> expecting(String expected) {
     return Parser((s, pos) {
@@ -266,10 +266,10 @@ class Parser<A> {
   Parser<A> operator <(Parser p) => thenDrop(p);
 
   /// Maps [f] over the result of [this].
-  Parser<B> map<B>(B f(A x)) => (success(f) * this) as Parser<B>;
+  Parser<B> map<B>(B Function(A x) f) => (success(f) * this) as Parser<B>;
 
   /// Alias for [map].
-  Parser operator ^(Object f(A x)) => map(f);
+  Parser operator ^(Object Function(A x) f) => map(f);
 
   /// Parser sequencing: creates a parser accumulator.
   ParserAccumulator2<A, B> and<B>(Parser<B> p) => ParserAccumulator2(this, p);
@@ -410,7 +410,7 @@ class Parser<A> {
       this.map((x) => Option.some(x)).orElse(Option.none());
 
   // Imperative version to avoid stack overflows.
-  Parser<List<A>> _many(List<A> acc()) {
+  Parser<List<A>> _many(List<A> Function() acc) {
     return Parser((s, pos) {
       final res = acc();
       var exps = Expectations.empty(pos);
@@ -562,7 +562,7 @@ final Parser<Null> eof = Parser<Null>((s, pos) => pos.offset >= s.length
     ? ParseResult.success(null, s, pos)
     : ParseResult.failure(s, pos, Expectations.single('eof', pos)));
 
-Parser<String> pred(bool p(String char)) {
+Parser<String> pred(bool Function(String char) p) {
   return Parser<String>((s, pos) {
     if (pos.offset >= s.length)
       return ParseResult.failure(s, pos);
@@ -607,7 +607,8 @@ Parser<String> string(String str) {
   });
 }
 
-Parser<A> rec<A>(Parser<A> f()) => Parser<A>((s, pos) => f().run(s, pos));
+Parser<A> rec<A>(Parser<A> Function() f) =>
+    Parser<A>((s, pos) => f().run(s, pos));
 
 final Parser<Position> position =
     Parser((s, pos) => ParseResult.success(pos, s, pos));

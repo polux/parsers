@@ -3,9 +3,13 @@ part of parsers_test;
 // Simple models of the most complex combinators (the one that use while loops
 // to avoid stack overflows).
 
-_cons(x) => (xs) => []
-  ..add(x)
-  ..addAll(xs as Iterable);
+Iterable Function(dynamic) _cons(x) {
+  return (xs) {
+    return []
+      ..add(x)
+      ..addAll(xs as Iterable);
+  };
+}
 
 Parser<List> manyModel(Parser p) {
   Parser go() => success(_cons).apply(p).apply(rec(go)).or(success([]));
@@ -14,19 +18,20 @@ Parser<List> manyModel(Parser p) {
 
 Parser<List> manyImpl(Parser p) => p.many;
 
-Parser skipManyModel(Parser p) => manyModel(p) > success(null);
+Parser<Null> skipManyModel(Parser p) => manyModel(p).thenKeep(success(null));
 
 Parser skipManyImpl(Parser p) => p.skipMany;
 
 Parser<List> manyUntilModel(Parser p, Parser end) {
-  Parser go() => (end > success([])).or(success(_cons)).apply(p).apply(rec(go));
+  Parser go() =>
+      (end.thenKeep(success([]))).or(success(_cons)).apply(p).apply(rec(go));
   return go() as Parser<List>;
 }
 
 Parser<List> manyUntilImpl(Parser p, Parser end) => p.manyUntil(end);
 
-Parser skipManyUntilModel(Parser p, Parser end) {
-  return manyUntilModel(p, end) > success(null);
+Parser<Null> skipManyUntilModel(Parser p, Parser end) {
+  return manyUntilModel(p, end).thenKeep(success(null));
 }
 
 Parser skipManyUntilImpl(Parser p, Parser end) => p.skipManyUntil(end);

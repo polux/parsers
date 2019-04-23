@@ -269,7 +269,7 @@ class Parser<A> {
   Parser<B> map<B>(B Function(A x) f) => (success(f).apply<A, B>(this));
 
   /// Alias for [map].
-  Parser operator ^(Object Function(A x) f) => map(f);
+  // Parser operator ^(Object Function(A x) f) => map(f);
 
   /// Parser sequencing: creates a parser accumulator.
   ParserAccumulator2<A, B> and<B>(Parser<B> p) => ParserAccumulator2(this, p);

@@ -2,3 +2,33 @@ analyzer:
   strong-mode:
     implicit-casts: false
     implicit-dynamic: true
+
+linter:
+  rules:
+    - avoid_positional_boolean_parameters
+    - avoid_types_on_closure_parameters
+    - avoid_unused_constructor_parameters
+    - directives_ordering
+    - file_names
+    # - flutter_style_todos
+    - parameter_assignments
+    - prefer_adjacent_string_concatenation
+    - prefer_asserts_in_initializer_lists
+    - prefer_const_declarations
+    - prefer_final_fields
+    - prefer_final_locals
+    # - prefer_for_elements_to_map_fromIterable # not yet landed in stable
+    - prefer_generic_function_type_aliases
+    # - prefer_if_elements_to_conditional_expressions # not yet landed in stable
+    - prefer_is_empty
+    - prefer_single_quotes
+    # - prefer_spread_collections # not yet landed in stable
+    - prefer_typing_uninitialized_variables
+    - recursive_getters
+    - unnecessary_await_in_return
+    - unnecessary_lambdas
+    - unnecessary_const
+    - unnecessary_new
+    - use_function_type_syntax_for_parameters
+    - use_rethrow_when_possible
+    - use_to_and_as_if_applicable

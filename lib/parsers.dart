@@ -645,7 +645,7 @@ class _SkipInBetween {
   Parser parser() => nested ? _insideMulti() : _insideSingle();
 
   Parser _inside() => rec(parser).between(left, right);
-  Parser get _leftOrRightAhead => (left | right).lookAhead;
+  Parser get _leftOrRightAhead => (left.or(right)).lookAhead;
   Parser _insideMulti() => anyChar.skipManyUntil(_leftOrRightAhead) > _nest();
   Parser _nest() => (rec(_inside) > rec(_insideMulti)).maybe;
   Parser _insideSingle() => anyChar.skipManyUntil(right.lookAhead);
@@ -730,8 +730,8 @@ class LanguageParsers {
       Parser<String> identStart = null, // letter | char('_')
       Parser<String> identLetter = null, // alphanum | char('_')
       List<String> reservedNames = const []}) {
-    final identStartDefault = letter | char('_');
-    final identLetterDefault = alphanum | char('_');
+    final identStartDefault = letter.or(char('_'));
+    final identLetterDefault = alphanum.or(char('_'));
 
     _commentStart = commentStart;
     _commentEnd = commentEnd;
@@ -770,25 +770,25 @@ class LanguageParsers {
     return _reserved;
   }
 
-  final Parser<String> _escapeCode = ((char('a') > success('\a')) |
-      (char('b') > success('\b')) |
-      (char('f') > success('\f')) |
-      (char('n') > success('\n')) |
-      (char('r') > success('\r')) |
-      (char('t') > success('\t')) |
-      (char('v') > success('\v')) |
-      (char('\\') > success('\\')) |
-      (char('"') > success('"')) |
-      (char("'") > success("'"))) as Parser<String>;
+  final Parser<String> _escapeCode = ((char('a') > success('\a'))
+      .or(char('b') > success('\b'))
+      .or(char('f') > success('\f'))
+      .or(char('n') > success('\n'))
+      .or(char('r') > success('\r'))
+      .or(char('t') > success('\t'))
+      .or(char('v') > success('\v'))
+      .or(char('\\') > success('\\'))
+      .or(char('"') > success('"'))
+      .or(char("'") > success("'"))) as Parser<String>;
 
   Parser<String> get _charChar =>
-      (char('\\') > _escapeCode) | pred((c) => c != "'") as Parser<String>;
+      (char('\\') > _escapeCode).or(pred((c) => c != "'")) as Parser<String>;
 
   Parser<String> get charLiteral =>
       lexeme(_charChar.between(char("'"), char("'"))) % 'character literal';
 
   Parser<String> get _stringChar =>
-      (char('\\') > _escapeCode) | pred((c) => c != '"') as Parser<String>;
+      (char('\\') > _escapeCode).or(pred((c) => c != '"')) as Parser<String>;
 
   Parser<String> get stringLiteral =>
       lexeme(_stringChar.many.between(char('"'), char('"')))
@@ -799,7 +799,7 @@ class LanguageParsers {
 
   final Parser<String> _octalDigit = oneOf('01234567');
 
-  Parser<String> get _maybeSign => (char('-') | char('+')).orElse('');
+  Parser<String> get _maybeSign => (char('-').or(char('+'))).orElse('');
 
   Parser<String> _concat(Parser<List<String>> parsers) =>
       parsers.map((list) => list.join());
@@ -815,11 +815,11 @@ class LanguageParsers {
   Parser<String> get _octal =>
       _concatSum(oneOf('oO') + _concat(_octalDigit.many1));
 
-  Parser<String> get _zeroNumber =>
-      _concat((char('0') + (_hexaDecimal | _octal | _decimal).orElse('')).list
+  Parser<String> get _zeroNumber => _concat(
+      (char('0') + (_hexaDecimal.or(_octal).or(_decimal)).orElse('')).list
           as Parser<List<String>>);
 
-  Parser<String> get _nat => (_zeroNumber | _decimal);
+  Parser<String> get _nat => (_zeroNumber.or(_decimal));
 
   Parser<String> get _int => _concatSum(lexeme(_maybeSign) + _nat);
 
@@ -829,7 +829,7 @@ class LanguageParsers {
   Parser<String> get _fraction => _concatSum(char('.') + _concat(digit.many1));
 
   Parser<String> get _fractExponent =>
-      (_concatSum(_fraction + _exponent.orElse('')) | _exponent);
+      (_concatSum(_fraction + _exponent.orElse('')).or(_exponent));
 
   Parser<String> get _float => _concatSum(decimal + _fractExponent);
 
@@ -864,11 +864,12 @@ class LanguageParsers {
   Parser<String> get _start => string(_commentStart);
   Parser<String> get _end => string(_commentEnd);
 
-  Parser get _multiLineComment =>
+  Parser<Null> get _multiLineComment =>
       skipEverythingBetween(_start, _end, nested: _nestedComments);
 
-  Parser get _oneLineComment =>
-      string(_commentLine) > (pred((c) => c != '\n').skipMany > success(null));
+  Parser<Null> get _oneLineComment =>
+      (string(_commentLine) > (pred((c) => c != '\n').skipMany > success(null)))
+          as Parser<Null>;
 
   Parser get whiteSpace => _whiteSpace % 'whitespace/comment';
 
@@ -876,11 +877,11 @@ class LanguageParsers {
     if (_commentLine.isEmpty && _commentStart.isEmpty) {
       return space.skipMany;
     } else if (_commentLine.isEmpty) {
-      return (space | _multiLineComment).skipMany;
+      return (space.or(_multiLineComment)).skipMany;
     } else if (_commentStart.isEmpty) {
-      return (space | _oneLineComment).skipMany;
+      return (space.or(_oneLineComment)).skipMany;
     } else {
-      return (space | _oneLineComment | _multiLineComment).skipMany;
+      return (space.or(_oneLineComment).or(_multiLineComment)).skipMany;
     }
   }
 

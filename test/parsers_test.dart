@@ -107,14 +107,20 @@ main() {
   test(
       'string 5', () => expect(string('foo').run('foo'), isSuccess('foo', '')));
 
-  test('> 1',
-      () => expect((char('a') > char('b')).run('abc'), isSuccess('b', 'c')));
-
-  test('> 2',
-      () => expect((char('a') > char('b')).run('bbc'), isFailure('bbc')));
+  test(
+      '> 1',
+      () => expect(
+          (char('a').thenKeep(char('b'))).run('abc'), isSuccess('b', 'c')));
 
   test(
-      '> 3', () => expect((char('a') > char('b')).run('aac'), isFailure('ac')));
+      '> 2',
+      () =>
+          expect((char('a').thenKeep(char('b'))).run('bbc'), isFailure('bbc')));
+
+  test(
+      '> 3',
+      () =>
+          expect((char('a').thenKeep(char('b'))).run('aac'), isFailure('ac')));
 
   final let = string('let').notFollowedBy(alphanum);
 
@@ -228,8 +234,8 @@ main() {
 
   test('letter', () => expect(letter.run('a'), isSuccess('a', '')));
 
-  manyUntilProp0(f) => expect(
-      (string('/*') > (f(anyChar, string('*/')) as Parser)).run('/* abcdef */'),
+  manyUntilProp0(Parser Function(Parser<String>, Parser<String>) f) => expect(
+      (string('/*').thenKeep((f(anyChar, string('*/'))))).run('/* abcdef */'),
       isSuccess(' abcdef '.split(''), ''));
 
   test('manyUntil 0 model', () => manyUntilProp0(manyUntilModel));
@@ -326,68 +332,80 @@ main() {
 
   test(
       'multi-line comment 1.1',
-      () => expect((lang.identifier > lang.identifier).run('a /* abc */ b'),
+      () => expect(
+          (lang.identifier.thenKeep(lang.identifier)).run('a /* abc */ b'),
           isSuccess('b', '')));
 
   test(
       'multi-line comment 1.2',
       () => expect(
-          (lang.identifier > lang.identifier).run('a /* x /* abc */ y */ b'),
+          (lang.identifier.thenKeep(lang.identifier))
+              .run('a /* x /* abc */ y */ b'),
           isSuccess('b', '')));
 
   test(
       'multi-line comment 1.3',
       () => expect(
-          (lang.identifier > lang.identifier).run('a /* x /* abc */ y b'),
+          (lang.identifier.thenKeep(lang.identifier))
+              .run('a /* x /* abc */ y b'),
           isFailure('/* x /* abc */ y b')));
 
   test(
       'multi-line comment 1.4',
-      () => expect((lang.identifier > lang.identifier).run('a /*/**/*/ y b'),
+      () => expect(
+          (lang.identifier.thenKeep(lang.identifier)).run('a /*/**/*/ y b'),
           isSuccess('y', 'b')));
 
   test(
       'multi-line comment 1.5',
-      () => expect((lang.identifier > lang.identifier).run('a /*/**/ y b'),
+      () => expect(
+          (lang.identifier.thenKeep(lang.identifier)).run('a /*/**/ y b'),
           isFailure('/*/**/ y b')));
 
   test(
       'single-line comment 1.1',
-      () => expect((lang.identifier > lang.identifier).run('a // foo \n b'),
+      () => expect(
+          (lang.identifier.thenKeep(lang.identifier)).run('a // foo \n b'),
           isSuccess('b', '')));
 
   final noNest = LanguageParsers(nestedComments: false);
 
   test(
       'multi-line comment 2.1',
-      () => expect((noNest.identifier > lang.identifier).run('a /* abc */ b'),
+      () => expect(
+          (noNest.identifier.thenKeep(lang.identifier)).run('a /* abc */ b'),
           isSuccess('b', '')));
 
   test(
       'multi-line comment 2.2',
       () => expect(
-          (noNest.identifier > lang.identifier).run('a /* x /* abc */ y */ b'),
+          (noNest.identifier.thenKeep(lang.identifier))
+              .run('a /* x /* abc */ y */ b'),
           isSuccess('y', '*/ b')));
 
   test(
       'multi-line comment 2.3',
       () => expect(
-          (noNest.identifier > lang.identifier).run('a /* x /* abc */ y b'),
+          (noNest.identifier.thenKeep(lang.identifier))
+              .run('a /* x /* abc */ y b'),
           isSuccess('y', 'b')));
 
   test(
       'multi-line comment 2.4',
-      () => expect((noNest.identifier > lang.identifier).run('a /*/**/*/ y b'),
+      () => expect(
+          (noNest.identifier.thenKeep(lang.identifier)).run('a /*/**/*/ y b'),
           isFailure('*/ y b')));
 
   test(
       'multi-line comment 2.5',
-      () => expect((noNest.identifier > lang.identifier).run('a /*/**/ y b'),
+      () => expect(
+          (noNest.identifier.thenKeep(lang.identifier)).run('a /*/**/ y b'),
           isSuccess('y', 'b')));
 
   test(
       'single-line comment 2.1',
-      () => expect((lang.identifier > lang.identifier).run('a // foo \n b'),
+      () => expect(
+          (lang.identifier.thenKeep(lang.identifier)).run('a // foo \n b'),
           isSuccess('b', '')));
 
   test('reserved 1',
@@ -521,8 +539,8 @@ main() {
           lang.natural.chainl(success((x, y) => x + y), 42).run('a 2 3'),
           isSuccess(42, 'a 2 3')));
 
-  final addop = (lang.symbol('+') > success((x, y) => x + y)) |
-      (lang.symbol('-') > success((x, y) => x - y));
+  final addop = (lang.symbol('+').thenKeep(success((x, y) => x + y))) |
+      (lang.symbol('-').thenKeep(success((x, y) => x - y)));
 
   test(
       'chainl 3',
@@ -696,12 +714,14 @@ main() {
 
   test(
       'commit 3',
-      () => expect((char('a') > char('b').committed | char('a')).run('acc'),
+      () => expect(
+          (char('a').thenKeep(char('b').committed) | char('a')).run('acc'),
           isFailure('cc')));
 
   test(
       'commit 4',
-      () => expect((char('a') > char('b').committed | char('a')).run('abc'),
+      () => expect(
+          (char('a').thenKeep(char('b').committed) | char('a')).run('abc'),
           isSuccess('b', 'c')));
 
   test('commit 5',
@@ -972,8 +992,8 @@ main() {
   test('commit 47 impl', () => commit47Prop(manyImpl));
 
   commit475Prop(f) {
-    final p =
-        f(char('x') > char('a').committed) > string('b') | string('xaxac');
+    final p = f(char('x').thenKeep(char('a').committed)).thenKeep(string('b')) |
+        string('xaxac');
     return expect(p.run('xaxac'), isFailure('c'));
   }
 
@@ -981,8 +1001,8 @@ main() {
   test('commit 47.5 impl', () => commit475Prop(manyImpl));
 
   commit48Prop(f) {
-    final p = (char('a') > (char('b').committed > char('c'))) |
-        (char('d') > (char('e') > char('f')));
+    final p = (char('a').thenKeep(char('b').committed.thenKeep(char('c')))) |
+        (char('d').thenKeep(char('e').thenKeep(char('f'))));
     return expect(f(p).run('abcabczz'), isSuccess(null, 'zz'));
   }
 
@@ -990,8 +1010,8 @@ main() {
   test('commit 48 impl', () => commit48Prop(skipManyImpl));
 
   commit49Prop(f) {
-    final p = (char('a') > (char('b').committed > char('c'))) |
-        (char('d') > (char('e') > char('f')));
+    final p = (char('a').thenKeep(char('b').committed.thenKeep(char('c')))) |
+        (char('d').thenKeep(char('e').thenKeep(char('f'))));
     return expect(f(p).run('abcdefabczz'), isSuccess(null, 'zz'));
   }
 
@@ -999,8 +1019,8 @@ main() {
   test('commit 49 impl', () => commit49Prop(skipManyImpl));
 
   commit50Prop(f) {
-    final p = (char('a') > (char('b').committed > char('c'))) |
-        (char('d') > (char('e') > char('f')));
+    final p = (char('a').thenKeep(char('b').committed.thenKeep(char('c')))) |
+        (char('d').thenKeep(char('e').thenKeep(char('f'))));
     return expect(f(p).run('abcaefzz'), isFailure('efzz'));
   }
 
@@ -1020,7 +1040,8 @@ main() {
 
   commit515Prop(f) {
     final p =
-        (f(char('x') > char('a').committed) > string('b')) | string('xaxac');
+        (f(char('x').thenKeep(char('a').committed)).thenKeep(string('b'))) |
+            string('xaxac');
     return expect(p.run('xaxac'), isFailure('c'));
   }
 
@@ -1049,8 +1070,9 @@ main() {
   test('commit 53 impl', () => commit53Prop(manyUntilModel));
 
   commit54Prop(f) {
-    final p = f(char('x') > char('a').committed, char('z')) >
-        string('b') | string('xaxazc');
+    final p = f(char('x').thenKeep(char('a').committed), char('z'))
+            .thenKeep(string('b')) |
+        string('xaxazc');
     return expect(p.run('xaxazc'), isFailure('c'));
   }
 
@@ -1058,7 +1080,8 @@ main() {
   test('commit 54 impl', () => commit54Prop(manyUntilImpl));
 
   commit55Prop(f) {
-    final p = f(char('x') > char('a').committed, char('z')) | string('xaxazc');
+    final p = f(char('x').thenKeep(char('a').committed), char('z')) |
+        string('xaxazc');
     return expect(p.run('xaxaw'), isFailure('w'));
   }
 
@@ -1095,7 +1118,7 @@ main() {
 
   commit58Prop(f) {
     plus(x, y) => '$x$y';
-    final p = f(char('x') > char('a').committed, success(plus)) >
+    final p = f(char('x').thenKeep(char('a').committed), success(plus)) >
         string('b') | string('xaxac');
     return expect(p.run('xaxac'), isFailure('c'));
   }
@@ -1105,7 +1128,7 @@ main() {
 
   commit59Prop(f) {
     plus(x, y) => '$x$y';
-    final p = f(char('x') > char('a'), success(plus).committed) >
+    final p = f(char('x').thenKeep(char('a')), success(plus).committed) >
         string('b') | string('xaxac');
     return expect(p.run('xaxac'), isFailure('c'));
   }

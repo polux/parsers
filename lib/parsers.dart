@@ -810,28 +810,29 @@ class LanguageParsers {
   Parser<String> get _decimal => _concat(digit.many1);
 
   Parser<String> get _hexaDecimal =>
-      _concatSum(oneOf('xX') + _concat(_hexDigit.many1));
+      _concatSum(oneOf('xX').and(_concat(_hexDigit.many1)));
 
   Parser<String> get _octal =>
-      _concatSum(oneOf('oO') + _concat(_octalDigit.many1));
+      _concatSum(oneOf('oO').and(_concat(_octalDigit.many1)));
 
   Parser<String> get _zeroNumber => _concat(
-      (char('0') + (_hexaDecimal.or(_octal).or(_decimal)).orElse('')).list
+      (char('0').and((_hexaDecimal.or(_octal).or(_decimal)).orElse(''))).list
           as Parser<List<String>>);
 
   Parser<String> get _nat => (_zeroNumber.or(_decimal));
 
-  Parser<String> get _int => _concatSum(lexeme(_maybeSign) + _nat);
+  Parser<String> get _int => _concatSum(lexeme(_maybeSign).and(_nat));
 
   Parser<String> get _exponent =>
-      _concatSum(oneOf('eE') + _maybeSign + _concat(digit.many1));
+      _concatSum(oneOf('eE').and(_maybeSign).and(_concat(digit.many1)));
 
-  Parser<String> get _fraction => _concatSum(char('.') + _concat(digit.many1));
+  Parser<String> get _fraction =>
+      _concatSum(char('.').and(_concat(digit.many1)));
 
   Parser<String> get _fractExponent =>
-      (_concatSum(_fraction + _exponent.orElse('')).or(_exponent));
+      (_concatSum(_fraction.and(_exponent.orElse(''))).or(_exponent));
 
-  Parser<String> get _float => _concatSum(decimal + _fractExponent);
+  Parser<String> get _float => _concatSum(decimal.and(_fractExponent));
 
   final RegExp _octalPrefix = RegExp('0[Oo]');
 

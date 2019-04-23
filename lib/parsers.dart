@@ -275,7 +275,7 @@ class Parser<A> {
   ParserAccumulator2<A, B> and<B>(Parser<B> p) => ParserAccumulator2(this, p);
 
   /// Alias for [and].
-  ParserAccumulator2 operator +(Parser p) => ParserAccumulator2(this, p);
+  // ParserAccumulator2 operator +(Parser p) => ParserAccumulator2(this, p);
 
   /// Alternative.
   // refact(devkabiir): Since B extends A, A can always be used in place of B, not the other way around

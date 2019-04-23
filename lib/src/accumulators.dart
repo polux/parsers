@@ -1,4 +1,5 @@
 part of parsers;
+// ignore_for_file: avoid_types_on_closure_parameters
 
 class ParserAccumulator2<T1, T2> {
   final Parser<T1> p1;

@@ -48,9 +48,9 @@ class SuccessMatcher extends Matcher {
       description.add('a parse success with value $res and rest "$rest"');
 }
 
-isFailure(rest) => new FailureMatcher(rest as String);
+isFailure(rest) => FailureMatcher(rest as String);
 
-isSuccess(res, rest) => new SuccessMatcher(res, rest as String);
+isSuccess(res, rest) => SuccessMatcher(res, rest as String);
 
 checkFloat(res, f, rest) {
   expect(res.isSuccess, isTrue);
@@ -67,22 +67,22 @@ checkList(res, list, rest) {
 main() {
   test(
       'position 1',
-      () => expect(new Position(1, 1, 1, tabStop: 4).addChar("\t").character,
-          equals(5)));
+      () => expect(
+          Position(1, 1, 1, tabStop: 4).addChar("\t").character, equals(5)));
   test(
       'position 2',
-      () => expect(new Position(1, 1, 2, tabStop: 4).addChar("\t").character,
-          equals(5)));
+      () => expect(
+          Position(1, 1, 2, tabStop: 4).addChar("\t").character, equals(5)));
   test(
       'position 3',
-      () => expect(new Position(1, 1, 4, tabStop: 4).addChar("\t").character,
-          equals(5)));
+      () => expect(
+          Position(1, 1, 4, tabStop: 4).addChar("\t").character, equals(5)));
   test(
       'position 4',
-      () => expect(new Position(1, 1, 5, tabStop: 4).addChar("\t").character,
-          equals(9)));
+      () => expect(
+          Position(1, 1, 5, tabStop: 4).addChar("\t").character, equals(9)));
   test('position 5',
-      () => expect(new Position(1, 1, 3).addChar("\t").character, equals(4)));
+      () => expect(Position(1, 1, 3).addChar("\t").character, equals(4)));
 
   test('char 1', () => expect(char('a').run('abc'), isSuccess('a', 'bc')));
 
@@ -153,15 +153,11 @@ main() {
   test('skipMany 3 model', () => skipMany3Prop(skipManyModel));
   test('skipMany 3 impl', () => skipMany3Prop(skipManyModel));
 
-  test(
-      'maybe 1',
-      () => expect(
-          char('a').maybe.run('a'), isSuccess(new Option.some('a'), '')));
+  test('maybe 1',
+      () => expect(char('a').maybe.run('a'), isSuccess(Option.some('a'), '')));
 
-  test(
-      'maybe 2',
-      () =>
-          expect(char('a').maybe.run('b'), isSuccess(new Option.none(), 'b')));
+  test('maybe 2',
+      () => expect(char('a').maybe.run('b'), isSuccess(Option.none(), 'b')));
 
   test(
       'sepBy 1',
@@ -278,7 +274,7 @@ main() {
   test('skipManyUntil 3 impl', () => skipManyUntilProp3(skipManyUntilImpl));
 
   final lang =
-      new LanguageParsers(nestedComments: true, reservedNames: ['for', 'in']);
+      LanguageParsers(nestedComments: true, reservedNames: ['for', 'in']);
 
   test('semi 1', () => expect(lang.semi.run(';rest'), isSuccess(';', 'rest')));
 
@@ -360,7 +356,7 @@ main() {
       () => expect((lang.identifier > lang.identifier).run('a // foo \n b'),
           isSuccess('b', '')));
 
-  final noNest = new LanguageParsers(nestedComments: false);
+  final noNest = LanguageParsers(nestedComments: false);
 
   test(
       'multi-line comment 2.1',

@@ -7,7 +7,7 @@ class ParserAccumulator2<T1, T2> {
 
   /// Parser sequencing: creates a parser accumulator
   ParserAccumulator3<T1, T2, T3> and<T3>(Parser<T3> p) =>
-      new ParserAccumulator3(p1, p2, p);
+      ParserAccumulator3(p1, p2, p);
 
   /// Alias for [and]
   ParserAccumulator3 operator +(Parser p) => and(p);
@@ -32,7 +32,7 @@ class ParserAccumulator3<T1, T2, T3> {
 
   /// Parser sequencing: creates a parser accumulator
   ParserAccumulator4<T1, T2, T3, T4> and<T4>(Parser<T4> p) =>
-      new ParserAccumulator4(p1, p2, p3, p);
+      ParserAccumulator4(p1, p2, p3, p);
 
   /// Alias for [and]
   ParserAccumulator4 operator +(Parser p) => and(p);
@@ -64,7 +64,7 @@ class ParserAccumulator4<T1, T2, T3, T4> {
 
   /// Parser sequencing: creates a parser accumulator
   ParserAccumulator5<T1, T2, T3, T4, T5> and<T5>(Parser<T5> p) =>
-      new ParserAccumulator5(p1, p2, p3, p4, p);
+      ParserAccumulator5(p1, p2, p3, p4, p);
 
   /// Alias for [and]
   ParserAccumulator5 operator +(Parser p) => and(p);
@@ -99,7 +99,7 @@ class ParserAccumulator5<T1, T2, T3, T4, T5> {
 
   /// Parser sequencing: creates a parser accumulator
   ParserAccumulator6<T1, T2, T3, T4, T5, T6> and<T6>(Parser<T6> p) =>
-      new ParserAccumulator6(p1, p2, p3, p4, p5, p);
+      ParserAccumulator6(p1, p2, p3, p4, p5, p);
 
   /// Alias for [and]
   ParserAccumulator6 operator +(Parser p) => and(p);
@@ -137,7 +137,7 @@ class ParserAccumulator6<T1, T2, T3, T4, T5, T6> {
 
   /// Parser sequencing: creates a parser accumulator
   ParserAccumulator7<T1, T2, T3, T4, T5, T6, T7> and<T7>(Parser<T7> p) =>
-      new ParserAccumulator7(p1, p2, p3, p4, p5, p6, p);
+      ParserAccumulator7(p1, p2, p3, p4, p5, p6, p);
 
   /// Alias for [and]
   ParserAccumulator7 operator +(Parser p) => and(p);
@@ -181,7 +181,7 @@ class ParserAccumulator7<T1, T2, T3, T4, T5, T6, T7> {
 
   /// Parser sequencing: creates a parser accumulator
   ParserAccumulator8<T1, T2, T3, T4, T5, T6, T7, T8> and<T8>(Parser<T8> p) =>
-      new ParserAccumulator8(p1, p2, p3, p4, p5, p6, p7, p);
+      ParserAccumulator8(p1, p2, p3, p4, p5, p6, p7, p);
 
   /// Alias for [and]
   ParserAccumulator8 operator +(Parser p) => and(p);
@@ -230,7 +230,7 @@ class ParserAccumulator8<T1, T2, T3, T4, T5, T6, T7, T8> {
   /// Parser sequencing: creates a parser accumulator
   ParserAccumulator9<T1, T2, T3, T4, T5, T6, T7, T8, T9> and<T9>(
           Parser<T9> p) =>
-      new ParserAccumulator9(p1, p2, p3, p4, p5, p6, p7, p8, p);
+      ParserAccumulator9(p1, p2, p3, p4, p5, p6, p7, p8, p);
 
   /// Alias for [and]
   ParserAccumulator9 operator +(Parser p) => and(p);
@@ -284,7 +284,7 @@ class ParserAccumulator9<T1, T2, T3, T4, T5, T6, T7, T8, T9> {
   /// Parser sequencing: creates a parser accumulator
   ParserAccumulator10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> and<T10>(
           Parser<T10> p) =>
-      new ParserAccumulator10(p1, p2, p3, p4, p5, p6, p7, p8, p9, p);
+      ParserAccumulator10(p1, p2, p3, p4, p5, p6, p7, p8, p9, p);
 
   /// Alias for [and]
   ParserAccumulator10 operator +(Parser p) => and(p);

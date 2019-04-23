@@ -82,107 +82,101 @@ class FieldDeclaration {
 }
 
 NamespaceDeclaration namespaceDeclarationMapping(doc, _, name, body, __) =>
-  new NamespaceDeclaration(name, body, doc);
+    NamespaceDeclaration(name, body, doc);
 
 InterfaceDeclaration interfaceDeclarationMapping(doc, _, name, body, __) =>
-  new InterfaceDeclaration(name, body, doc);
+    InterfaceDeclaration(name, body, doc);
 
 MethodDeclaration methodDeclarationRegularMapping(
-    doc, returnType, name, parameters, _) =>
-  new MethodDeclaration(returnType, name, parameters, doc);
+        doc, returnType, name, parameters, _) =>
+    MethodDeclaration(returnType, name, parameters, doc);
 
 MethodDeclaration methodDeclarationReservedMapping(
-    doc, returnType, name, parameters, _) =>
-  new MethodDeclaration(new TypeAppl(returnType, null), name, parameters, doc);
+        doc, returnType, name, parameters, _) =>
+    MethodDeclaration(TypeAppl(returnType, null), name, parameters, doc);
 
-DictionaryDeclaration dictionaryDeclarationMapping(
-    doc, _, name, body, __) =>
-  new DictionaryDeclaration(name, body, doc);
+DictionaryDeclaration dictionaryDeclarationMapping(doc, _, name, body, __) =>
+    DictionaryDeclaration(name, body, doc);
 
 FieldDeclaration fieldDeclarationMapping(doc, type, name, _) =>
-  new FieldDeclaration(type, name, doc);
+    FieldDeclaration(type, name, doc);
 
 class DataCoreParser extends LanguageParsers {
-
-  DataCoreParser() : super(reservedNames: reservedNames,
-                           // tells LanguageParsers to not handle comments
-                           commentStart: "",
-                           commentEnd: "",
-                           commentLine: "");
+  DataCoreParser()
+      : super(
+            reservedNames: reservedNames,
+            // tells LanguageParsers to not handle comments
+            commentStart: "",
+            commentEnd: "",
+            commentLine: "");
 
   Parser get docString => lexeme(_docString).many;
 
   Parser get _docString =>
-        everythingBetween(string('//'), string('\n'))
-      | everythingBetween(string('/*'), string('*/'))
-      | everythingBetween(string('/**'), string('*/'));
+      everythingBetween(string('//'), string('\n')) |
+      everythingBetween(string('/*'), string('*/')) |
+      everythingBetween(string('/**'), string('*/'));
 
   Parser get namespaceDeclaration =>
-      docString
-      + reserved["namespace"]
-      + identifier
-      + braces(namespaceBody)
-      + semi
-      ^ namespaceDeclarationMapping;
+      docString +
+          reserved["namespace"] +
+          identifier +
+          braces(namespaceBody) +
+          semi ^
+      namespaceDeclarationMapping;
 
   Parser get namespaceBody => body.many;
 
   Parser get body => interfaceDeclaration | dictionaryDeclaration;
 
   Parser get interfaceDeclaration =>
-      docString
-      + reserved["interface"]
-      + identifier
-      + braces(interfaceBody)
-      + semi
-      ^ interfaceDeclarationMapping;
+      docString +
+          reserved["interface"] +
+          identifier +
+          braces(interfaceBody) +
+          semi ^
+      interfaceDeclarationMapping;
 
   Parser get interfaceBody => method.many;
 
   Parser get method => regularMethod | voidMethod;
 
   Parser typeAppl() =>
-      identifier
-      + angles(rec(typeAppl).sepBy(comma)).orElse([])
-      ^ (c, args) => new TypeAppl(c, args);
+      identifier + angles(rec(typeAppl).sepBy(comma)).orElse([]) ^
+      (c, args) => TypeAppl(c, args);
 
   Parser get parameter =>
-      (typeAppl() % 'type')
-      + (identifier % 'parameter')
-      ^ (t, p) => new Parameter(t, p);
+      (typeAppl() % 'type') + (identifier % 'parameter') ^
+      (t, p) => Parameter(t, p);
 
   Parser get regularMethod =>
-      docString
-      + typeAppl()
-      + identifier
-      + parens(parameter.sepBy(comma))
-      + semi
-      ^ methodDeclarationRegularMapping;
+      docString +
+          typeAppl() +
+          identifier +
+          parens(parameter.sepBy(comma)) +
+          semi ^
+      methodDeclarationRegularMapping;
 
   Parser get voidMethod =>
-      docString
-      + reserved['void']
-      + identifier
-      + parens(parameter.sepBy(comma))
-      + semi
-      ^ methodDeclarationReservedMapping;
+      docString +
+          reserved['void'] +
+          identifier +
+          parens(parameter.sepBy(comma)) +
+          semi ^
+      methodDeclarationReservedMapping;
 
   Parser get dictionaryDeclaration =>
-      docString
-      + reserved["dictionary"]
-      + identifier
-      + braces(dictionaryBody)
-      + semi
-      ^ dictionaryDeclarationMapping;
+      docString +
+          reserved["dictionary"] +
+          identifier +
+          braces(dictionaryBody) +
+          semi ^
+      dictionaryDeclarationMapping;
 
   Parser get dictionaryBody => field.many;
 
   Parser get field =>
-      docString
-      + typeAppl()
-      + identifier
-      + semi
-      ^ fieldDeclarationMapping;
+      docString + typeAppl() + identifier + semi ^ fieldDeclarationMapping;
 }
 
 final test = """
@@ -219,7 +213,7 @@ namespace datacore {
 """;
 
 void main() {
-  DataCoreParser dataCoreParser = new DataCoreParser();
+  DataCoreParser dataCoreParser = DataCoreParser();
   NamespaceDeclaration namespaceDeclaration =
       dataCoreParser.namespaceDeclaration.between(spaces, eof).parse(test);
   print(namespaceDeclaration);

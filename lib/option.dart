@@ -6,15 +6,14 @@ class Option<T> {
 
   factory Option.none() => const Option._internal(false, null);
 
-  factory Option.some(T value) => new Option._internal(true, value);
+  factory Option.some(T value) => Option._internal(true, value);
 
-  factory Option.fromNullable(T nullableValue) => nullableValue == null
-      ? new Option.none()
-      : new Option.some(nullableValue);
+  factory Option.fromNullable(T nullableValue) =>
+      nullableValue == null ? Option.none() : Option.some(nullableValue);
 
   T get value {
     if (isDefined) return _value;
-    throw new StateError('Option.none() has no value');
+    throw StateError('Option.none() has no value');
   }
 
   T get asNullable => isDefined ? _value : null;
@@ -24,7 +23,7 @@ class Option<T> {
   T orElseCompute(T defaultValue()) => isDefined ? _value : defaultValue();
 
   /// [:forall U, Option<U> map(U f(T value)):]
-  Option map(f(T value)) => isDefined ? new Option.some(f(_value)) : this;
+  Option map(f(T value)) => isDefined ? Option.some(f(_value)) : this;
 
   /// [:forall U, Option<U> map(Option<U> f(T value)):]
   Option expand(Option f(T value)) => isDefined ? f(_value) : this;
@@ -33,7 +32,7 @@ class Option<T> {
   Option get flattened {
     // enforces the precondition in checked mode
     final self = this as Option<Option>;
-    return self.orElse(new Option.none());
+    return self.orElse(Option.none());
   }
 
   bool operator ==(Object other) =>

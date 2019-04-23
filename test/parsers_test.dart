@@ -539,19 +539,17 @@ main() {
           lang.natural.chainl(success((x, y) => x + y), 42).run('a 2 3'),
           isSuccess(42, 'a 2 3')));
 
-  final addop = (lang.symbol('+').thenKeep(success((x, y) => x + y))) |
-      (lang.symbol('-').thenKeep(success((x, y) => x - y)));
+  final addop = (lang.symbol('+').thenKeep(success((x, y) => x + y)))
+      .or(lang.symbol('-').thenKeep(success((x, y) => x - y)));
 
   test(
       'chainl 3',
       () => expect(
-          lang.natural.chainl(addop as Parser<Function>, 42).run('3 - 1 - 2'),
-          isSuccess(0, '')));
+          lang.natural.chainl(addop, 42).run('3 - 1 - 2'), isSuccess(0, '')));
 
   test(
       'chainl 4',
-      () => expect(
-          lang.natural.chainl(addop as Parser<Function>, 42).run('a - 1 - 2'),
+      () => expect(lang.natural.chainl(addop, 42).run('a - 1 - 2'),
           isSuccess(42, 'a - 1 - 2')));
 
   chainl1Prop1(f) => expect(
@@ -594,15 +592,11 @@ main() {
   test(
       'chainr 3',
       () => expect(
-          lang.natural.chainr(addop as Parser<Function>, 42).run('3 - 1 - 2'),
-          isSuccess(4, '')));
+          lang.natural.chainr(addop, 42).run('3 - 1 - 2'), isSuccess(4, '')));
 
   test(
       'chainr 4',
-      () => expect(
-          lang.intLiteral
-              .chainr(addop as Parser<Function>, 42)
-              .run('a - 1 - 2'),
+      () => expect(lang.intLiteral.chainr(addop, 42).run('a - 1 - 2'),
           isSuccess(42, 'a - 1 - 2')));
 
   test(
@@ -620,13 +614,11 @@ main() {
   test(
       'chainr1 3',
       () => expect(
-          lang.intLiteral.chainr1(addop as Parser<Function>).run('3 - 1 - 2'),
-          isSuccess(4, '')));
+          lang.intLiteral.chainr1(addop).run('3 - 1 - 2'), isSuccess(4, '')));
 
   test(
       'chainr1 4',
-      () => expect(
-          lang.intLiteral.chainr1(addop as Parser<Function>).run('a - 1 - 2'),
+      () => expect(lang.intLiteral.chainr1(addop).run('a - 1 - 2'),
           isFailure('a - 1 - 2')));
 
   test(
@@ -704,24 +696,24 @@ main() {
 
   test(
       'commit 1',
-      () =>
-          expect((char('a').committed | char('b')).run('bc'), isFailure('bc')));
+      () => expect(
+          (char('a').committed.or(char('b'))).run('bc'), isFailure('bc')));
 
   test(
       'commit 2',
       () => expect(
-          (char('a').committed | char('b')).run('ac'), isSuccess('a', 'c')));
+          (char('a').committed.or(char('b'))).run('ac'), isSuccess('a', 'c')));
 
   test(
       'commit 3',
       () => expect(
-          (char('a').thenKeep(char('b').committed) | char('a')).run('acc'),
+          (char('a').thenKeep(char('b').committed).or(char('a'))).run('acc'),
           isFailure('cc')));
 
   test(
       'commit 4',
       () => expect(
-          (char('a').thenKeep(char('b').committed) | char('a')).run('abc'),
+          (char('a').thenKeep(char('b').committed).or(char('a'))).run('abc'),
           isSuccess('b', 'c')));
 
   test('commit 5',
@@ -965,8 +957,8 @@ main() {
     final p = (success(t3)
             .apply(char('a'))
             .apply(char('b').committed)
-            .apply(char('c'))) |
-        (success(t3).apply(char('d')).apply(char('e')).apply(char('f')));
+            .apply(char('c')))
+        .or(success(t3).apply(char('d')).apply(char('e')).apply(char('f')));
     return expect(f(p).run('abcabczz'), isSuccess(['abc', 'abc'], 'zz'));
   }
 
@@ -978,8 +970,8 @@ main() {
     final p = (success(t3)
             .apply(char('a'))
             .apply(char('b').committed)
-            .apply(char('c'))) |
-        (success(t3).apply(char('d')).apply(char('e')).apply(char('f')));
+            .apply(char('c')))
+        .or(success(t3).apply(char('d')).apply(char('e')).apply(char('f')));
     return expect(
         f(p).run('abcdefabczz'), isSuccess(['abc', 'def', 'abc'], 'zz'));
   }
@@ -992,8 +984,8 @@ main() {
     final p = (success(t3)
             .apply(char('a'))
             .apply(char('b').committed)
-            .apply(char('c'))) |
-        (success(t3).apply(char('a')).apply(char('e')).apply(char('f')));
+            .apply(char('c')))
+        .or(success(t3).apply(char('a')).apply(char('e')).apply(char('f')));
     return expect(f(p).run('abcaefzz'), isFailure('efzz'));
   }
 
@@ -1001,8 +993,9 @@ main() {
   test('commit 47 impl', () => commit47Prop(manyImpl));
 
   commit475Prop(f) {
-    final p = f(char('x').thenKeep(char('a').committed)).thenKeep(string('b')) |
-        string('xaxac');
+    final p = f(char('x').thenKeep(char('a').committed))
+        .thenKeep(string('b'))
+        .or(string('xaxac'));
     return expect(p.run('xaxac'), isFailure('c'));
   }
 
@@ -1010,8 +1003,8 @@ main() {
   test('commit 47.5 impl', () => commit475Prop(manyImpl));
 
   commit48Prop(f) {
-    final p = (char('a').thenKeep(char('b').committed.thenKeep(char('c')))) |
-        (char('d').thenKeep(char('e').thenKeep(char('f'))));
+    final p = (char('a').thenKeep(char('b').committed.thenKeep(char('c'))))
+        .or(char('d').thenKeep(char('e').thenKeep(char('f'))));
     return expect(f(p).run('abcabczz'), isSuccess(null, 'zz'));
   }
 
@@ -1019,8 +1012,8 @@ main() {
   test('commit 48 impl', () => commit48Prop(skipManyImpl));
 
   commit49Prop(f) {
-    final p = (char('a').thenKeep(char('b').committed.thenKeep(char('c')))) |
-        (char('d').thenKeep(char('e').thenKeep(char('f'))));
+    final p = (char('a').thenKeep(char('b').committed.thenKeep(char('c'))))
+        .or(char('d').thenKeep(char('e').thenKeep(char('f'))));
     return expect(f(p).run('abcdefabczz'), isSuccess(null, 'zz'));
   }
 
@@ -1028,8 +1021,8 @@ main() {
   test('commit 49 impl', () => commit49Prop(skipManyImpl));
 
   commit50Prop(f) {
-    final p = (char('a').thenKeep(char('b').committed.thenKeep(char('c')))) |
-        (char('d').thenKeep(char('e').thenKeep(char('f'))));
+    final p = (char('a').thenKeep(char('b').committed.thenKeep(char('c'))))
+        .or(char('d').thenKeep(char('e').thenKeep(char('f'))));
     return expect(f(p).run('abcaefzz'), isFailure('efzz'));
   }
 
@@ -1041,8 +1034,8 @@ main() {
     final p = (success(t3)
             .apply(char('a'))
             .apply(char('b').committed)
-            .apply(char('c'))) |
-        (success(t3).apply(char('a')).apply(char('e')).apply(char('f')));
+            .apply(char('c')))
+        .or(success(t3).apply(char('a')).apply(char('e')).apply(char('f')));
     return expect(
         f(p, char('z')).run('abcabczz'), isSuccess(['abc', 'abc'], 'z'));
   }
@@ -1051,9 +1044,8 @@ main() {
   test('commit 51 impl', () => commit51Prop(manyUntilImpl));
 
   commit515Prop(f) {
-    final p =
-        (f(char('x').thenKeep(char('a').committed)).thenKeep(string('b'))) |
-            string('xaxac');
+    final p = (f(char('x').thenKeep(char('a').committed)).thenKeep(string('b')))
+        .or(string('xaxac'));
     return expect(p.run('xaxac'), isFailure('c'));
   }
 
@@ -1065,8 +1057,8 @@ main() {
     final p = (success(t3)
             .apply(char('a'))
             .apply(char('b').committed)
-            .apply(char('c'))) |
-        (success(t3).apply(char('d')).apply(char('e')).apply(char('f')));
+            .apply(char('c')))
+        .or(success(t3).apply(char('d')).apply(char('e')).apply(char('f')));
     return expect(f(p, char('z')).run('abcdefabczz'),
         isSuccess(['abc', 'def', 'abc'], 'z'));
   }
@@ -1079,8 +1071,8 @@ main() {
     final p = (success(t3)
             .apply(char('a'))
             .apply(char('b').committed)
-            .apply(char('c'))) |
-        (success(t3).apply(char('a')).apply(char('e')).apply(char('f')));
+            .apply(char('c')))
+        .or(success(t3).apply(char('a')).apply(char('e')).apply(char('f')));
     return expect(f(p, char('z')).run('abcaefzz'), isFailure('efzz'));
   }
 
@@ -1089,8 +1081,8 @@ main() {
 
   commit54Prop(f) {
     final p = f(char('x').thenKeep(char('a').committed), char('z'))
-            .thenKeep(string('b')) |
-        string('xaxazc');
+        .thenKeep(string('b'))
+        .or(string('xaxazc'));
     return expect(p.run('xaxazc'), isFailure('c'));
   }
 
@@ -1098,8 +1090,8 @@ main() {
   test('commit 54 impl', () => commit54Prop(manyUntilImpl));
 
   commit55Prop(f) {
-    final p = f(char('x').thenKeep(char('a').committed), char('z')) |
-        string('xaxazc');
+    final p = f(char('x').thenKeep(char('a').committed), char('z'))
+        .or(string('xaxazc'));
     return expect(p.run('xaxaw'), isFailure('w'));
   }
 
@@ -1115,8 +1107,8 @@ main() {
     final p = (success(t3)
             .apply(char('1'))
             .apply(char('2').committed)
-            .apply(char('3'))) |
-        (success(t3).apply(char('4')).apply(char('5')).apply(char('6')));
+            .apply(char('3')))
+        .or(success(t3).apply(char('4')).apply(char('5')).apply(char('6')));
     return expect(f(p, success(plus)).run('123456123zz'), isSuccess(27, 'zz'));
   }
 
@@ -1132,8 +1124,8 @@ main() {
     final p = (success(t3)
             .apply(char('1'))
             .apply(char('2').committed)
-            .apply(char('3'))) |
-        (success(t3).apply(char('1')).apply(char('5')).apply(char('6')));
+            .apply(char('3')))
+        .or(success(t3).apply(char('1')).apply(char('5')).apply(char('6')));
     return expect(f(p, success(plus)).run('123156zz'), isFailure('56zz'));
   }
 

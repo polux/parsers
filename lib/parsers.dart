@@ -250,7 +250,7 @@ class Parser<A> {
       then((f) => p.then((x) => success((f as Function)(x) as C)));
 
   /// Alias for [apply].
-  Parser operator *(Parser p) => apply(p);
+  // Parser operator *(Parser p) => apply(p);
 
   /// Parses [this] then [p] and returns the result of [p].
   Parser<B> thenKeep<B>(Parser<B> p) => then((_) => p);

@@ -434,7 +434,7 @@ class Parser<A> {
 
   Parser<List<A>> get many => _many(() => []);
 
-  Parser<List<A>> get many1 => then((A x) => _many(() => [x]));
+  Parser<List<A>> get many1 => then((x) => _many(() => [x]));
 
   /// Parses [this] zero or more time, skipping its result.
   ///
@@ -493,7 +493,7 @@ class Parser<A> {
         var exps = Expectations.empty(pos);
         var commit = false;
         while (true) {
-          combine(Function(A, A) f) => (A x) => f(acc, x);
+          combine(Function(A, A) f) => (x) => f(acc, x);
           final res = success(combine).apply(sep).apply(this).run(s, index)
               as ParseResult<A>;
           exps = exps.best(res.expectations);
@@ -519,7 +519,7 @@ class Parser<A> {
 
   /// Warning: may lead to stack overflows.
   Parser<A> chainr1(Parser<Function> sep) {
-    Parser<A> rest(A x) => success((Function f) => (A y) => f(x, y))
+    Parser<A> rest(A x) => success((f) => (y) => f(x, y))
         .apply(sep)
         .apply(chainr1(sep))
         .or(success(x));
@@ -575,7 +575,7 @@ Parser<String> pred(bool Function(String char) p) {
   });
 }
 
-Parser<String> char(String chr) => pred((String c) => c == chr) % "'$chr'";
+Parser<String> char(String chr) => pred((c) => c == chr) % "'$chr'";
 
 Parser<String> string(String str) {
   // Primitive version for efficiency
@@ -745,7 +745,7 @@ class LanguageParsers {
   Parser<String> get dot => symbol('.') % 'dot';
 
   Parser<String> get _ident =>
-      success((String c) => (List<String> cs) => '$c${cs.join()}')
+      success((c) => (cs) => '$c${cs.join()}')
           .apply(_identStart)
           .apply(_identLetter.many);
 

@@ -263,7 +263,7 @@ class Parser<A> {
       this.then((x) => p.thenKeep(success(x)));
 
   /// Alias for [thenDrop];
-  Parser<A> operator <(Parser p) => thenDrop(p);
+  // Parser<A> operator <(Parser p) => thenDrop(p);
 
   /// Maps [f] over the result of [this].
   Parser<B> map<B>(B Function(A x) f) => (success(f).apply<A, B>(this));
@@ -861,7 +861,7 @@ class LanguageParsers {
   Parser<String> symbol(String symb) => lexeme(string(symb));
 
   /// Parser combinator which skips whitespaces from the right side.
-  Parser<A> lexeme<A>(Parser<A> p) => p < whiteSpace;
+  Parser<A> lexeme<A>(Parser<A> p) => p.thenDrop(whiteSpace);
 
   Parser<String> get _start => string(_commentStart);
   Parser<String> get _end => string(_commentEnd);

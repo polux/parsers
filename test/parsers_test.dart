@@ -1164,12 +1164,12 @@ main() {
 
   test(
       'sequence map 1',
-      () => expect((char('a') + char('b') ^ (x, y) => '$y$x').run('abc'),
+      () => expect((char('a').and(char('b')).map((x, y) => '$y$x')).run('abc'),
           isSuccess('ba', 'c')));
 
   test(
       'sequence map 2',
-      () => expect((char('a') + char('b') ^ (x, y) => '$y$x').run('acb'),
+      () => expect((char('a').and(char('b')).map((x, y) => '$y$x')).run('acb'),
           isFailure('cb')));
 
   test(

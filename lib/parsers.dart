@@ -10,10 +10,6 @@ library parsers;
 import 'option.dart';
 part 'src/accumulators.dart';
 
-class Undefined {
-  const Undefined();
-} // simulates the old ? operator
-
 class Position {
   final int line;
   final int character;
@@ -143,20 +139,22 @@ class ParseResult<A> {
     return copy(value: f(value));
   }
 
-  ParseResult<B> copy<B>(
-      {String text,
-      Expectations expectations,
-      Position position,
-      bool isSuccess,
-      bool isCommitted,
-      Object value: const Undefined()}) {
-    return new ParseResult(
-        (text != null) ? text : this.text,
-        (expectations != null) ? expectations : this.expectations,
-        (position != null) ? position : this.position,
-        (isSuccess != null) ? isSuccess : this.isSuccess,
-        (isCommitted != null) ? isCommitted : this.isCommitted,
-        ((value != const Undefined()) ? value : this.value) as B);
+  ParseResult<B> copy<B>({
+    String text,
+    Expectations expectations,
+    Position position,
+    bool isSuccess,
+    bool isCommitted,
+    B value,
+  }) {
+    return ParseResult(
+      text ?? this.text,
+      expectations ?? this.expectations,
+      position ?? this.position,
+      isSuccess ?? this.isSuccess,
+      isCommitted ?? this.isCommitted,
+      (value ?? this.value) as B,
+    );
   }
 
   String get errorMessage {

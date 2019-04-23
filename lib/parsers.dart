@@ -256,7 +256,7 @@ class Parser<A> {
   Parser<B> thenKeep<B>(Parser<B> p) => then((_) => p);
 
   /// Alias for [thenKeep].
-  Parser operator >(Parser p) => thenKeep(p);
+  // Parser operator >(Parser p) => thenKeep(p);
 
   /// Parses [this] then [p] and returns the result of [this].
   Parser<A> thenDrop<B>(Parser<B> p) =>
@@ -646,15 +646,16 @@ class _SkipInBetween {
 
   Parser _inside() => rec(parser).between(left, right);
   Parser get _leftOrRightAhead => (left.or(right)).lookAhead;
-  Parser _insideMulti() => anyChar.skipManyUntil(_leftOrRightAhead) > _nest();
-  Parser _nest() => (rec(_inside) > rec(_insideMulti)).maybe;
+  Parser _insideMulti() =>
+      anyChar.skipManyUntil(_leftOrRightAhead).thenKeep(_nest());
+  Parser _nest() => (rec(_inside).thenKeep(rec(_insideMulti))).maybe;
   Parser _insideSingle() => anyChar.skipManyUntil(right.lookAhead);
 }
 
 Parser<Null> skipEverythingBetween(Parser left, Parser right,
     {bool nested = false}) {
   final inBetween = _SkipInBetween(left, right, nested).parser();
-  return (inBetween.between(left, right) > success(null)) as Parser<Null>;
+  return (inBetween.between(left, right).thenKeep(success(null)));
 }
 
 Parser<String> everythingBetween(Parser left, Parser right,
@@ -686,7 +687,7 @@ final Parser<String> newline = char('\n') % 'newline';
 
 final Parser<String> space = oneOf(_spaces) % 'space';
 
-final Parser spaces = (space.many > success(null)) % 'spaces';
+final Parser<Null> spaces = (space.many.thenKeep(success(null))) % 'spaces';
 
 final Parser<String> upper = oneOf(_upper) % 'uppercase letter';
 
@@ -770,25 +771,25 @@ class LanguageParsers {
     return _reserved;
   }
 
-  final Parser<String> _escapeCode = ((char('a') > success('\a'))
-      .or(char('b') > success('\b'))
-      .or(char('f') > success('\f'))
-      .or(char('n') > success('\n'))
-      .or(char('r') > success('\r'))
-      .or(char('t') > success('\t'))
-      .or(char('v') > success('\v'))
-      .or(char('\\') > success('\\'))
-      .or(char('"') > success('"'))
-      .or(char("'") > success("'"))) as Parser<String>;
+  final Parser<String> _escapeCode = (char('a').thenKeep(success('\a')))
+      .or(char('b').thenKeep(success('\b')))
+      .or(char('f').thenKeep(success('\f')))
+      .or(char('n').thenKeep(success('\n')))
+      .or(char('r').thenKeep(success('\r')))
+      .or(char('t').thenKeep(success('\t')))
+      .or(char('v').thenKeep(success('\v')))
+      .or(char('\\').thenKeep(success('\\')))
+      .or(char('"').thenKeep(success('"')))
+      .or(char("'").thenKeep(success("'")));
 
   Parser<String> get _charChar =>
-      (char('\\') > _escapeCode).or(pred((c) => c != "'")) as Parser<String>;
+      (char('\\').thenKeep(_escapeCode)).or(pred((c) => c != "'"));
 
   Parser<String> get charLiteral =>
       lexeme(_charChar.between(char("'"), char("'"))) % 'character literal';
 
   Parser<String> get _stringChar =>
-      (char('\\') > _escapeCode).or(pred((c) => c != '"')) as Parser<String>;
+      (char('\\').thenKeep(_escapeCode)).or(pred((c) => c != '"'));
 
   Parser<String> get stringLiteral =>
       lexeme(_stringChar.many.between(char('"'), char('"')))
@@ -868,9 +869,8 @@ class LanguageParsers {
   Parser<Null> get _multiLineComment =>
       skipEverythingBetween(_start, _end, nested: _nestedComments);
 
-  Parser<Null> get _oneLineComment =>
-      (string(_commentLine) > (pred((c) => c != '\n').skipMany > success(null)))
-          as Parser<Null>;
+  Parser<Null> get _oneLineComment => string(_commentLine)
+      .thenKeep(pred((c) => c != '\n').skipMany.thenKeep(success(null)));
 
   Parser get whiteSpace => _whiteSpace % 'whitespace/comment';
 

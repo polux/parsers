@@ -162,7 +162,7 @@ class ParseResult<A> {
       return '$prelude unexpected $maxSeenChar.';
     } else {
       final or = _humanOr(expected.toList());
-      return "$prelude expected $or, got $maxSeenChar.";
+      return '$prelude expected $or, got $maxSeenChar.';
     }
   }
 
@@ -560,7 +560,7 @@ Parser<A> success<A>(A value) =>
 
 final Parser<Null> eof = Parser<Null>((s, pos) => pos.offset >= s.length
     ? ParseResult.success(null, s, pos)
-    : ParseResult.failure(s, pos, Expectations.single("eof", pos)));
+    : ParseResult.failure(s, pos, Expectations.single('eof', pos)));
 
 Parser<String> pred(bool p(String char)) {
   return Parser<String>((s, pos) {
@@ -669,12 +669,12 @@ Parser<String> oneOf(String chars) =>
 Parser<String> noneOf(String chars) =>
     pred((c) => !chars.contains(c)).expecting("none of '$chars'");
 
-final _spaces = " \t\n\r\v\f";
-final _lower = "abcdefghijklmnopqrstuvwxyz";
+final _spaces = ' \t\n\r\v\f';
+final _lower = 'abcdefghijklmnopqrstuvwxyz';
 final _upper = _lower.toUpperCase();
-final _alpha = "$_lower$_upper";
-final _digit = "1234567890";
-final _alphanum = "$_alpha$_digit";
+final _alpha = '$_lower$_upper';
+final _digit = '1234567890';
+final _alphanum = '$_alpha$_digit';
 
 final Parser<String> tab = char('\t') % 'tab';
 
@@ -700,7 +700,7 @@ class ReservedNames {
   Parser<String> operator [](String key) {
     final res = _map[key];
     if (res == null)
-      throw "$key is not a reserved name";
+      throw '$key is not a reserved name';
     else
       return res;
   }
@@ -746,7 +746,7 @@ class LanguageParsers {
   Parser<String> get dot => symbol('.') % 'dot';
 
   Parser<String> get _ident =>
-      success((String c) => (List<String> cs) => "$c${cs.join()}")
+      success((String c) => (List<String> cs) => '$c${cs.join()}')
           .apply(_identStart)
           .apply(_identLetter.many);
 
@@ -794,9 +794,9 @@ class LanguageParsers {
           .map((cs) => cs.join()) %
       'string literal';
 
-  final Parser<String> _hexDigit = oneOf("0123456789abcdefABCDEF");
+  final Parser<String> _hexDigit = oneOf('0123456789abcdefABCDEF');
 
-  final Parser<String> _octalDigit = oneOf("01234567");
+  final Parser<String> _octalDigit = oneOf('01234567');
 
   Parser<String> get _maybeSign =>
       (char('-') | char('+')).orElse('') as Parser<String>;
@@ -810,10 +810,10 @@ class LanguageParsers {
   Parser<String> get _decimal => _concat(digit.many1);
 
   Parser<String> get _hexaDecimal =>
-      _concatSum(oneOf("xX") + _concat(_hexDigit.many1));
+      _concatSum(oneOf('xX') + _concat(_hexDigit.many1));
 
   Parser<String> get _octal =>
-      _concatSum(oneOf("oO") + _concat(_octalDigit.many1));
+      _concatSum(oneOf('oO') + _concat(_octalDigit.many1));
 
   Parser<String> get _zeroNumber =>
       _concat((char('0') + (_hexaDecimal | _octal | _decimal).orElse('')).list

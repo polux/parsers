@@ -42,5 +42,5 @@ class Option<T> {
 
   int get hashCode => asNullable.hashCode;
 
-  String toString() => isDefined ? "Option.some($_value)" : "Option.none()";
+  String toString() => isDefined ? 'Option.some($_value)' : 'Option.none()';
 }

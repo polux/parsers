@@ -68,21 +68,21 @@ main() {
   test(
       'position 1',
       () => expect(
-          Position(1, 1, 1, tabStop: 4).addChar("\t").character, equals(5)));
+          Position(1, 1, 1, tabStop: 4).addChar('\t').character, equals(5)));
   test(
       'position 2',
       () => expect(
-          Position(1, 1, 2, tabStop: 4).addChar("\t").character, equals(5)));
+          Position(1, 1, 2, tabStop: 4).addChar('\t').character, equals(5)));
   test(
       'position 3',
       () => expect(
-          Position(1, 1, 4, tabStop: 4).addChar("\t").character, equals(5)));
+          Position(1, 1, 4, tabStop: 4).addChar('\t').character, equals(5)));
   test(
       'position 4',
       () => expect(
-          Position(1, 1, 5, tabStop: 4).addChar("\t").character, equals(9)));
+          Position(1, 1, 5, tabStop: 4).addChar('\t').character, equals(9)));
   test('position 5',
-      () => expect(Position(1, 1, 3).addChar("\t").character, equals(4)));
+      () => expect(Position(1, 1, 3).addChar('\t').character, equals(4)));
 
   test('char 1', () => expect(char('a').run('abc'), isSuccess('a', 'bc')));
 
@@ -116,7 +116,7 @@ main() {
   test(
       '> 3', () => expect((char('a') > char('b')).run('aac'), isFailure('ac')));
 
-  final let = string("let").notFollowedBy(alphanum);
+  final let = string('let').notFollowedBy(alphanum);
 
   test('notFollowedBy 1',
       () => expect(let.run('let aa'), isSuccess('let', ' aa')));
@@ -638,14 +638,14 @@ main() {
   test(
       'skipEverythingBetween 3',
       () => expect(
-          skipEverythingBetween(string('ab'), string('ac')).run("abaaaaa"),
+          skipEverythingBetween(string('ab'), string('ac')).run('abaaaaa'),
           isFailure('')));
 
   test(
       'skipEverythingBetween 4',
       () => expect(
           skipEverythingBetween(string('ab'), string('ac'), nested: true)
-              .run("abaaaaa"),
+              .run('abaaaaa'),
           isFailure('')));
 
   test(
@@ -664,14 +664,14 @@ main() {
 
   test(
       'everythingBetween 3',
-      () => expect(everythingBetween(string('ab'), string('ac')).run("abaaaaa"),
+      () => expect(everythingBetween(string('ab'), string('ac')).run('abaaaaa'),
           isFailure('')));
 
   test(
       'everythingBetween 4',
       () => expect(
           everythingBetween(string('ab'), string('ac'), nested: true)
-              .run("abaaaaa"),
+              .run('abaaaaa'),
           isFailure('')));
 
   test(
@@ -1131,7 +1131,7 @@ main() {
   test('sequence list 2',
       () => expect((char('a') + char('b')).list.run('acb'), isFailure('cb')));
 
-  var big = "a";
+  var big = 'a';
   for (int i = 0; i < 15; i++) {
     big = '$big$big';
   }

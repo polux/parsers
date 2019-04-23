@@ -802,11 +802,11 @@ class LanguageParsers {
 
   Parser<String> get _maybeSign => (char('-').or(char('+'))).orElse('');
 
-  Parser<String> _concat(Parser<List<String>> parsers) =>
+  Parser<String> _concat(Parser<List<dynamic>> parsers) =>
       parsers.map((list) => list.join());
 
   Parser<String> _concatSum(accum) =>
-      _concat(accum.list as Parser<List<String>>);
+      _concat(accum.list as Parser<List<dynamic>>);
 
   Parser<String> get _decimal => _concat(digit.many1);
 
@@ -817,8 +817,7 @@ class LanguageParsers {
       _concatSum(oneOf('oO').and(_concat(_octalDigit.many1)));
 
   Parser<String> get _zeroNumber => _concat(
-      (char('0').and((_hexaDecimal.or(_octal).or(_decimal)).orElse(''))).list
-          as Parser<List<String>>);
+      (char('0').and((_hexaDecimal.or(_octal).or(_decimal)).orElse(''))).list);
 
   Parser<String> get _nat => (_zeroNumber.or(_decimal));
 

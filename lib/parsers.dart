@@ -294,7 +294,7 @@ class Parser<A> {
   }
 
   /// Alias for [or].
-  Parser<A> operator |(Parser p) => or(p as Parser<A>);
+  // Parser<A> operator |(Parser p) => or(p as Parser<A>);
 
   /// Parses without consuming any input.
   ///

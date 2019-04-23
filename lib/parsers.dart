@@ -733,10 +733,8 @@ class LanguageParsers {
     _commentEnd = commentEnd;
     _commentLine = commentLine;
     _nestedComments = nestedComments;
-    _identStart = ((identStart == null) ? identStartDefault : identStart)
-        as Parser<String>;
-    _identLetter = ((identLetter == null) ? identLetterDefault : identLetter)
-        as Parser<String>;
+    _identStart = ((identStart == null) ? identStartDefault : identStart);
+    _identLetter = ((identLetter == null) ? identLetterDefault : identLetter);
     _reservedNames = Set<String>.from(reservedNames);
   }
 
@@ -798,8 +796,7 @@ class LanguageParsers {
 
   final Parser<String> _octalDigit = oneOf('01234567');
 
-  Parser<String> get _maybeSign =>
-      (char('-') | char('+')).orElse('') as Parser<String>;
+  Parser<String> get _maybeSign => (char('-') | char('+')).orElse('');
 
   Parser<String> _concat(Parser<List<String>> parsers) =>
       parsers.map((list) => list.join());
@@ -819,7 +816,7 @@ class LanguageParsers {
       _concat((char('0') + (_hexaDecimal | _octal | _decimal).orElse('')).list
           as Parser<List<String>>);
 
-  Parser<String> get _nat => (_zeroNumber | _decimal) as Parser<String>;
+  Parser<String> get _nat => (_zeroNumber | _decimal);
 
   Parser<String> get _int => _concatSum(lexeme(_maybeSign) + _nat);
 
@@ -829,8 +826,7 @@ class LanguageParsers {
   Parser<String> get _fraction => _concatSum(char('.') + _concat(digit.many1));
 
   Parser<String> get _fractExponent =>
-      (_concatSum(_fraction + _exponent.orElse('')) | _exponent)
-          as Parser<String>;
+      (_concatSum(_fraction + _exponent.orElse('')) | _exponent);
 
   Parser<String> get _float => _concatSum(decimal + _fractExponent);
 

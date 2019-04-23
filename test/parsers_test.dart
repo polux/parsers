@@ -1142,8 +1142,9 @@ main() {
 
   commit58Prop(f) {
     plus(x, y) => '$x$y';
-    final p = f(char('x').thenKeep(char('a').committed), success(plus)) >
-        string('b') | string('xaxac');
+    final p = f(char('x').thenKeep(char('a').committed), success(plus))
+            .thenKeep(string('b')) |
+        string('xaxac');
     return expect(p.run('xaxac'), isFailure('c'));
   }
 
@@ -1152,8 +1153,9 @@ main() {
 
   commit59Prop(f) {
     plus(x, y) => '$x$y';
-    final p = f(char('x').thenKeep(char('a')), success(plus).committed) >
-        string('b') | string('xaxac');
+    final p = f(char('x').thenKeep(char('a')), success(plus).committed)
+            .thenKeep(string('b')) |
+        string('xaxac');
     return expect(p.run('xaxac'), isFailure('c'));
   }
 

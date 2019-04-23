@@ -8,6 +8,7 @@
 library parsers;
 
 import 'option.dart';
+export 'option.dart';
 part 'src/accumulators.dart';
 
 class Position {

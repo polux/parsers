@@ -192,15 +192,15 @@ class ParseResult<A> {
   }
 }
 
-typedef _ParseFunction = ParseResult Function(String s, Position pos);
-
 class Parser<A> {
-  final _ParseFunction _run;
+  /// Consume [s] at [pos] and return result of type [A]
+  final ParseResult<A> Function(String s, Position pos) _run;
 
-  Parser(ParseResult<A> f(String s, Position pos)) : this._run = f;
+  Parser(this._run);
 
+  /// Consume [s] at [pos] and return result of type [A]
   ParseResult<A> run(String s, [Position pos = const Position(0, 1, 1)]) =>
-      _run(s, pos) as ParseResult<A>;
+      _run(s, pos);
 
   A parse(String s, {int tabStop = 1}) {
     ParseResult<A> result = run(s, Position(0, 1, 1, tabStop: tabStop));
@@ -212,9 +212,9 @@ class Parser<A> {
 
   Parser<B> then<B>(Parser<B> g(A value)) {
     return Parser((text, pos) {
-      ParseResult res = _run(text, pos);
+      final res = run(text, pos);
       if (res.isSuccess) {
-        final res2 = g(res.value as A)._run(text, res.position);
+        final res2 = g(res.value).run(text, res.position);
         return res2.copy(
             expectations: res.expectations.best(res2.expectations),
             isCommitted: res.isCommitted || res2.isCommitted);
@@ -229,7 +229,7 @@ class Parser<A> {
 
   Parser<A> expecting(String expected) {
     return Parser((s, pos) {
-      final res = _run(s, pos);
+      final res = run(s, pos);
       return res.copy(expectations: Expectations.single(expected, pos));
     });
   }
@@ -239,7 +239,7 @@ class Parser<A> {
 
   Parser<A> get committed {
     return Parser((s, pos) {
-      final res = _run(s, pos);
+      final res = run(s, pos);
       return res.copy(isCommitted: true);
     });
   }
@@ -278,13 +278,15 @@ class Parser<A> {
   ParserAccumulator2 operator +(Parser p) => ParserAccumulator2(this, p);
 
   /// Alternative.
-  Parser<B> or<B extends A>(Parser<B> p) {
-    return Parser<B>((s, pos) {
-      ParseResult<B> res = _run(s, pos) as ParseResult<B>;
+  // refact(devkabiir): Since B extends A, A can always be used in place of B, not the other way around
+  // probably don't even need type parameters?
+  Parser<A> or<B extends A>(Parser<B> p) {
+    return Parser<A>((s, pos) {
+      final res = run(s, pos);
       if (res.isSuccess || res.isCommitted) {
         return res;
       } else {
-        ParseResult res2 = p._run(s, pos);
+        final res2 = p.run(s, pos);
         return res2.copy(
             expectations: res.expectations.best(res2.expectations));
       }
@@ -299,9 +301,8 @@ class Parser<A> {
   /// Used for defining followedBy, which is probably what you're looking for.
   Parser<A> get lookAhead {
     return Parser((s, pos) {
-      ParseResult res = _run(s, pos);
-      return (res.isSuccess ? ParseResult.success(res.value, s, pos) : res)
-          as ParseResult<A>;
+      final res = run(s, pos);
+      return (res.isSuccess ? ParseResult.success(res.value, s, pos) : res);
     });
   }
 
@@ -315,8 +316,8 @@ class Parser<A> {
   ///
   /// Used for defining notFollowedBy, which is probably what you're looking for.
   Parser<A> get notAhead {
-    return Parser((s, pos) {
-      ParseResult res = _run(s, pos);
+    return Parser<A>((s, pos) {
+      final res = run(s, pos);
       return res.isSuccess
           ? ParseResult.failure(s, pos)
           : ParseResult.success(null, s, pos);
@@ -379,14 +380,14 @@ class Parser<A> {
       var exps = Expectations.empty(pos);
       var commit = false;
       while (true) {
-        final endRes = end._run(s, index);
+        final endRes = end.run(s, index);
         exps = exps.best(endRes.expectations);
         commit = commit || endRes.isCommitted;
         if (endRes.isSuccess) {
           return endRes.copy(
               value: null, expectations: exps, isCommitted: commit);
         } else if (!endRes.isCommitted) {
-          final xRes = this._run(s, index);
+          final xRes = this.run(s, index);
           exps = exps.best(xRes.expectations);
           commit = commit || xRes.isCommitted;
           if (xRes.isSuccess) {
@@ -416,7 +417,7 @@ class Parser<A> {
       Position index = pos;
       bool committed = false;
       while (true) {
-        ParseResult<A> o = this._run(s, index) as ParseResult<A>;
+        final o = this.run(s, index);
         exps = exps.best(o.expectations);
         committed = committed || o.isCommitted;
         if (o.isSuccess) {
@@ -445,7 +446,7 @@ class Parser<A> {
       var exps = Expectations.empty(pos);
       bool committed = false;
       while (true) {
-        ParseResult<A> o = this._run(s, index) as ParseResult<A>;
+        final o = this.run(s, index);
         exps = exps.best(o.expectations);
         committed = committed || o.isCommitted;
         if (o.isSuccess) {
@@ -492,12 +493,13 @@ class Parser<A> {
         var exps = Expectations.empty(pos);
         var commit = false;
         while (true) {
-          combine(Function f) => (A x) => f(acc, x);
-          final res = success(combine).apply(sep).apply(this)._run(s, index);
+          combine(Function(A, A) f) => (A x) => f(acc, x);
+          final res = success(combine).apply(sep).apply(this).run(s, index)
+              as ParseResult<A>;
           exps = exps.best(res.expectations);
           commit = commit || res.isCommitted;
           if (res.isSuccess) {
-            acc = res.value as A;
+            acc = res.value;
             index = res.position;
           } else if (res.isCommitted) {
             return res.copy(expectations: exps);
@@ -544,8 +546,7 @@ class Parser<A> {
   /// has been parsed.
   Parser<PointedValue<A>> get withPosition {
     return Parser((s, pos) {
-      return (this.map((v) => PointedValue(v, pos))._run(s, pos))
-          as ParseResult<PointedValue<A>>;
+      return (this.map((v) => PointedValue(v, pos)).run(s, pos));
     });
   }
 }
@@ -606,8 +607,7 @@ Parser<String> string(String str) {
   });
 }
 
-Parser<A> rec<A>(Parser<A> f()) =>
-    Parser<A>((s, pos) => f()._run(s, pos) as ParseResult<A>);
+Parser<A> rec<A>(Parser<A> f()) => Parser<A>((s, pos) => f().run(s, pos));
 
 final Parser<Position> position =
     Parser((s, pos) => ParseResult.success(pos, s, pos));
@@ -619,12 +619,12 @@ Parser<A> choice<A>(List<Parser<A>> ps) {
   return Parser((s, pos) {
     var exps = Expectations.empty(pos);
     for (final p in ps) {
-      final res = p._run(s, pos);
+      final res = p.run(s, pos);
       exps = exps.best(res.expectations);
       if (res.isSuccess) {
         return res.copy(expectations: exps);
       } else if (res.isCommitted) {
-        return res as ParseResult<A>;
+        return res;
       }
     }
     return ParseResult.failure(s, pos, exps);

@@ -178,7 +178,7 @@ class ParseResult<A> {
   }
 
   static String _humanOr(List es) {
-    assert(es.length > 0);
+    assert(es?.isNotEmpty ?? false);
     if (es.length == 1) {
       return es[0] as String;
     } else {

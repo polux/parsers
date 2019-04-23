@@ -34,10 +34,10 @@ Parser skipManyUntilImpl(Parser p, Parser end) => p.skipManyUntil(end);
 Parser chainl1Model(Parser p, Parser sep) {
   Parser rest(acc) {
     combine(f) => (x) => f(acc, x);
-    return (success(combine).apply(sep).apply(p)) >> rest.or(success(acc));
+    return (success(combine).apply(sep).apply(p)).then(rest).or(success(acc));
   }
 
-  return p >> rest;
+  return p.then(rest);
 }
 
 Parser chainl1Impl(Parser p, Parser sep) => p.chainl1(sep as Parser<Function>);

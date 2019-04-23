@@ -521,10 +521,11 @@ class Parser<A> {
 
   /// Warning: may lead to stack overflows.
   Parser<A> chainr1(Parser<Function> sep) {
-    Parser<A> rest(A x) => success((f) => (y) => f(x, y))
+    // ignore: avoid_types_on_closure_parameters
+    Parser<A> rest(A x) => success((Function(A, A) f) => (A y) => f(x, y))
         .apply(sep)
         .apply(chainr1(sep))
-        .or(success(x));
+        .or(success(x)) as Parser<A>;
     return then(rest);
   }
 

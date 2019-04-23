@@ -499,6 +499,7 @@ class Parser<A> {
           exps = exps.best(res.expectations);
           commit = commit || res.isCommitted;
           if (res.isSuccess) {
+            // ignore: parameter_assignments
             acc = res.value;
             index = res.position;
           } else if (res.isCommitted) {

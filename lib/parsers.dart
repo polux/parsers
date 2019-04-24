@@ -4,6 +4,7 @@
 // Authors:
 //   Paul Brauner (polux@google.com)
 //   Maxim Dikun (me@dikmax.name)
+//   Dinesh Ahuja (dev@kabiir.me)
 
 library parsers;
 

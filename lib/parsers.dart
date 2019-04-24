@@ -252,7 +252,7 @@ class Parser<A> {
   }
 
   /// Alias for [then].
-  // Parser operator >>(Parser Function(A x) g) => then(g);
+  Parser operator >>(Parser Function(A x) g) => then(g);
 
   Parser<A> expecting(String expected) {
     return Parser((s, pos) {
@@ -277,32 +277,32 @@ class Parser<A> {
       this.then((f) => p.then((x) => success((f as Function)(x) as C)));
 
   /// Alias for [apply].
-  // Parser operator *(Parser p) => apply(p);
+  Parser operator *(Parser p) => apply(p);
 
   /// Parses [this] then [p] and returns the result of [p].
   Parser<B> thenKeep<B>(Parser<B> p) => then((_) => p);
 
   /// Alias for [thenKeep].
-  // Parser operator >(Parser p) => thenKeep(p);
+  Parser operator >(Parser p) => thenKeep(p);
 
   /// Parses [this] then [p] and returns the result of [this].
   Parser<A> thenDrop<B>(Parser<B> p) =>
       this.then((x) => p.thenKeep(success(x)));
 
   /// Alias for [thenDrop];
-  // Parser<A> operator <(Parser p) => thenDrop(p);
+  Parser<A> operator <(Parser p) => thenDrop(p);
 
   /// Maps [f] over the result of [this].
   Parser<B> map<B>(B Function(A x) f) => (success(f).apply<A, B>(this));
 
   /// Alias for [map].
-  // Parser operator ^(Object Function(A x) f) => map(f);
+  Parser operator ^(Object Function(A x) f) => map(f);
 
   /// Parser sequencing: creates a parser accumulator.
   ParserAccumulator2<A, B> and<B>(Parser<B> p) => ParserAccumulator2(this, p);
 
   /// Alias for [and].
-  // ParserAccumulator2 operator +(Parser p) => ParserAccumulator2(this, p);
+  ParserAccumulator2 operator +(Parser p) => ParserAccumulator2(this, p);
 
   /// Alternative.
   // refact(devkabiir): Since B extends A, A can always be used in place of B, not the other way around
@@ -323,7 +323,7 @@ class Parser<A> {
   }
 
   /// Alias for [or].
-  // Parser<A> operator |(Parser p) => or(p as Parser<A>);
+  Parser<A> operator |(Parser p) => or(p as Parser<A>);
 
   /// Parses without consuming any input.
   ///

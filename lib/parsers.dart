@@ -270,10 +270,10 @@ class Parser<A> {
     });
   }
 
-  // Assumes that [this] parses a function (i.e., A = B -> C) and applies it
-  // to the result of [p].
+  /// Assumes that [this] parses a function (i.e., A = B -> C) and applies it
+  /// to the result of [p].
   Parser<C> apply<B, C>(Parser<B> p) =>
-      then((f) => p.then((x) => success((f as Function)(x) as C)));
+      this.then((f) => p.then((x) => success((f as Function)(x) as C)));
 
   /// Alias for [apply].
   // Parser operator *(Parser p) => apply(p);

@@ -5,6 +5,7 @@
 //   Paul Brauner (polux@google.com)
 //   Adam Singer (financecoding@gmail.com)
 //   Maxim Dikun (me@dikmax.name)
+//   Dinesh Ahuja (dev@kabiir.me)
 
 library parsers_test;
 

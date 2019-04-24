@@ -317,8 +317,8 @@ class Parser<A> {
     return Parser<A>((s, pos) {
       final res = run(s, pos);
       return res.isSuccess
-          ? ParseResult.failure(s, pos)
-          : ParseResult.success(null, s, pos);
+          ? ParseResult.failure<A>(s, pos)
+          : ParseResult.success<A>(null, s, pos);
     });
   }
 
@@ -554,24 +554,29 @@ class Parser<A> {
 
 // Primitive parsers
 
-final Parser fail = Parser((s, pos) => ParseResult.failure(s, pos));
+// final Parser fail = Parser((s, pos) => ParseResult.failure(s, pos));
+
+/// Create a parser that fails with [value].
+/// Prefer specifying a value to help type system
+Parser<A> failure<A>([A value = null]) =>
+    Parser<A>((s, pos) => ParseResult.failure<A>(s, pos, null, null, value));
 
 Parser<A> success<A>(A value) =>
-    Parser((s, pos) => ParseResult.success(value, s, pos));
+    Parser((s, pos) => ParseResult.success<A>(value, s, pos));
 
 final Parser<Null> eof = Parser<Null>((s, pos) => pos.offset >= s.length
-    ? ParseResult.success(null, s, pos)
-    : ParseResult.failure(s, pos, Expectations.single('eof', pos)));
+    ? ParseResult.success<Null>(null, s, pos)
+    : ParseResult.failure<Null>(s, pos, Expectations.single('eof', pos)));
 
 Parser<String> pred(bool Function(String char) p) {
   return Parser<String>((s, pos) {
     if (pos.offset >= s.length)
-      return ParseResult.failure(s, pos);
+      return ParseResult.failure<String>(s, pos);
     else {
       final c = s[pos.offset];
       return p(c)
-          ? ParseResult.success(c, s, pos.addChar(c))
-          : ParseResult.failure(s, pos);
+          ? ParseResult.success<String>(c, s, pos.addChar(c))
+          : ParseResult.failure<String>(s, pos);
     }
   });
 }
@@ -603,7 +608,8 @@ Parser<String> string(String str) {
       return ParseResult.success(
           str, s, pos.copy(offset: max, line: newline, character: newchar));
     } else {
-      return ParseResult.failure(s, pos, Expectations.single("'$str'", pos));
+      return ParseResult.failure<String>(
+          s, pos, Expectations.single("'$str'", pos));
     }
   });
 }
@@ -629,7 +635,7 @@ Parser<A> choice<A>(List<Parser<A>> ps) {
         return res;
       }
     }
-    return ParseResult.failure(s, pos, exps);
+    return ParseResult.failure<A>(s, pos, exps);
   });
 }
 
@@ -751,11 +757,12 @@ class LanguageParsers {
       .apply(_identLetter.many);
 
   Parser<String> get identifier =>
-      (lexeme(
+      lexeme(
         _ident.then(
-          (name) => _reservedNames.contains(name) ? fail : success(name),
+          (name) =>
+              _reservedNames.contains(name) ? failure<String>() : success(name),
         ),
-      ) as Parser<String>) %
+      ) %
       'identifier';
 
   ReservedNames get reserved {

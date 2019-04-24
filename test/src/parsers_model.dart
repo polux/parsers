@@ -3,7 +3,7 @@ part of parsers_test;
 // Simple models of the most complex combinators (the one that use while loops
 // to avoid stack overflows).
 
-Iterable Function(dynamic) _cons(x) {
+List Function(dynamic) _cons(x) {
   return (xs) {
     return []
       ..add(x)
@@ -12,8 +12,8 @@ Iterable Function(dynamic) _cons(x) {
 }
 
 Parser<List> manyModel(Parser p) {
-  Parser go() => success(_cons).apply(p).apply(rec(go)).or(success([]));
-  return go() as Parser<List>;
+  Parser<List> go() => success(_cons).apply(p).apply(rec(go)).or(success([]));
+  return go();
 }
 
 Parser<List> manyImpl(Parser p) => p.many;
@@ -23,9 +23,9 @@ Parser<Null> skipManyModel(Parser p) => manyModel(p).thenKeep(success(null));
 Parser skipManyImpl(Parser p) => p.skipMany;
 
 Parser<List> manyUntilModel(Parser p, Parser end) {
-  Parser go() =>
-      (end.thenKeep(success([]))).or(success(_cons)).apply(p).apply(rec(go));
-  return go() as Parser<List>;
+  Parser<List> go() => (end.thenKeep(success([])))
+      .or<List>(success(_cons).apply(p).apply(rec(go)));
+  return go();
 }
 
 Parser<List> manyUntilImpl(Parser p, Parser end) => p.manyUntil(end);

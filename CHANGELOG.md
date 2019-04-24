@@ -5,6 +5,7 @@
 - Dart 2.0 compatible
 - Operators disabled for now, so instead of `parser1 | parser2` use `parser1.or(parser2)`
 - `%` operator is an exception as it does not require any type parameters
+- Examples in `example` directory still don't work.
 
 ## 1.0.0
 

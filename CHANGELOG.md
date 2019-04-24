@@ -1,5 +1,11 @@
 # Parsers Changelog
 
+## 2.0.0
+
+- Dart 2.0 compatible
+- Operators disabled for now, so instead of `parser1 | parser2` use `parser1.or(parser2)`
+- `%` operator is an exception as it does not require any type parameters
+
 ## 1.0.0
 
 - Make strong mode and dart 2 compatible.

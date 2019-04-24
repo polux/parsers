@@ -11,6 +11,34 @@ import 'option.dart';
 export 'option.dart';
 part 'src/accumulators.dart';
 
+/// Helper to cast [original] to [C]
+C cast<C>(Object original) {
+  // ignore: type_check_is_null
+  if (C == Null || original == null || original is Null || C == null) {
+    return null;
+  }
+
+  if (C == String) {
+    return original.toString() as C;
+  }
+  if (C == List) {
+    if (original is List) {
+      return List.castFrom(original) as C;
+    }
+  }
+  if (C == num) {
+    return num.tryParse(original.toString()) as C;
+  }
+  if (C == int) {
+    return int.tryParse(original.toString()) as C;
+  }
+  if (C == double) {
+    return double.tryParse(original.toString()) as C;
+  }
+
+  return original as C;
+}
+
 class Position {
   final int line;
   final int character;
@@ -140,13 +168,13 @@ class ParseResult<A> {
     bool isCommitted,
     B value,
   }) {
-    return ParseResult(
+    return ParseResult<B>(
       text ?? this.text,
       expectations ?? this.expectations,
       position ?? this.position,
       isSuccess ?? this.isSuccess,
       isCommitted ?? this.isCommitted,
-      (value ?? this.value) as B,
+      cast<B>(value ?? this.value),
     );
   }
 
@@ -217,7 +245,7 @@ class Parser<A> {
             expectations: res.expectations.best(res2.expectations),
             isCommitted: res.isCommitted || res2.isCommitted);
       } else {
-        return res as ParseResult<B>;
+        return res.copy(value: cast<B>(res.value));
       }
     });
   }
@@ -278,17 +306,19 @@ class Parser<A> {
   /// Alternative.
   // refact(devkabiir): Since B extends A, A can always be used in place of B, not the other way around
   // probably don't even need type parameters?
-  Parser<A> or<B extends A>(Parser<B> p) {
-    return Parser<A>((s, pos) {
+  Parser<B> or<B>(Parser<B> p) {
+    ParseResult<B> parserFunction(String s, Position pos) {
       final res = run(s, pos);
       if (res.isSuccess || res.isCommitted) {
-        return res;
+        return res.copy<B>(value: cast<B>(res.value));
       } else {
         final res2 = p.run(s, pos);
-        return res2.copy(
+        return res2.copy<B>(
             expectations: res.expectations.best(res2.expectations));
       }
-    });
+    }
+
+    return Parser<B>(parserFunction);
   }
 
   /// Alias for [or].
@@ -493,13 +523,12 @@ class Parser<A> {
         while (true) {
           // ignore: avoid_types_on_closure_parameters
           combine(Function(A, A) f) => (A x) => f(acc, x);
-          final res = success(combine).apply(sep).apply(this).run(s, index)
-              as ParseResult<A>;
+          final res = success(combine).apply(sep).apply(this).run(s, index);
           exps = exps.best(res.expectations);
           commit = commit || res.isCommitted;
           if (res.isSuccess) {
             // ignore: parameter_assignments
-            acc = res.value;
+            acc = cast<A>(res.value);
             index = res.position;
           } else if (res.isCommitted) {
             return res.copy(expectations: exps);
@@ -523,7 +552,7 @@ class Parser<A> {
     Parser<A> rest(A x) => success((Function(A, A) f) => (A y) => f(x, y))
         .apply(sep)
         .apply(chainr1(sep))
-        .or(success(x)) as Parser<A>;
+        .or(success(x));
     return then(rest);
   }
 

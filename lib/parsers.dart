@@ -116,18 +116,16 @@ class ParseResult<A> {
   ParseResult(this.text, this.expectations, this.position, this.isSuccess,
       this.isCommitted, this.value);
 
-  factory ParseResult.success(A value, String text, Position position,
+  static ParseResult<A> success<A>(A value, String text, Position position,
       [Expectations expectations, bool committed = false]) {
-    final Expectations exps =
-        (expectations != null) ? expectations : Expectations.empty(position);
-    return ParseResult(text, exps, position, true, committed, value);
+    return ParseResult<A>(text, expectations ?? Expectations.empty(position),
+        position, true, committed ?? false, value);
   }
 
-  factory ParseResult.failure(String text, Position position,
-      [Expectations expectations, bool committed = false]) {
-    final Expectations exps =
-        (expectations != null) ? expectations : Expectations.empty(position);
-    return ParseResult(text, exps, position, false, committed, null);
+  static ParseResult<A> failure<A>(String text, Position position,
+      [Expectations expectations, bool committed = false, A value = null]) {
+    return ParseResult<A>(text, expectations ?? Expectations.empty(position),
+        position, false, committed ?? false, value);
   }
 
   ParseResult<B> map<B>(B Function(A value) f) {

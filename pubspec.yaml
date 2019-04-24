@@ -11,4 +11,4 @@ environment:
 dependencies:
   # persistent: any
 dev_dependencies:
-  test: any
+  test: ^1.0.0

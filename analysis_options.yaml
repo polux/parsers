@@ -5,7 +5,7 @@ analyzer:
 
 linter:
   rules:
-    - avoid_positional_boolean_parameters
+    # - avoid_positional_boolean_parameters
     - avoid_types_on_closure_parameters
     - avoid_unused_constructor_parameters
     - directives_ordering

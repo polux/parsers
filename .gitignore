@@ -9,3 +9,4 @@ doc/gen
 doc/tutorial/bin/packages
 .idea/
 .packages
+.dart_tool

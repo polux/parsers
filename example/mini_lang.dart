@@ -16,18 +16,17 @@ class MiniLang extends LanguageParsers {
   get start => stmts().between(spaces, eof);
 
   stmts() => stmt().endBy(semi);
-  stmt() => declStmt()
-          | assignStmt()
-          | ifStmt();
+  stmt() => declStmt() | assignStmt() | ifStmt();
   // In a real parser, we would build AST nodes, but here we turn sequences
   // into lists via the list getter for simplicity.
   declStmt() => (reserved['var'] + identifier + symbol('=') + expr()).list;
   assignStmt() => (identifier + symbol('=') + expr()).list;
-  ifStmt() => (reserved['if']
-               + parens(expr())
-               + braces(rec(stmts))
-               + reserved['else']
-               + braces(rec(stmts))).list;
+  ifStmt() => (reserved['if'] +
+          parens(expr()) +
+          braces(rec(stmts)) +
+          reserved['else'] +
+          braces(rec(stmts)))
+      .list;
 
   expr() => disj().sepBy1(symbol('||'));
   disj() => comp().sepBy1(symbol('&&'));
@@ -35,13 +34,14 @@ class MiniLang extends LanguageParsers {
   arith() => term().sepBy1(symbol('+') | symbol('-'));
   term() => atom().withPosition.sepBy1(symbol('*') | symbol('/'));
 
-  atom() => floatLiteral
-          | intLiteral
-          | stringLiteral
-          | reserved['true']
-          | reserved['false']
-          | identifier
-          | parens(rec(expr));
+  atom() =>
+      floatLiteral |
+      intLiteral |
+      stringLiteral |
+      reserved['true'] |
+      reserved['false'] |
+      identifier |
+      parens(rec(expr));
 }
 
 final test = """
@@ -59,5 +59,5 @@ final test = """
 """;
 
 main() {
-  print(new MiniLang().start.parse(test));
+  print(MiniLang().start.parse(test));
 }

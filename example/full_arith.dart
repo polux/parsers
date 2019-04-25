@@ -12,31 +12,33 @@ import 'package:parsers/parsers.dart';
 // Same example as example.dart, with the additional use of chainl1 which
 // helps handling infix operators with the same precedence.
 
+typedef MathFunction<T> = T Function(T a, T b);
+
 class Arith {
   int digits2int(List<String> digits) => int.parse(digits.join());
 
-  Parser<A> lexeme<A>(Parser<A> parser) => parser < spaces;
+  Parser<A> lexeme<A>(Parser<A> parser) => parser.thenDrop(spaces);
   Parser<String> token(String str) => lexeme(string(str));
   Parser<A> parens<A>(Parser<A> parser) =>
       parser.between(token('('), token(')'));
 
-  Parser get start => expr() < eof;
+  Parser<int> get start => expr().thenDrop(eof);
 
-  Parser get comma => token(',');
-  Parser get times => token('*');
-  Parser get div => token('~/');
-  Parser get plus => token('+');
-  Parser get minus => token('-');
-  Parser get number => (lexeme(digit.many1) ^ digits2int);
+  Parser<String> get comma => token(',');
+  Parser<String> get times => token('*');
+  Parser<String> get div => token('~/');
+  Parser<String> get plus => token('+');
+  Parser<String> get minus => token('-');
+  Parser<int> get number => (lexeme(digit.many1).map(digits2int));
 
-  Parser expr() => rec(term).chainl1(addop);
-  Parser term() => rec(atom).chainl1(mulop);
-  Parser atom() => number | parens(rec(expr));
+  Parser<int> expr() => rec(term).chainl1(addop);
+  Parser<int> term() => rec(atom).chainl1(mulop);
+  Parser<int> atom() => number.or(parens(rec(expr)));
 
-  Parser<Function> get addop => (plus.thenKeep(success((x, y) => x + y)))
+  Parser<MathFunction> get addop => (plus.thenKeep(success((x, y) => x + y)))
       .or(minus.thenKeep(success((x, y) => x - y)));
 
-  Parser<Function> get mulop => (times.thenKeep(success((x, y) => x * y)))
+  Parser<MathFunction> get mulop => (times.thenKeep(success((x, y) => x * y)))
       .or(div.thenKeep(success((x, y) => x ~/ y)));
 }
 

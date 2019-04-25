@@ -416,7 +416,7 @@ main() {
       () => expect(lang.reserved['for'].run('fora'), isFailure('a')));
 
   test('reserved 3',
-      () => expect(() => lang.reserved['foo'].run('fora'), throws));
+      () => expect(() => lang.reserved['foo'].run('fora'), throwsA(anything)));
 
   test(
       'char 1', () => expect(lang.charLiteral.run(r"'a'"), isSuccess('a', '')));

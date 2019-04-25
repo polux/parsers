@@ -19,24 +19,6 @@ C cast<C>(Object original) {
     return null;
   }
 
-  if (C == String) {
-    return original.toString() as C;
-  }
-  if (C == List) {
-    if (original is List) {
-      return List.castFrom(original) as C;
-    }
-  }
-  if (C == num) {
-    return num.tryParse(original.toString()) as C;
-  }
-  if (C == int) {
-    return int.tryParse(original.toString()) as C;
-  }
-  if (C == double) {
-    return double.tryParse(original.toString()) as C;
-  }
-
   return original as C;
 }
 
